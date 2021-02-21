@@ -24,6 +24,7 @@
 #include <gtest/gtest.h> // Google test framework
 
 #include <common/BasicTypes.h>
+#include <common/log-api.h>
 
 //#include <SequenceParser.h>
 #include <Instruction.h>
@@ -41,6 +42,10 @@
 // Type declaration
 
 // Function declaration
+
+// Global variables
+
+static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
 // Function definition
 
@@ -68,7 +73,7 @@ TEST(SystemCallInstruction, Execute_success)
 
   if (status)
     {
-      status = instruction->AddAttribute("command","ls /tmp &> /dev/null");
+      status = instruction->AddAttribute("command","/usr/bin/ls /tmp &> /dev/null");
     }
 
   if (status)
