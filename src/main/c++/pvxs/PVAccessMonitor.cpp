@@ -22,6 +22,7 @@
 // Global header files
 
 #include <new> // std::nothrow, etc.
+#include <mutex> // std::mutex, etc.
 #include <algorithm> // std::find, etc.
 
 #include <common/BasicTypes.h> // Misc. type definition
@@ -67,7 +68,13 @@ class PVMonitorCache : public ccs::base::PVMonitor
     ccs::types::boolean _initialised = false;
 
     /**
-     * @brief Workspace variable copy.
+     * @brief Mutex for concurrent access of Variable.
+     */
+
+    mutable std::mutex _async_mutex;
+
+    /**
+     * @brief PV monitor copy.
      */
 
     ccs::types::AnyValue _value;
@@ -89,7 +96,7 @@ class PVMonitorCache : public ccs::base::PVMonitor
     virtual ~PVMonitorCache (void);
 
     /**
-     * @brief Accessor
+     * @brief Accessor.
      */
 
     bool IsInitialised (void) const;
@@ -157,9 +164,11 @@ class BlockingPVMonitorNode : public Instruction, public PVMonitorCache
 
 /**
  * @brief PVMonitorVariable class.
- * @detail Workspace variable with asynchronous PVAccess monitoring. Mandatory attribute is the
- * named 'channel' (PV name) to connect to.
- * @todo Implement access protection between PVMonitor::HandleMonitor and Variable::GetValueImpl.
+ * @detail Workspace variable with asynchronous PVAccess monitoring. Mandatory attribute is the named
+ * 'channel' (PV name) to connect to. The implementation allows for providing an optional 'status' attribute
+ * specifying the name of an additional variable to host status information as part of the workspace.
+ * @note Data access protection between concurrent calls to GetValue and SetValue is provided through the
+ * Variable interface. Additional guard is provided between PVMonitorCache::HandleMonitor and PVMonitorCache::GetValue.
  */
 
 class PVMonitorVariable : public Variable, public PVMonitorCache
@@ -279,7 +288,8 @@ void PVMonitorCache::HandleMonitor (const ccs::types::AnyValue& value)
     }
 
   if (status)
-    { // Copy variable
+    { // MUTEX wrt. GetValue
+      std::lock_guard<std::mutex> lock (_async_mutex);
       _value = value;
     }
 
@@ -321,7 +331,8 @@ bool PVMonitorCache::GetValue (ccs::types::AnyValue& value) const
   bool status = _initialised;
 
   if (status)
-    {
+    { // MUTEX wrt. HandleMonitor
+      std::lock_guard<std::mutex> lock (_async_mutex);
       value = _value;
     }
 
@@ -400,7 +411,6 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
     { // Write to workspace
       log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", GetName().c_str(), GetAttribute("variable").c_str());
       status = ws->SetValue(GetAttribute("variable"), _value);
-      //(void)ws->SetValue(GetAttribute("variable"), _value);
     }
   else
     {
@@ -422,6 +432,10 @@ bool PVMonitorVariable::Setup (void)
       status = PVMonitorCache::SetChannel(GetAttribute("channel").c_str());
     }
 
+  if (Variable::HasAttribute("status"))
+    { // ToDo - Additional status variable
+    }
+
   return status;
 
 }
@@ -429,13 +443,11 @@ bool PVMonitorVariable::Setup (void)
 bool PVMonitorVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
 
-  bool status = PVMonitorCache::IsInitialised(); // Has received monitor and valid value
-
-  // ToDo - MUTEX operation
+  bool status = PVMonitorCache::IsInitialised(); // Has received monitor and at least one valid value
 
   if (status)
     {
-      PVMonitorCache::GetValue(value);
+      status = PVMonitorCache::GetValue(value);
     }
 
   return status;
@@ -452,7 +464,6 @@ BlockingPVMonitorNode::BlockingPVMonitorNode (void) : Instruction("BlockingPVMon
 BlockingPVMonitorNode::~BlockingPVMonitorNode (void) {}
 
 PVMonitorVariable::PVMonitorVariable (void) : Variable(PVMonitorVariable::Type), PVMonitorCache() {}
-
 PVMonitorVariable::~PVMonitorVariable (void) {}
 
 } // namespace sequencer
