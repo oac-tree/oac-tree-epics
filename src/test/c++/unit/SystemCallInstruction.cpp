@@ -21,7 +21,6 @@
 
 // Global header files
 
-#include <new> // std::nothrow, etc.
 #include <cstdlib> // std::system, etc.
 
 #include <common/BasicTypes.h> // Misc. type definition
@@ -77,7 +76,7 @@ class SystemCallInstruction : public Instruction
     ~SystemCallInstruction (void) override;
 
     /**
-     * @brief Class name for registration.
+     * @brief Class name for InstructionRegistry.
      */
 
     static const std::string Type;

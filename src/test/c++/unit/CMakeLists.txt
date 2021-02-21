@@ -4,6 +4,8 @@ target_sources(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/LogVariable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/NullUserInterface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction-tests.cpp
     )
 
 target_include_directories(unit-tests
