@@ -1,0 +1,120 @@
+<!--
+ $HeadURL: $
+ $Id: $
+
+ Project       : Supervision and Automation - Sequencer
+
+ Description   : SUP sequencer EPICS plugin module
+
+ Authors       : B.Bauvir (IO)
+
+ Copyright (c) : 2010-2020 ITER Organization,
+                 CS 90 046
+                 13067 St. Paul-lez-Durance Cedex
+                 France
+
+ This file is part of ITER CODAC software.
+ For the terms and conditions of redistribution or use of this software
+ refer to the file ITER-LICENSE.TXT located in the top level directory
+ of the distribution package.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.iter.codac.units</groupId>
+    <artifactId>sequencer-epics</artifactId>
+    <packaging>codac</packaging>
+    <version>1.0.0</version>
+    <name>SUP sequencer EPICS plugin module</name>
+    <description>SUP sequencer EPICS plugin module</description>
+    <url>http://www.iter.org/</url>
+
+    <!-- project properties -->
+    <properties>
+        <unit.type>module</unit.type>
+        <integrity.level>1</integrity.level>
+        <pluginpath>lib/plugins</pluginpath>
+    </properties>
+
+    <!-- parent pom.xml -->
+    <parent>
+        <groupId>org.iter.codac.units</groupId>
+        <artifactId>maven-iter-settings</artifactId>
+        <version>6.3.0</version>
+    </parent>
+
+    <!-- unit owner and developers -->
+    <developers>
+        <developer>
+            <id>vanherw</id>
+            <name>Walter Van Herck</name>
+            <organization>ITER Organisation</organization>
+            <email>walter.vanherck@iter.org</email>
+            <roles>
+                <role>unit owner</role>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>bauvirb</id>
+            <name>Bertrand Bauvir</name>
+            <organization>ITER Organisation</organization>
+            <email>bertrand.bauvir@iter.org</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>ferrog</id>
+            <name>Giuseppe Ferro</name>
+            <organization>ITER Organisation</organization>
+            <email>giuseppe.ferro@iter.org</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <!-- configuration of how the project is built -->
+    <build>
+        <!-- default phase is compile -->
+        <defaultGoal>compile</defaultGoal>
+        <!-- this command is executed if you just write 'mvn' -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-iter-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <packaging>
+                        <package>
+                            <!-- Libraries -->
+                            <include type="file" source="lib" target="${pluginpath}">
+                                <include>*.so*</include>
+                            </include>
+                            <!-- Package dependencies -->
+                            <requires codac="true">cpp-common</requires>
+                            <requires codac="true">cpp-common-epics</requires>
+                            <requires codac="true">sequencer</requires>
+                            <requires version="current" buildOnly="true">cmake3</requires>
+                            <requires codac="true" buildOnly="true">cpp-common-devel</requires>
+                            <requires codac="true" buildOnly="true">cpp-common-epics-devel</requires>
+                            <requires codac="true" buildOnly="true">sequencer-devel</requires>
+                            <!-- RPM scriptlet -->
+                            <scriptlet type="posttrans">
+                                <![CDATA[ ldconfig ]]>
+                            </scriptlet>
+                        </package>
+                        <package name="tests">
+                            <!-- Unit test -->
+                            <include type="file" source="bin/unit-tests" target="tests/${project.artifactId}/unit-tests"/>
+                            <!-- Package dependencies -->
+                            <requires version="current">%{codac_rpm_prefix}-${project.artifactId}</requires>
+                            <requires version="current" buildOnly="true">gtest-devel</requires>
+                        </package>
+                    </packaging>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
