@@ -44,6 +44,22 @@
 
 // Function definition
 
+TEST(SystemCallInstruction, Execute_missing)
+{
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::FAILURE == instruction->GetStatus());
+    }
+
+  ASSERT_EQ(true, status);
+}
+
 TEST(SystemCallInstruction, Execute_success)
 {
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
