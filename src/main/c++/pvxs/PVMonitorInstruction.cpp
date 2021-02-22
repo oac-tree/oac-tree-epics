@@ -55,14 +55,14 @@ namespace sup {
 namespace sequencer {
 
 /**
- * @brief BlockingPVMonitorNode class.
+ * @brief BlockingPVMonitorInstruction class.
  * @detail Blocking instruction which establishes a PVAccess connection and updates a
  * workspace variable based on monitor received. Mandatory attributes are 'channel' (PV name)
  * and 'variable' workspace variable name. The 'timeout' attribute is optional and defaulted
  * to 5s.
  */
 
-class BlockingPVMonitorNode : public Instruction, public PVMonitorCache
+class BlockingPVMonitorInstruction : public Instruction, public PVMonitorCache
 {
 
   private:
@@ -93,13 +93,17 @@ class BlockingPVMonitorNode : public Instruction, public PVMonitorCache
      * @brief Constructor.
      */
 
-    BlockingPVMonitorNode (void);
+    BlockingPVMonitorInstruction (void);
 
     /**
      * @brief Destructor.
      */
 
-    ~BlockingPVMonitorNode (void) override;
+    ~BlockingPVMonitorInstruction (void) override;
+
+    /**
+     * @brief Class name for InstructionRegistry.
+     */
 
     static const std::string Type;
 
@@ -111,8 +115,8 @@ template <typename Type> inline Type ToInteger (const ccs::types::char8 * const 
 
 // Global variables
 
-const std::string BlockingPVMonitorNode::Type = "BlockingPVMonitorInstruction";
-static bool _pvmonitor_initialised_flag = RegisterGlobalInstruction<BlockingPVMonitorNode>();
+const std::string BlockingPVMonitorInstruction::Type = "BlockingPVMonitorInstruction";
+static bool _pvmonitor_initialised_flag = RegisterGlobalInstruction<BlockingPVMonitorInstruction>();
 
 // Function definition
 
@@ -133,17 +137,17 @@ template <> inline ccs::types::uint64 ToInteger<ccs::types::uint64> (const ccs::
 
 }
 
-bool BlockingPVMonitorNode::Setup (void)
+bool BlockingPVMonitorInstruction::Setup (void)
 {
 
-  log_info("BlockingPVMonitorNode('%s')::Setup - Method called ..", Instruction::GetName().c_str());
+  log_info("BlockingPVMonitorInstruction('%s')::Setup - Method called ..", Instruction::GetName().c_str());
 
   bool status = (HasAttribute("channel") && HasAttribute("variable") && (false == PVMonitorCache::IsInitialised()));
 
   if (status)
     {
-      log_info("BlockingPVMonitorNode('%s')::Setup - .. with channel '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      log_info("BlockingPVMonitorNode('%s')::Setup - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_info("BlockingPVMonitorInstruction('%s')::Setup - .. with channel '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_info("BlockingPVMonitorInstruction('%s')::Setup - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
     }
 
   if (status && Instruction::HasAttribute("timeout"))
@@ -160,7 +164,7 @@ bool BlockingPVMonitorNode::Setup (void)
 
 }
 
-ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
+ExecutionStatus BlockingPVMonitorInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
   (void)ui;
@@ -191,10 +195,10 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
 
   if (status && static_cast<bool>(_value.GetType()))
     { // Verify if the named variable exists in the workspace
-      log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. verify workspace content", Instruction::GetName().c_str());
+      log_info("BlockingPVMonitorInstruction('%s')::ExecuteSingleImpl - .. verify workspace content", Instruction::GetName().c_str());
       if (ws->VariableNames().end() == std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))
         { // .. create variable in the workspace but this requires the type
-          log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. create '%s' variable in workspace", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+          log_info("BlockingPVMonitorInstruction('%s')::ExecuteSingleImpl - .. create '%s' variable in workspace", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           LocalVariable* _variable = new (std::nothrow) LocalVariable (_value.GetType());
           status = ws->AddVariable(GetAttribute("variable"), _variable);
         }
@@ -202,7 +206,7 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
 
   if (status && static_cast<bool>(_value.GetType()))
     { // Write to workspace
-      log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_info("BlockingPVMonitorInstruction('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
       status = ws->SetValue(GetAttribute("variable"), _value);
     }
   else
@@ -214,8 +218,8 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
 
 }
 
-BlockingPVMonitorNode::BlockingPVMonitorNode (void) : Instruction(BlockingPVMonitorNode::Type), PVMonitorCache() {}
-BlockingPVMonitorNode::~BlockingPVMonitorNode (void) {}
+BlockingPVMonitorInstruction::BlockingPVMonitorInstruction (void) : Instruction(BlockingPVMonitorInstruction::Type), PVMonitorCache() {}
+BlockingPVMonitorInstruction::~BlockingPVMonitorInstruction (void) {}
 
 } // namespace sequencer
 
