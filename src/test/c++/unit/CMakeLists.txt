@@ -5,6 +5,7 @@ target_sources(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/LogVariable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/NullUserInterface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction-tests.cpp
     )
 

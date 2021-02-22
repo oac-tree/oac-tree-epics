@@ -6,7 +6,7 @@
  *
  * Description   : Unit test code
  *
- * Author        : Walter Van Herck (IO)
+ * Author        : B.Bauvir (IO)
  *
  * Copyright (c) : 2010-2020 ITER Organization,
  *                 CS 90 046

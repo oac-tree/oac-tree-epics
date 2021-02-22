@@ -33,6 +33,9 @@
     <properties>
         <unit.type>module</unit.type>
         <integrity.level>1</integrity.level>
+        <cppcheck.args>--enable=all --suppress=missingInclude --inline-suppr</cppcheck.args>
+        <valgrind.enable>false</valgrind.enable>
+        <sonar.exclusions>src/test/**</sonar.exclusions>
         <pluginpath>lib/plugins</pluginpath>
     </properties>
 
