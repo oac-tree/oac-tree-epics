@@ -31,12 +31,12 @@
 
 #include <common/PVMonitor.h> // Plug-in managed through dynamic linking .. see Makefile
 
+#include <Variable.h>
+#include <VariableRegistry.h>
+
 // Local header files
 
 #include "PVMonitorCache.h"
-
-#include "Variable.h"
-#include "VariableRegistry.h"
 
 // Constants
 
@@ -118,7 +118,7 @@ bool PVMonitorVariable::Setup (void)
   if (status)
     { // Instantiate implementation
       log_info("PVMonitorVariable('%s')::Setup - Method called with '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
-      status = PVMonitorCache::SetChannel(GetAttribute("channel").c_str());
+      status = PVMonitorCache::SetChannel(Variable::GetAttribute("channel").c_str());
     }
 
   if (Variable::HasAttribute("status"))
