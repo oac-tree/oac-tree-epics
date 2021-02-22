@@ -30,11 +30,11 @@
 #include <common/PVAccessServer.h>
 #include <common/PVAccessTypes.h>
 
-// Local header files
+#include <SequenceParser.h>
+#include <Variable.h>
+#include <VariableRegistry.h>
 
-#include "SequenceParser.h"
-#include "Variable.h"
-#include "VariableRegistry.h"
+// Local header files
 
 #include "NullUserInterface.h"
 

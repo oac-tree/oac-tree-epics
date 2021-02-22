@@ -28,10 +28,10 @@
 
 #include <common/log-api.h> // Syslog wrapper routines
 
-// Local header files
+#include <Instruction.h>
+#include <InstructionRegistry.h>
 
-#include "Instruction.h"
-#include "InstructionRegistry.h"
+// Local header files
 
 // Constants
 
