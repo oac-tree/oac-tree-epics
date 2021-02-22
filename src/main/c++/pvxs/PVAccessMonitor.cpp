@@ -35,15 +35,13 @@
 
 // Local header files
 
+#include "PVMonitorCache.h"
+
 #include "Instruction.h"
 #include "InstructionRegistry.h"
 
-#include "Variable.h"
-#include "VariableRegistry.h"
-
 #include "LocalVariable.h"
 #include "Workspace.h"
-
 
 // Constants
 
@@ -55,63 +53,6 @@
 namespace sup {
 
 namespace sequencer {
-
-class PVMonitorCache : public ccs::base::PVMonitor
-{
-
-  private:
-
-    /**
-     * @brief Intialised flag.
-     */
-
-    ccs::types::boolean _initialised = false;
-
-    /**
-     * @brief Mutex for concurrent access of Variable.
-     */
-
-    mutable std::mutex _async_mutex;
-
-    /**
-     * @brief PV monitor copy.
-     */
-
-    ccs::types::AnyValue _value;
-
-  protected:
-
-  public:
-
-    /**
-     * @brief Constructor.
-     */
-
-    PVMonitorCache (void);
-
-    /**
-     * @brief Destructor.
-     */
-
-    virtual ~PVMonitorCache (void);
-
-    /**
-     * @brief Accessor.
-     */
-
-    bool IsInitialised (void) const;
-    bool GetValue (ccs::types::AnyValue& value) const;
-
-    bool SetChannel (const ccs::types::char8 * const name);
-
-    /**
-     * @brief See ccs::base::PVMonitor.
-     */
-
-    virtual void HandleEvent (const ccs::base::PVMonitor::Event& event);
-    virtual void HandleMonitor (const ccs::types::AnyValue& value);
-
-};
 
 /**
  * @brief BlockingPVMonitorNode class.
@@ -160,70 +101,22 @@ class BlockingPVMonitorNode : public Instruction, public PVMonitorCache
 
     ~BlockingPVMonitorNode (void) override;
 
-};
-
-/**
- * @brief PVMonitorVariable class.
- * @detail Workspace variable with asynchronous PVAccess monitoring. Mandatory attribute is the named
- * 'channel' (PV name) to connect to. The implementation allows for providing an optional 'status' attribute
- * specifying the name of an additional variable to host status information as part of the workspace.
- * @note Data access protection between concurrent calls to GetValue and SetValue is provided through the
- * Variable interface. Additional guard is provided between PVMonitorCache::HandleMonitor and PVMonitorCache::GetValue.
- */
-
-class PVMonitorVariable : public Variable, public PVMonitorCache
-{
-
-  private:
-
-    /**
-     * @brief Setup using provided attributes.
-     */
-
-    virtual bool Setup (void);
-
-  protected:
-
-  public:
-
-    /**
-     * @brief Constructor.
-     */
-
-    PVMonitorVariable (void);
-
-    /**
-     * @brief Destructor.
-     */
-
-    ~PVMonitorVariable (void) override;
-
-    /**
-     * @brief See sup::sequencer::Variable.
-     */
-
-    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
-
     static const std::string Type;
 
 };
-
-const std::string PVMonitorVariable::Type = "PVMonitorVariable";
 
 // Function declaration
 
 template <typename Type> inline Type ToInteger (const ccs::types::char8 * const buffer);
 
-bool RegisterPVMonitor (void);
-
 // Global variables
 
-static bool global_pvmonitor_initialised_flag = RegisterPVMonitor();
+const std::string BlockingPVMonitorNode::Type = "BlockingPVMonitorInstruction";
+static bool _pvmonitor_initialised_flag = RegisterGlobalInstruction<BlockingPVMonitorNode>();
 
 // Function definition
 
-template <> inline ccs::types::uint64 ToInteger (const ccs::types::char8 * const buffer)
+template <> inline ccs::types::uint64 ToInteger<ccs::types::uint64> (const ccs::types::char8 * const buffer)
 {
 
   ccs::types::uint64 ret = 0ul;
@@ -240,127 +133,27 @@ template <> inline ccs::types::uint64 ToInteger (const ccs::types::char8 * const
 
 }
 
-bool RegisterPVMonitor (void)
-{
-
-  { // PVMonitor instruction
-    auto constructor = []() { return static_cast<Instruction*>(new BlockingPVMonitorNode ()); };
-    GlobalInstructionRegistry().RegisterInstruction("BlockingPVMonitorNode", constructor);
-  }
-
-  { // PVMonitor variable
-    auto constructor = []() { return static_cast<Variable*>(new PVMonitorVariable ()); };
-    GlobalVariableRegistry().RegisterVariable(PVMonitorVariable::Type, constructor);
-  }
-
-  return true;
-
-}
-
-// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
-void PVMonitorCache::HandleEvent (const ccs::base::PVMonitor::Event& event)
-{
-
-  if (ccs::base::PVMonitor::Event::Connect == event)
-    {
-      log_notice("PVMonitorCache::HandleEvent - Connect to '%s'", ccs::base::PVMonitor::GetChannel());
-    }
-
-  if (_initialised && (ccs::base::PVMonitor::Event::Disconnect == event))
-    {
-      log_notice("PVMonitorCache::HandleEvent - Disconnect from '%s'", ccs::base::PVMonitor::GetChannel());
-      _initialised = false;
-    }
-
-  return;
-
-}
-
-// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
-void PVMonitorCache::HandleMonitor (const ccs::types::AnyValue& value)
-{
-
-  bool status = static_cast<bool>(value.GetType());
-
-  if (status)
-    {
-      _initialised = true;
-    }
-
-  if (status)
-    { // MUTEX wrt. GetValue
-      std::lock_guard<std::mutex> lock (_async_mutex);
-      _value = value;
-    }
-
-  if (status)
-    {
-      ccs::types::char8 buffer [2048];
-      (void)_value.SerialiseInstance(buffer, 2048u);
-      log_info("PVMonitorCache::HandleMonitor - Storing '%s' value", buffer);
-    }
-
-  return;
-
-}
-
-bool PVMonitorCache::IsInitialised (void) const { return _initialised; }
-
-bool PVMonitorCache::SetChannel (const ccs::types::char8 * const name)
-{
-
-  bool status = (false == _initialised);
-
-  if (status)
-    {
-      status = ccs::base::PVMonitor::SetChannel(name);
-    }
-
-  if (status)
-    { // Instantiate implementation
-      status = ccs::base::PVMonitor::Initialise();
-    }
-
-  return status;
-
-}
-
-bool PVMonitorCache::GetValue (ccs::types::AnyValue& value) const
-{
-
-  bool status = _initialised;
-
-  if (status)
-    { // MUTEX wrt. HandleMonitor
-      std::lock_guard<std::mutex> lock (_async_mutex);
-      value = _value;
-    }
-
-  return status;
-
-}
-
 bool BlockingPVMonitorNode::Setup (void)
 {
 
-  log_info("BlockingPVMonitorNode('%s')::Setup - Method called ..", GetName().c_str());
+  log_info("BlockingPVMonitorNode('%s')::Setup - Method called ..", Instruction::GetName().c_str());
 
   bool status = (HasAttribute("channel") && HasAttribute("variable") && (false == PVMonitorCache::IsInitialised()));
 
   if (status)
     {
-      log_info("BlockingPVMonitorNode('%s')::Setup - .. with channel '%s'", GetName().c_str(), GetAttribute("channel").c_str());
-      log_info("BlockingPVMonitorNode('%s')::Setup - .. using workspace variable '%s'", GetName().c_str(), GetAttribute("variable").c_str());
+      log_info("BlockingPVMonitorNode('%s')::Setup - .. with channel '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_info("BlockingPVMonitorNode('%s')::Setup - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
     }
 
-  if (status && HasAttribute("timeout"))
+  if (status && Instruction::HasAttribute("timeout"))
     { // Move to HelperTools namespace
-      _timeout = ToInteger<ccs::types::uint64>(GetAttribute("timeout").c_str());
+      _timeout = ToInteger<ccs::types::uint64>(Instruction::GetAttribute("timeout").c_str());
     }
 
   if (status)
     { // Instantiate implementation
-      status = PVMonitorCache::SetChannel(GetAttribute("channel").c_str());
+      status = PVMonitorCache::SetChannel(Instruction::GetAttribute("channel").c_str());
     }
 
   return status;
@@ -398,10 +191,10 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
 
   if (status && static_cast<bool>(_value.GetType()))
     { // Verify if the named variable exists in the workspace
-      log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. verify workspace content", GetName().c_str());
-      if (ws->VariableNames().end() == std::find(ws->VariableNames().begin(), ws->VariableNames().end(), GetAttribute("variable").c_str()))
+      log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. verify workspace content", Instruction::GetName().c_str());
+      if (ws->VariableNames().end() == std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))
         { // .. create variable in the workspace but this requires the type
-          log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. create '%s' variable in workspace", GetName().c_str(), GetAttribute("variable").c_str());
+          log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. create '%s' variable in workspace", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           LocalVariable* _variable = new (std::nothrow) LocalVariable (_value.GetType());
           status = ws->AddVariable(GetAttribute("variable"), _variable);
         }
@@ -409,7 +202,7 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
 
   if (status && static_cast<bool>(_value.GetType()))
     { // Write to workspace
-      log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", GetName().c_str(), GetAttribute("variable").c_str());
+      log_info("BlockingPVMonitorNode('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
       status = ws->SetValue(GetAttribute("variable"), _value);
     }
   else
@@ -421,50 +214,8 @@ ExecutionStatus BlockingPVMonitorNode::ExecuteSingleImpl (UserInterface * ui, Wo
 
 }
 
-bool PVMonitorVariable::Setup (void)
-{
-
-  bool status = ((false == PVMonitorCache::IsInitialised()) && Variable::HasAttribute("channel"));
-
-  if (status)
-    { // Instantiate implementation
-      log_info("PVMonitorVariable('%s')::Setup - Method called with '%s' channel", GetName().c_str(), GetAttribute("channel").c_str());
-      status = PVMonitorCache::SetChannel(GetAttribute("channel").c_str());
-    }
-
-  if (Variable::HasAttribute("status"))
-    { // ToDo - Additional status variable
-    }
-
-  return status;
-
-}
-
-bool PVMonitorVariable::GetValueImpl (ccs::types::AnyValue& value) const
-{
-
-  bool status = PVMonitorCache::IsInitialised(); // Has received monitor and at least one valid value
-
-  if (status)
-    {
-      status = PVMonitorCache::GetValue(value);
-    }
-
-  return status;
-
-}
-
-// Unsupported
-bool PVMonitorVariable::SetValueImpl (const ccs::types::AnyValue& value) { return false; }
-
-PVMonitorCache::PVMonitorCache (void) : ccs::base::PVMonitor() {}
-PVMonitorCache::~PVMonitorCache (void) {}
-
-BlockingPVMonitorNode::BlockingPVMonitorNode (void) : Instruction("BlockingPVMonitorNode"), PVMonitorCache() {}
+BlockingPVMonitorNode::BlockingPVMonitorNode (void) : Instruction(BlockingPVMonitorNode::Type), PVMonitorCache() {}
 BlockingPVMonitorNode::~BlockingPVMonitorNode (void) {}
-
-PVMonitorVariable::PVMonitorVariable (void) : Variable(PVMonitorVariable::Type), PVMonitorCache() {}
-PVMonitorVariable::~PVMonitorVariable (void) {}
 
 } // namespace sequencer
 
