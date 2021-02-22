@@ -3,6 +3,7 @@ add_executable(unit-tests)
 target_sources(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/LogVariable.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/LogInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/NullUserInterface.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessVariable-tests.cpp

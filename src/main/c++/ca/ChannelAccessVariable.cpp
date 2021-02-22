@@ -27,6 +27,8 @@
 
 #include <common/log-api.h> // Syslog wrapper routines
 
+#include <common/SharedReference.h>
+
 #include <common/AnyTypeHelper.h>
 #include <common/ChannelAccessClient.h>
 
@@ -57,19 +59,13 @@ class ChannelAccessVariable : public Variable
 {
 
   private:
-#if 0
+
     /**
      * @brief CA client reference attribute.
      */
 
-    chid _channel;
+    ccs::base::ChannelAccessClient* _client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
 
-    /**
-     * @brief PV copy.
-     */
-
-    ccs::types::AnyValue _value;
-#endif
     /**
      * @brief Setup using provided attributes.
      */
@@ -109,12 +105,55 @@ class ChannelAccessVariable : public Variable
 
 // Function declaration
 
+static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void);
+static bool TerminateChannelAccessClientInstance (void);
+
 // Global variables
 
 const std::string ChannelAccessVariable::Type = "ChannelAccessVariable";
 static bool _cavariable_initialised_flag = RegisterGlobalVariable<ChannelAccessVariable>();
 
+static ccs::types::uint32 _ca_client_count = 0u;
+static ccs::base::ChannelAccessClient* _ca_client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
+
 // Function definition
+
+static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
+
+  if (!status)
+    { // Reference counted ccs::base::ChannelAccessClient instance
+      log_notice("ChannelAccessClientContext::GetInstance - Initialise the shared reference ..");
+      _ca_client = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>();;
+    }
+
+  // Increment count
+  _ca_client_count += 1u;
+
+  return _ca_client;
+
+}
+
+static bool TerminateChannelAccessClientInstance (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
+
+  // Decrement count
+  _ca_client_count -= 1u;
+
+  if (status && (0u == _ca_client_count))
+    { // Assume destroying the reference is sufficient for context tear-down
+      log_notice("ChannelAccessClientContext::Terminate - Forgetting the shared reference ..");
+      ccs::base::ChannelAccessInterface::Terminate<ccs::base::ChannelAccessClient>();
+      _ca_client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
+    }
+
+  return status;
+
+}
 
 bool ChannelAccessVariable::Setup (void)
 {
@@ -132,13 +171,14 @@ bool ChannelAccessVariable::Setup (void)
   if (status)
     { // Instantiate variable cache
       log_info("ChannelAccessVariable('%s')::Setup - .. and '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
-      status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->AddVariable(Variable::GetAttribute("channel").c_str(), ccs::types::AnyputVariable, _type);
+      _client = GetChannelAccessClientInstance();
+      status = _client->AddVariable(Variable::GetAttribute("channel").c_str(), ccs::types::AnyputVariable, _type);
     }
 #if 0
   if (status && Variable::HasAttribute("period"))
     { // ToDo
       ccs::types::uint64 _period = 100000000ul;
-      status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->SetPeriod(_period);
+      status = _client->SetPeriod(_period);
     }
 #endif
   return status;
@@ -148,15 +188,16 @@ bool ChannelAccessVariable::Setup (void)
 bool ChannelAccessVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
   // ToDo - Make an Instruction to start the CA variable cache with period ..
-  (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->Launch();
+  (void)_client->Launch();
+  (void)ccs::HelperTools::SleepFor(1000000000ul);
 
-  bool status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->IsValid(Variable::GetAttribute("channel").c_str());
+  bool status = _client->IsValid(Variable::GetAttribute("channel").c_str());
 
   ccs::types::AnyValue* _value = NULL_PTR_CAST(ccs::types::AnyValue*);
 
   if (status)
     {
-      _value = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->GetVariable(Variable::GetAttribute("channel").c_str());
+      _value = _client->GetVariable(Variable::GetAttribute("channel").c_str());
       status = (NULL_PTR_CAST(ccs::types::AnyValue*) != _value);
     }
 
@@ -172,18 +213,19 @@ bool ChannelAccessVariable::GetValueImpl (ccs::types::AnyValue& value) const
 bool ChannelAccessVariable::SetValueImpl (const ccs::types::AnyValue& value)
 {
   // ToDo - Make an Instruction to start the CA variable cache with period ..
-  (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->Launch();
+  (void)_client->Launch();
+  (void)ccs::HelperTools::SleepFor(1000000000ul);
 
-  bool status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->IsValid(Variable::GetAttribute("channel").c_str());
+  bool status = _client->IsValid(Variable::GetAttribute("channel").c_str());
 
   if (status)
     {
-      status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->SetVariable(Variable::GetAttribute("channel").c_str(), value);
+      status = _client->SetVariable(Variable::GetAttribute("channel").c_str(), value);
     }
 #if 0
   if (status)
     {
-      status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->UpdateVariable(Variable::GetAttribute("channel").c_str());
+      status = _client->UpdateVariable(Variable::GetAttribute("channel").c_str());
     }
 #endif
   return status;
@@ -191,7 +233,14 @@ bool ChannelAccessVariable::SetValueImpl (const ccs::types::AnyValue& value)
 }
 
 ChannelAccessVariable::ChannelAccessVariable (void) : Variable(ChannelAccessVariable::Type) {}
-ChannelAccessVariable::~ChannelAccessVariable (void) {}
+ChannelAccessVariable::~ChannelAccessVariable (void)
+{ 
+
+  // Tear-down client context
+  _client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*); // Forget about it locally ..
+  (void)TerminateChannelAccessClientInstance(); // .. last instance should finalise clean-up
+
+}
 
 } // namespace sequencer
 

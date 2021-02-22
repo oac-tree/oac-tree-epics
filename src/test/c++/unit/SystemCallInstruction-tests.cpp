@@ -51,6 +51,7 @@ static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
 TEST(SystemCallInstruction, Execute_missing)
 {
+
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
 
   bool status = static_cast<bool>(instruction);
@@ -63,17 +64,19 @@ TEST(SystemCallInstruction, Execute_missing)
     }
 
   ASSERT_EQ(true, status);
+
 }
 
 TEST(SystemCallInstruction, Execute_success)
 {
+
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
 
   bool status = static_cast<bool>(instruction);
 
   if (status)
     {
-      status = instruction->AddAttribute("command","/usr/bin/ls /tmp &> /dev/null");
+      status = instruction->AddAttribute("command", "/usr/bin/ls /tmp &> /dev/null");
     }
 
   if (status)
@@ -84,17 +87,19 @@ TEST(SystemCallInstruction, Execute_success)
     }
 
   ASSERT_EQ(true, status);
+
 }
 
 TEST(SystemCallInstruction, Execute_error)
 {
+
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
 
   bool status = static_cast<bool>(instruction);
 
   if (status)
     {
-      status = instruction->AddAttribute("command","/usr/bin/undefined &> /dev/null");
+      status = instruction->AddAttribute("command", "/usr/bin/undefined &> /dev/null");
     }
 
   if (status)
@@ -105,6 +110,30 @@ TEST(SystemCallInstruction, Execute_error)
     }
 
   ASSERT_EQ(true, status);
-}
 
+}
+#if 0
+TEST(SystemCallInstruction, Execute_softioc)
+{
+
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      status = instruction->AddAttribute("command", "/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
+    }
+
+  ASSERT_EQ(true, status);
+
+}
+#endif
 #undef LOG_ALTERN_SRC

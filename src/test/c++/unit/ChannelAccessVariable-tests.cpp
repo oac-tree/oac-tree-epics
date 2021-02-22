@@ -31,6 +31,10 @@
 #include <common/PVAccessTypes.h>
 
 #include <SequenceParser.h>
+
+#include <Instruction.h>
+#include <InstructionRegistry.h>
+
 #include <Variable.h>
 #include <VariableRegistry.h>
 
@@ -56,7 +60,22 @@ static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 static inline bool Initialise (void)
 {
 
-  bool status = true;
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      status = instruction->AddAttribute("command","/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
+    }
+
   return status;
 
 }
@@ -64,12 +83,79 @@ static inline bool Initialise (void)
 static inline bool Terminate (void)
 {
 
-  bool status = true;
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      status = instruction->AddAttribute("command","/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
+    }
+
   return status;
 
 }
 
 // Function definition
+
+TEST(ChannelAccessVariable, GetValue_success)
+{
+
+  auto variable = sup::sequencer::GlobalVariableRegistry().Create("ChannelAccessVariable");
+
+  bool status = static_cast<bool>(variable);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    { // Setup implicit with AddAttribute .. access as 'string'
+      status = (variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
+		variable->AddAttribute("datatype", "{\"type\":\"string\"}"));
+    }
+
+  if (status)
+    {
+      (void)ccs::HelperTools::SleepFor(1000000000ul);
+    }
+
+  ccs::types::AnyValue value; // Placeholder
+
+  if (status)
+    {
+      status = variable->GetValue(value);
+    }
+
+  if (status)
+    {
+      status = (ccs::types::String == value.GetType());
+    }
+
+  if (status)
+    {
+      ccs::types::char8 buffer [1024];
+      ccs::HelperTools::SerialiseToJSONStream(&value, buffer, 1024u);
+      log_info("TEST(ChannelAccessVariable, GetValue_success) - Value is ..");
+      log_info("'%s'", buffer);
+    }
+
+  if (status)
+    {
+      status = Terminate();
+    }
+
+  ASSERT_EQ(true, status);
+
+}
 
 TEST(ChannelAccessVariable, GetValue_error)
 {
@@ -80,7 +166,7 @@ TEST(ChannelAccessVariable, GetValue_error)
 
   if (status)
     { // Missing mandatory attribute .. Setup implicit with AddAttribute
-      status = variable->AddAttribute("irrelevant","undefined");
+      status = variable->AddAttribute("irrelevant", "undefined");
     }
 
   ccs::types::AnyValue value; // Placeholder
@@ -89,6 +175,85 @@ TEST(ChannelAccessVariable, GetValue_error)
     {
       status = ((false == variable->GetValue(value)) &&
                 (false == static_cast<bool>(value.GetType())));
+    }
+
+  ASSERT_EQ(true, status);
+
+}
+
+TEST(ChannelAccessVariable, SetValue_success)
+{
+
+  auto variable = sup::sequencer::GlobalVariableRegistry().Create("ChannelAccessVariable");
+
+  bool status = static_cast<bool>(variable);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    { // Setup implicit with AddAttribute .. access as 'float32'
+      status = (variable->AddAttribute("channel", "SEQ-TEST:FLOAT") &&
+		variable->AddAttribute("datatype", "{\"type\":\"float32\"}"));
+    }
+
+  if (status)
+    {
+      (void)ccs::HelperTools::SleepFor(1000000000ul);
+    }
+
+  ccs::types::AnyValue value (static_cast<ccs::types::float32>(0.1));
+
+  if (status)
+    {
+      status = variable->SetValue(value);
+    }
+
+  if (status)
+    {
+      (void)ccs::HelperTools::SleepFor(1000000000ul);
+    }
+
+  if (status)
+    {
+      ccs::types::char8 buffer [1024];
+      ccs::HelperTools::SerialiseToJSONStream(&value, buffer, 1024u);
+      log_info("TEST(ChannelAccessVariable, SetValue_success) - Value is ..");
+      log_info("'%s'", buffer);
+    }
+
+  if (status)
+    {
+      status = Terminate();
+    }
+
+  ASSERT_EQ(true, status);
+
+}
+
+TEST(ChannelAccessVariable, ProcedureFile)
+{
+
+  auto proc = sup::sequencer::ParseProcedureFile("../resources/variable_ca.xml");
+
+  bool status = bool(proc);
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+
+      do
+        {
+          proc->ExecuteSingle(&ui);
+	  exec = proc->GetStatus();
+	}
+      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+             (sup::sequencer::ExecutionStatus::FAILURE != exec));
+
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
     }
 
   ASSERT_EQ(true, status);
