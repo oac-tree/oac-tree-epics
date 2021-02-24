@@ -3,16 +3,20 @@
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Plugin name="libsequencer-ca.so"/>
     <Sequence>
         <LogTrace level="info" message="Step 1 - Start softioc"/>
         <SystemCall name="softioc"
             command='/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
         <LogTrace level="info" message="Step 2 - Wait for some time"/>
         <Wait timeout="1.0"/>
-        <LogTrace level="info" message="Step 3 - Kill softioc"/>
+        <LogTrace level="info" message="Step 3 - Read variables"/>
+        <LogTrace level="info" input="boolean"/>
+        <LogTrace level="info" input="float32"/>
+        <LogTrace level="info" message="Step 4 - Kill softioc"/>
         <SystemCall name="kill"
             command='/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &amp;&gt; /dev/null'/>
-        <LogTrace level="info" message="Step 4 - Terminate"/>
+        <LogTrace level="info" message="Step 5 - Terminate"/>
     </Sequence>
     <Workspace>
         <ChannelAccessVariable name="boolean"
