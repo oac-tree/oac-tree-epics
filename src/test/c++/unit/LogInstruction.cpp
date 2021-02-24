@@ -21,15 +21,17 @@
 
 // Global header files
 
-#include <cstdlib> // std::system, etc.
-
 #include <common/BasicTypes.h> // Misc. type definition
-//#include <common/SysTools.h> // Misc. helper functions
 
 #include <common/log-api.h> // Syslog wrapper routines
 
+#include <common/AnyValue.h>
+#include <common/AnyValueHelper.h>
+
 #include <Instruction.h>
 #include <InstructionRegistry.h>
+
+#include <Workspace.h>
 
 // Local header files
 
@@ -85,6 +87,8 @@ class LogInstruction : public Instruction
 
 // Function declaration
 
+static inline ccs::log::Severity_t GetSeverity (const std::string& severity);
+
 // Global variables
 
 const std::string LogInstruction::Type = "LogTrace";
@@ -92,17 +96,54 @@ static bool _log_initialised_flag = RegisterGlobalInstruction<LogInstruction>();
 
 // Function definition
 
+static inline ccs::log::Severity_t GetSeverity (const std::string& severity)
+{
+
+  ccs::log::Severity_t ret = LOG_INFO;
+
+  if (severity == "debug")
+    {
+      ret = LOG_DEBUG;
+    }
+
+  if (severity == "notice")
+    {
+      ret = LOG_NOTICE;
+    }
+
+  return ret;
+
+}
+
 ExecutionStatus LogInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
   (void)ui;
   (void)ws;
 
-  bool status = Instruction::HasAttribute("message");
+  bool status = (Instruction::HasAttribute("message") || Instruction::HasAttribute("input"));
 
-  if (status)
+  if (status && (false == Instruction::HasAttribute("level")))
     {
-      log_info(Instruction::GetAttribute("message").c_str());
+      status = Instruction::AddAttribute("level", "info");
+    }
+
+  if (Instruction::HasAttribute("message"))
+    {
+      ccs::log::Message(GetSeverity(Instruction::GetAttribute("level")), LOG_ALTERN_SRC, Instruction::GetAttribute("message").c_str());
+    }
+
+  if (Instruction::HasAttribute("input"))
+    { // Read from workspace
+      ccs::types::AnyValue _value;
+      status = ws->GetValue(Instruction::GetAttribute("input"), _value);
+
+      if (status)
+        {
+          ccs::types::char8 buffer [2048];
+          (void)ccs::HelperTools::SerialiseToJSONStream(&_value, buffer, 2048u);
+          ccs::log::Message(GetSeverity(Instruction::GetAttribute("level")), LOG_ALTERN_SRC, buffer);
+        }
     }
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
