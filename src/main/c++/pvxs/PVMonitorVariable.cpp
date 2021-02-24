@@ -64,12 +64,6 @@ class PVMonitorVariable : public Variable, public PVMonitorCache
 
   private:
 
-    /**
-     * @brief Setup using provided attributes.
-     */
-
-    virtual bool Setup (void);
-
   protected:
 
   public:
@@ -90,6 +84,7 @@ class PVMonitorVariable : public Variable, public PVMonitorCache
      * @brief See sup::sequencer::Variable.
      */
 
+    virtual bool SetupImpl (void);
     virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
     virtual bool SetValueImpl (const ccs::types::AnyValue& value);
 
@@ -110,14 +105,14 @@ static bool _pvmonitor_initialised_flag = RegisterGlobalVariable<PVMonitorVariab
 
 // Function definition
 
-bool PVMonitorVariable::Setup (void)
+bool PVMonitorVariable::SetupImpl (void)
 {
 
   bool status = ((false == PVMonitorCache::IsInitialised()) && Variable::HasAttribute("channel"));
 
   if (status)
     { // Instantiate implementation
-      log_info("PVMonitorVariable('%s')::Setup - Method called with '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
+      log_info("PVMonitorVariable('%s')::SetupImpl - Method called with '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       status = PVMonitorCache::SetChannel(Variable::GetAttribute("channel").c_str());
     }
 

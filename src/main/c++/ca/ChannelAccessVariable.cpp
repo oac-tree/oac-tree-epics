@@ -66,12 +66,6 @@ class ChannelAccessVariable : public Variable
 
     ccs::base::ChannelAccessClient* _client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
 
-    /**
-     * @brief Setup using provided attributes.
-     */
-
-    virtual bool Setup (void);
-
   protected:
 
   public:
@@ -92,6 +86,7 @@ class ChannelAccessVariable : public Variable
      * @brief See sup::sequencer::Variable.
      */
 
+    virtual bool SetupImpl (void);
     virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
     virtual bool SetValueImpl (const ccs::types::AnyValue& value);
 
@@ -113,6 +108,8 @@ static bool TerminateChannelAccessClientInstance (void);
 const std::string ChannelAccessVariable::Type = "ChannelAccessVariable";
 static bool _cavariable_initialised_flag = RegisterGlobalVariable<ChannelAccessVariable>();
 
+// ToDo - Replace the singleton mechanism in cpp-common-epics
+static ccs::types::boolean _ca_client_launch = false;
 static ccs::types::uint32 _ca_client_count = 0u;
 static ccs::base::ChannelAccessClient* _ca_client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
 
@@ -126,13 +123,30 @@ static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
   if (!status)
     { // Reference counted ccs::base::ChannelAccessClient instance
       log_notice("ChannelAccessClientContext::GetInstance - Initialise the shared reference ..");
-      _ca_client = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>();;
+      _ca_client = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>();
     }
 
   // Increment count
   _ca_client_count += 1u;
 
   return _ca_client;
+
+}
+
+static bool LaunchChannelAccessClientInstance (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
+
+  if (status && (false == _ca_client_launch))
+    {
+      log_notice("ChannelAccessClientContext::Launch - Starting CA caching thread ..");
+      (void)_ca_client->Launch();
+      (void)ccs::HelperTools::SleepFor(50000000ul);
+      _ca_client_launch = true;
+    }
+
+  return status;
 
 }
 
@@ -149,13 +163,14 @@ static bool TerminateChannelAccessClientInstance (void)
       log_notice("ChannelAccessClientContext::Terminate - Forgetting the shared reference ..");
       ccs::base::ChannelAccessInterface::Terminate<ccs::base::ChannelAccessClient>();
       _ca_client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
+      _ca_client_launch = false;
     }
 
   return status;
 
 }
 
-bool ChannelAccessVariable::Setup (void)
+bool ChannelAccessVariable::SetupImpl (void)
 {
 
   bool status = (Variable::HasAttribute("channel") && Variable::HasAttribute("datatype"));
@@ -164,14 +179,19 @@ bool ChannelAccessVariable::Setup (void)
 
   if (status)
     { // Instantiate required datatype
-      log_info("ChannelAccessVariable('%s')::Setup - Method called with '%s' datatype ..", Variable::GetName().c_str(), Variable::GetAttribute("datatype").c_str());
+      log_info("ChannelAccessVariable('%s')::SetupImpl - Method called with '%s' datatype ..", Variable::GetName().c_str(), Variable::GetAttribute("datatype").c_str());
       status = (0u < ccs::HelperTools::Parse(_type, Variable::GetAttribute("datatype").c_str()));
     }
 
   if (status)
     { // Instantiate variable cache
-      log_info("ChannelAccessVariable('%s')::Setup - .. and '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       _client = GetChannelAccessClientInstance();
+      status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _client);
+    }
+
+  if (status)
+    { // Instantiate variable cache
+      log_info("ChannelAccessVariable('%s')::SetupImpl - .. and '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       status = _client->AddVariable(Variable::GetAttribute("channel").c_str(), ccs::types::AnyputVariable, _type);
     }
 #if 0
@@ -188,10 +208,14 @@ bool ChannelAccessVariable::Setup (void)
 bool ChannelAccessVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
   // ToDo - Make an Instruction to start the CA variable cache with period ..
-  (void)_client->Launch();
-  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  (void)LaunchChannelAccessClientInstance(); // Only if not already done
 
-  bool status = _client->IsValid(Variable::GetAttribute("channel").c_str());
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _client);
+
+  if (status)
+    {
+      status = _client->IsValid(Variable::GetAttribute("channel").c_str());
+    }
 
   ccs::types::AnyValue* _value = NULL_PTR_CAST(ccs::types::AnyValue*);
 
@@ -213,16 +237,20 @@ bool ChannelAccessVariable::GetValueImpl (ccs::types::AnyValue& value) const
 bool ChannelAccessVariable::SetValueImpl (const ccs::types::AnyValue& value)
 {
   // ToDo - Make an Instruction to start the CA variable cache with period ..
-  (void)_client->Launch();
-  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  (void)LaunchChannelAccessClientInstance(); // Only if not already done
 
-  bool status = _client->IsValid(Variable::GetAttribute("channel").c_str());
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _client);
+
+  if (status)
+    {
+      status = _client->IsValid(Variable::GetAttribute("channel").c_str());
+    }
 
   if (status)
     {
       status = _client->SetVariable(Variable::GetAttribute("channel").c_str(), value);
     }
-#if 0
+#if 0 // Implicit with SetVariable .. would be required if copying memory
   if (status)
     {
       status = _client->UpdateVariable(Variable::GetAttribute("channel").c_str());
