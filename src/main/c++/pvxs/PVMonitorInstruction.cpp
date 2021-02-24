@@ -40,7 +40,6 @@
 #include "Instruction.h"
 #include "InstructionRegistry.h"
 
-#include "LocalVariable.h"
 #include "Workspace.h"
 
 // Constants
@@ -196,12 +195,7 @@ ExecutionStatus BlockingPVMonitorInstruction::ExecuteSingleImpl (UserInterface *
   if (status && static_cast<bool>(_value.GetType()))
     { // Verify if the named variable exists in the workspace
       log_info("BlockingPVMonitorInstruction('%s')::ExecuteSingleImpl - .. verify workspace content", Instruction::GetName().c_str());
-      if (ws->VariableNames().end() == std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))
-        { // .. create variable in the workspace but this requires the type
-          log_info("BlockingPVMonitorInstruction('%s')::ExecuteSingleImpl - .. create '%s' variable in workspace", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
-          LocalVariable* _variable = new (std::nothrow) LocalVariable (_value.GetType());
-          status = ws->AddVariable(GetAttribute("variable"), _variable);
-        }
+      status = (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
     }
 
   if (status && static_cast<bool>(_value.GetType()))
