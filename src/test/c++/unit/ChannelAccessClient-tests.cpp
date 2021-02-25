@@ -137,10 +137,7 @@ TEST(ChannelAccessClient, Launch)
       status = (false == ccs::HelperTools::IsUndefinedString(reinterpret_cast<char*>(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->GetVariable("SEQ-TEST:BOOL")->GetInstance())));
     }
 
-  if (status)
-    {
-      status = Terminate();
-    }
+  (void)Terminate();
 
   ASSERT_EQ(true, status);
 
