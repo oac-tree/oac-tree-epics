@@ -25,10 +25,10 @@
 
 #include <common/BasicTypes.h>
 #include <common/TimeTools.h>
+
 #include <common/AnyValueHelper.h>
 
-#include <common/PVAccessServer.h>
-#include <common/PVAccessTypes.h>
+#include <common/ChannelAccessClient.h>
 
 #include <SequenceParser.h>
 
@@ -66,7 +66,7 @@ static inline bool Initialise (void)
 
   if (status)
     {
-      status = instruction->AddAttribute("command","/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+      status = instruction->AddAttribute("command", "/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
     }
 
   if (status)
@@ -89,7 +89,7 @@ static inline bool Terminate (void)
 
   if (status)
     {
-      status = instruction->AddAttribute("command","/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
+      status = instruction->AddAttribute("command", "/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
     }
 
   if (status)
@@ -120,12 +120,7 @@ TEST(ChannelAccessVariable, GetValue_success)
   if (status)
     { // Setup implicit with AddAttribute .. access as 'string'
       status = (variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
-		variable->AddAttribute("datatype", "{\"type\":\"string\"}"));
-    }
-
-  if (status)
-    {
-      (void)ccs::HelperTools::SleepFor(1000000000ul);
+                variable->AddAttribute("datatype", "{\"type\":\"string\"}"));
     }
 
   ccs::types::AnyValue value; // Placeholder
@@ -148,10 +143,7 @@ TEST(ChannelAccessVariable, GetValue_success)
       log_info("'%s'", buffer);
     }
 
-  if (status)
-    {
-      status = Terminate();
-    }
+  (void)Terminate();
 
   ASSERT_EQ(true, status);
 
@@ -196,12 +188,7 @@ TEST(ChannelAccessVariable, SetValue_success)
   if (status)
     { // Setup implicit with AddAttribute .. access as 'float32'
       status = (variable->AddAttribute("channel", "SEQ-TEST:FLOAT") &&
-		variable->AddAttribute("datatype", "{\"type\":\"float32\"}"));
-    }
-
-  if (status)
-    {
-      (void)ccs::HelperTools::SleepFor(1000000000ul);
+                variable->AddAttribute("datatype", "{\"type\":\"float32\"}"));
     }
 
   ccs::types::AnyValue value (static_cast<ccs::types::float32>(0.1));
@@ -213,7 +200,12 @@ TEST(ChannelAccessVariable, SetValue_success)
 
   if (status)
     {
-      (void)ccs::HelperTools::SleepFor(1000000000ul);
+      (void)ccs::HelperTools::SleepFor(100000000ul);
+    }
+
+  if (status)
+    {
+      status = variable->GetValue(value);
     }
 
   if (status)
@@ -226,8 +218,29 @@ TEST(ChannelAccessVariable, SetValue_success)
 
   if (status)
     {
-      status = Terminate();
+      value = static_cast<ccs::types::float32>(7.5); // Should be truncated by the IOC record
+      status = variable->SetValue(value);
     }
+
+  if (status)
+    {
+      (void)ccs::HelperTools::SleepFor(100000000ul);
+    }
+
+  if (status)
+    {
+      status = variable->GetValue(value);
+    }
+
+  if (status)
+    {
+      ccs::types::char8 buffer [1024];
+      ccs::HelperTools::SerialiseToJSONStream(&value, buffer, 1024u);
+      log_info("TEST(ChannelAccessVariable, SetValue_success) - Value is ..");
+      log_info("'%s'", buffer);
+    }
+
+  (void)Terminate();
 
   ASSERT_EQ(true, status);
 
@@ -238,7 +251,7 @@ TEST(ChannelAccessVariable, ProcedureFile)
 
   auto proc = sup::sequencer::ParseProcedureFile("../resources/variable_ca.xml");
 
-  bool status = bool(proc);
+  bool status = static_cast<bool>(proc);
 
   if (status)
     {
@@ -247,9 +260,10 @@ TEST(ChannelAccessVariable, ProcedureFile)
 
       do
         {
+          (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
           proc->ExecuteSingle(&ui);
-	  exec = proc->GetStatus();
-	}
+          exec = proc->GetStatus();
+        }
       while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
              (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
