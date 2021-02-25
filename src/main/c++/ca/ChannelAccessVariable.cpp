@@ -136,8 +136,6 @@ static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
 static bool LaunchChannelAccessClientInstance (void)
 {
 
-  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
-
   if (status && (false == _ca_client_launch))
     {
       log_notice("ChannelAccessClientContext::Launch - Starting CA caching thread ..");
@@ -153,10 +151,14 @@ static bool LaunchChannelAccessClientInstance (void)
 static bool TerminateChannelAccessClientInstance (void)
 {
 
+  log_notice("ChannelAccessClientContext::Terminate - Method called with counter '%u'", _ca_client_count);
+
   bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
 
-  // Decrement count
-  _ca_client_count -= 1u;
+  if (0u < _ca_client_count)
+    { // Decrement count
+      _ca_client_count -= 1u;
+    }
 
   if (status && (0u == _ca_client_count))
     { // Assume destroying the reference is sufficient for context tear-down
@@ -264,9 +266,13 @@ ChannelAccessVariable::ChannelAccessVariable (void) : Variable(ChannelAccessVari
 ChannelAccessVariable::~ChannelAccessVariable (void)
 { 
 
-  // Tear-down client context
-  _client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*); // Forget about it locally ..
-  (void)TerminateChannelAccessClientInstance(); // .. last instance should finalise clean-up
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _client);
+
+  if (status)
+    { // Tear-down client context
+      _client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*); // Forget about it locally ..
+      (void)TerminateChannelAccessClientInstance(); // .. last instance should finalise clean-up
+    }
 
 }
 
