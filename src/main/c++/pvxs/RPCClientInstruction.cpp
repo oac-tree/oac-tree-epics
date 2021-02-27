@@ -52,7 +52,7 @@ namespace sequencer {
  * @brief Xxx
  */
 
-class BlockingRPCClientNode : public Instruction
+class RPCClientInstruction : public Instruction
 {
 
   private:
@@ -79,13 +79,13 @@ class BlockingRPCClientNode : public Instruction
      * @brief Constructor.
      */
 
-    BlockingRPCClientNode (void);
+    RPCClientInstruction (void);
 
     /**
      * @brief Destructor.
      */
 
-    ~BlockingRPCClientNode (void) override;
+    ~RPCClientInstruction (void) override;
 
     /**
      * @brief Class name for InstructionRegistry.
@@ -99,21 +99,21 @@ class BlockingRPCClientNode : public Instruction
 
 // Global variables
 
-const std::string BlockingRPCClientNode::Type = "RPCClientInstruction";
+const std::string RPCClientInstruction::Type = "RPCClientInstruction";
 static bool _rpcclient_initialised_flag = RegisterGlobalInstruction<RPCClientInstruction>();
 
 // Function definition
 
-bool BlockingRPCClientNode::SetupImpl (Workspace * ws)
+bool RPCClientInstruction::SetupImpl (Workspace * ws)
 {
 
-  log_debug("BlockingRPCClientNode('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
+  log_debug("RPCClientInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
 
   bool status = Instruction::HasAttribute("service");
 
   if (status)
     {
-      log_debug("BlockingRPCClientNode::SetupImpl('%s') - Method called with service '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("service").c_str());
+      log_debug("RPCClientInstruction::SetupImpl('%s') - Method called with service '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("service").c_str());
       status = ((Instruction::HasAttribute("request") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("request").c_str()))) ||
                 (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
@@ -122,13 +122,13 @@ bool BlockingRPCClientNode::SetupImpl (Workspace * ws)
     {
       if (Instruction::HasAttribute("request"))
         {
-          log_debug("BlockingRPCClientNode::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("request").c_str());
+          log_debug("RPCClientInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("request").c_str());
           status = ws->GetValue(Instruction::GetAttribute("request"), _request);
         }
       else
         {
-          log_debug("BlockingRPCClientNode::SetupImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
-          log_debug("BlockingRPCClientNode::SetupImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
+          log_debug("RPCClientInstruction::SetupImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
+          log_debug("RPCClientInstruction::SetupImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
           _request = ccs::types::AnyValue (Instruction::GetAttribute("datatype").c_str());
           status = _request.ParseInstance(Instruction::GetAttribute("instance").c_str());
         }
@@ -143,10 +143,10 @@ bool BlockingRPCClientNode::SetupImpl (Workspace * ws)
 
 }
 
-ExecutionStatus BlockingRPCClientNode::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
+ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
-  log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - Method called ..", Instruction::GetName().c_str());
+  log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Method called ..", Instruction::GetName().c_str());
 
   (void)ui;
   (void)ws;
@@ -157,11 +157,11 @@ ExecutionStatus BlockingRPCClientNode::ExecuteSingleImpl (UserInterface * ui, Wo
     {
       ccs::types::char8 buffer [1024];
 
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - Using request ..", Instruction::GetName().c_str());
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Using request ..", Instruction::GetName().c_str());
       _reply.SerialiseType(buffer, 1024u);
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
       _reply.SerialiseInstance(buffer, 1024u);
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
     }
 #endif
   ccs::types::AnyValue reply; // Placeholder
@@ -170,7 +170,7 @@ ExecutionStatus BlockingRPCClientNode::ExecuteSingleImpl (UserInterface * ui, Wo
     { // Create RPC client
       ccs::base::RPCClient client (Instruction::GetAttribute("service").c_str());
 
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - Launch ..", Instruction::GetName().c_str());
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Launch ..", Instruction::GetName().c_str());
       status = client.Launch();
 #if 0
       if (status)
@@ -180,7 +180,7 @@ ExecutionStatus BlockingRPCClientNode::ExecuteSingleImpl (UserInterface * ui, Wo
 #endif
       if (status)
         {
-          log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - Send request ..", Instruction::GetName().c_str());
+          log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Send request ..", Instruction::GetName().c_str());
           reply = client.SendRequest(_request);
           status = static_cast<bool>(reply.GetType());
         }
@@ -200,19 +200,19 @@ ExecutionStatus BlockingRPCClientNode::ExecuteSingleImpl (UserInterface * ui, Wo
     {
       ccs::types::char8 buffer [1024];
 
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - Received reply ..", Instruction::GetName().c_str());
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Received reply ..", Instruction::GetName().c_str());
       reply.SerialiseType(buffer, 1024u);
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
       reply.SerialiseInstance(buffer, 1024u);
-      log_debug("BlockingRPCClientNode::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
     }
 #endif
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
 }
 
-BlockingRPCClientNode::BlockingRPCClientNode (void) : Instruction(BlockingRPCClientNode::Type) {}
-BlockingRPCClientNode::~BlockingRPCClientNode (void) {}
+RPCClientInstruction::RPCClientInstruction (void) : Instruction(RPCClientInstruction::Type) {}
+RPCClientInstruction::~RPCClientInstruction (void) {}
 
 } // namespace sequencer
 
