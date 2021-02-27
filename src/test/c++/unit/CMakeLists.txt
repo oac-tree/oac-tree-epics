@@ -8,6 +8,7 @@ target_sources(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessInstruction-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessVariable-tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction-tests.cpp
     )
