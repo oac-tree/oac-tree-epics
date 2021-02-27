@@ -40,6 +40,8 @@
 
 #include "ChannelAccessClientContext.h"
 
+#include "SystemCall.h"
+
 #include "NullUserInterface.h"
 
 // Constants
@@ -60,21 +62,7 @@ static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 static inline bool Initialise (void)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
-
-  bool status = static_cast<bool>(instruction);
-
-  if (status)
-    {
-      status = instruction->AddAttribute("command", "/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
-    }
+  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
 
   return status;
 
@@ -83,21 +71,7 @@ static inline bool Initialise (void)
 static inline bool Terminate (void)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
-
-  bool status = static_cast<bool>(instruction);
-
-  if (status)
-    {
-      status = instruction->AddAttribute("command", "/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
-    }
+  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
 
   return status;
 
@@ -149,7 +123,106 @@ TEST(ChannelAccessInstruction, Execute_novar)
 
 }
 
-TEST(ChannelAccessInstruction, Execute_boolean)
+TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variable in the workspace
+{
+
+  auto proc = sup::sequencer::ParseProcedureString(
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
+    "           name=\"Trivial procedure for testing purposes\"\n"
+    "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+    "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
+    "    <Sequence>\n"
+    "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
+    "            channel=\"SEQ-TEST:BOOL\"\n"
+    "            variable=\"boolean\"/>\n"
+    "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
+    "            channel=\"SEQ-TEST:BOOL\"\n"
+    "            variable=\"uint32\"/>\n"
+    "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
+    "            channel=\"SEQ-TEST:BOOL\"\n"
+    "            variable=\"string\"/>\n"
+    "    </Sequence>\n"
+    "    <Workspace>\n"
+    "        <FileVariable name=\"boolean\" file=\"/tmp/file-variable-boolean.dat\"/>\n"
+    "        <FileVariable name=\"uint32\" file=\"/tmp/file-variable-uint32.dat\"/>\n"
+    "        <FileVariable name=\"string\" file=\"/tmp/file-variable-string.dat\"/>\n"
+    "    </Workspace>\n"
+    "</Procedure>");
+
+  bool status = static_cast<bool>(proc);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    { // Create file to initialise the waorkspace variables with right datatype
+      ccs::types::AnyValue boolean_var (false); ccs::HelperTools::DumpToFile(&boolean_var, "/tmp/file-variable-boolean.dat");
+      ccs::types::AnyValue uint32_var (0u); ccs::HelperTools::DumpToFile(&uint32_var, "/tmp/file-variable-uint32.dat");
+      ccs::types::AnyValue string_var ("undefined"); ccs::HelperTools::DumpToFile(&string_var, "/tmp/file-variable-string.dat");
+    }
+
+  if (status)
+    {
+      (void)::ccs::HelperTools::SleepFor(100000000ul);
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caput SEQ-TEST:BOOL TRUE");
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+
+      do
+        {
+          (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+          proc->ExecuteSingle(&ui);
+          exec = proc->GetStatus();
+        }
+      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+             (sup::sequencer::ExecutionStatus::FAILURE != exec));
+
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
+    }
+
+  // Test variable
+
+  if (status)
+    {
+      ccs::types::AnyValue value; 
+      status = ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-boolean.dat");
+
+      if (status)
+	{
+	  status = (true == static_cast<bool>(value));
+	}
+    }
+
+  if (status)
+    {
+      ccs::types::AnyValue value; 
+      status = ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-uint32.dat");
+
+      if (status)
+	{
+	  status = (1u == static_cast<ccs::types::uint32>(value));
+	}
+    }
+
+  // Remove temp. files
+  (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-boolean.dat");
+  (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-uint32.dat");
+  (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-string.dat");
+
+  (void)Terminate();
+
+  ASSERT_EQ(true, status);
+
+}
+
+TEST(ChannelAccessInstruction, Write_boolean)
 {
 
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
@@ -205,7 +278,7 @@ TEST(ChannelAccessInstruction, Execute_boolean)
 
   if (status)
     {
-      log_info("TEST(ChannelAccessInstruction, Execute_boolean) - Test variable ..")
+      log_info("TEST(ChannelAccessInstruction, Execute_boolean) - Test variable ..");
       status = (true == static_cast<bool>(value));
     }
 
@@ -218,7 +291,7 @@ TEST(ChannelAccessInstruction, Execute_boolean)
 
 }
 
-TEST(ChannelAccessInstruction, Execute_float32)
+TEST(ChannelAccessInstruction, Write_float32)
 {
 
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
@@ -274,7 +347,7 @@ TEST(ChannelAccessInstruction, Execute_float32)
 
   if (status)
     {
-      log_info("TEST(ChannelAccessInstruction, Execute_float32) - Test variable ..")
+      log_info("TEST(ChannelAccessInstruction, Execute_float32) - Test variable ..");
       status = (static_cast<ccs::types::float32>(0.5) == static_cast<ccs::types::float32>(value));
     }
 
