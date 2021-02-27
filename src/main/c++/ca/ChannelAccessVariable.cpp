@@ -136,6 +136,8 @@ static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
 static bool LaunchChannelAccessClientInstance (void)
 {
 
+  bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
+
   if (status && (false == _ca_client_launch))
     {
       log_notice("ChannelAccessClientContext::Launch - Starting CA caching thread ..");
@@ -150,8 +152,6 @@ static bool LaunchChannelAccessClientInstance (void)
 
 static bool TerminateChannelAccessClientInstance (void)
 {
-
-  log_notice("ChannelAccessClientContext::Terminate - Method called with counter '%u'", _ca_client_count);
 
   bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
 
