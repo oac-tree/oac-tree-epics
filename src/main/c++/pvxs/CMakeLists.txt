@@ -34,7 +34,8 @@ target_link_libraries(sequencer-pvxs
 
 target_compile_definitions(sequencer-pvxs
     PRIVATE
-        LOG_DEBUG_ENABLE
+## No DEBUG level messages compiled in
+#        LOG_DEBUG_ENABLE
     )
 
 install(TARGETS sequencer-pvxs DESTINATION lib)

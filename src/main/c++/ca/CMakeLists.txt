@@ -38,7 +38,8 @@ target_link_libraries(sequencer-ca
 
 target_compile_definitions(sequencer-ca
     PRIVATE
-        LOG_DEBUG_ENABLE
+## No DEBUG level messages compiled in
+#        LOG_DEBUG_ENABLE
     )
 
 install(TARGETS sequencer-ca DESTINATION lib)
