@@ -27,7 +27,6 @@
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
 
-#define LOG_DEBUG_ENABLE
 #include <common/log-api.h> // Syslog wrapper routines
 
 #include <common/RPCClient.h> // Plug-in managed through dynamic linking .. see Makefile
