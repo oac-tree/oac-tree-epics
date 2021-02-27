@@ -172,7 +172,7 @@ TEST(RPCClientAccessInstruction, Execute_success) // Must be associated to a var
     "        <LogTrace input=\"reply\"/>\n"
     "    </Sequence>\n"
     "    <Workspace>\n"
-    "        <Local name=\"request\" type='{\"type\":\"Request_t\",\"attributes\":[{\"value\":{\"type\":\"uint32\"}}]}' value='{\"value\":1234u}'/>\n"
+    "        <Local name=\"request\" type='{\"type\":\"Request_t\",\"attributes\":[{\"value\":{\"type\":\"uint32\"}},{\"status\":{\"type\":\"bool\"}}]}' value='{\"value\":1234u,\"status\":true}'/>\n"
     "        <FileVariable name=\"reply\" file=\"/tmp/file-variable-struct.dat\"/>\n"
     "    </Workspace>\n"
     "</Procedure>");
@@ -209,8 +209,8 @@ TEST(RPCClientAccessInstruction, Execute_success) // Must be associated to a var
       status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-struct.dat");
 
       if (status)
-	{ // Ignore structure .. just test payload
-	  status = (1234u == static_cast<ccs::types::uint32>(value));
+	{
+	  status = (::ccs::HelperTools::HasAttribute(&value, "value") && (1234u == ::ccs::HelperTools::GetAttributeValue<ccs::types::uint32>(&value, "value")));
 	}
     }
 
