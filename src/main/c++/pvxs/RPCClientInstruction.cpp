@@ -174,12 +174,13 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
 
       log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Launch ..", Instruction::GetName().c_str());
       status = client.Launch();
-#if 0
+
       if (status)
         {
+          (void)::ccs::HelperTools::SleepFor(100000000ul);
           status = client.IsConnected();
         }
-#endif
+
       if (status)
         {
           log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Send request ..", Instruction::GetName().c_str());
@@ -195,7 +196,8 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
 
   if (status && Instruction::HasAttribute("reply"))
     {
-      status = ws->SetValue(Instruction::GetAttribute("reply"), reply);
+      //status = ws->SetValue(Instruction::GetAttribute("reply"), reply);
+      (void)ws->SetValue(Instruction::GetAttribute("reply"), reply); // Does LocalVariable need to know the type beforehand ?
     }
 #ifdef LOG_DEBUG_ENABLE
   if (status)
