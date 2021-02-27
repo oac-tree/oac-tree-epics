@@ -28,12 +28,17 @@
 
 #include <common/AnyValueHelper.h>
 
+#include <common/AnyTypeToCA.h>
+#include <common/ChannelAccessHelper.h>
+
 #include <SequenceParser.h>
 
 #include <Instruction.h>
 #include <InstructionRegistry.h>
 
 // Local header files
+
+#include "ChannelAccessClientContext.h"
 
 #include "NullUserInterface.h"
 
@@ -144,7 +149,7 @@ TEST(ChannelAccessInstruction, Execute_novar)
 
 }
 
-TEST(ChannelAccessInstruction, Execute_success)
+TEST(ChannelAccessInstruction, Execute_boolean)
 {
 
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
@@ -173,9 +178,110 @@ TEST(ChannelAccessInstruction, Execute_success)
       status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
     }
 
+  // Test variable
+
+  // At this point, the instruction has diconnected form the channel and thread detached from the context
+
+  if (status)
+    {
+      status = ccs::HelperTools::ChannelAccessClientContext::Attach();
+    }
+
+  chid channel;
+
+  if (status)
+    {
+      (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:BOOL", channel);
+      (void)ccs::HelperTools::SleepFor(100000000ul);
+      status = ccs::HelperTools::ChannelAccess::IsConnected(channel);
+    }
+
+  ccs::types::AnyValue value (false);
+
+  if (status)
+    {
+      status = ccs::HelperTools::ChannelAccess::ReadVariable(channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance());
+    }
+
+  if (status)
+    {
+      log_info("TEST(ChannelAccessInstruction, Execute_boolean) - Test variable ..")
+      status = (true == static_cast<bool>(value));
+    }
+
+  (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
+  (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
+
   (void)Terminate();
 
-  // ToDo - Test variable
+  ASSERT_EQ(true, status);
+
+}
+
+TEST(ChannelAccessInstruction, Execute_float32)
+{
+
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    {
+      status = instruction->AddAttribute("channel", "SEQ-TEST:FLOAT");
+    }
+
+  if (status)
+    {
+      status = (instruction->AddAttribute("datatype", "{\"type\": \"string\"}") && instruction->AddAttribute("instance", "\"0.5\""));
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
+    }
+
+  // Test variable
+
+  // At this point, the instruction has diconnected form the channel and thread detached from the context
+
+  if (status)
+    {
+      status = ccs::HelperTools::ChannelAccessClientContext::Attach();
+    }
+
+  chid channel;
+
+  if (status)
+    {
+      (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:FLOAT", channel);
+      (void)ccs::HelperTools::SleepFor(100000000ul);
+      status = ccs::HelperTools::ChannelAccess::IsConnected(channel);
+    }
+
+  ccs::types::AnyValue value (static_cast<ccs::types::float32>(0.0));
+
+  if (status)
+    {
+      status = ccs::HelperTools::ChannelAccess::ReadVariable(channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance());
+    }
+
+  if (status)
+    {
+      log_info("TEST(ChannelAccessInstruction, Execute_float32) - Test variable ..")
+      status = (static_cast<ccs::types::float32>(0.5) == static_cast<ccs::types::float32>(value));
+    }
+
+  (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
+  (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
+
+  (void)Terminate();
 
   ASSERT_EQ(true, status);
 
