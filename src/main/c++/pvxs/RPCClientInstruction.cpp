@@ -21,7 +21,7 @@
 
 // Global header files
 
-#include <new> // std::nothrow, etc.
+#include <algorithm> // std::find, etc.
 
 #include <common/BasicTypes.h> // Misc. type definition
 #include <common/StringTools.h> // Misc. helper functions
@@ -34,6 +34,8 @@
 
 #include <Instruction.h>
 #include <InstructionRegistry.h>
+
+#include <Workspace.h>
 
 // Local header files
 
@@ -158,9 +160,9 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
       ccs::types::char8 buffer [1024];
 
       log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Using request ..", Instruction::GetName().c_str());
-      _reply.SerialiseType(buffer, 1024u);
+      _request.SerialiseType(buffer, 1024u);
       log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
-      _reply.SerialiseInstance(buffer, 1024u);
+      _request.SerialiseInstance(buffer, 1024u);
       log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
     }
 #endif
@@ -193,7 +195,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
 
   if (status && Instruction::HasAttribute("reply"))
     {
-      status = ws->SetValue(Instruction::GetAttribute("reply", reply));
+      status = ws->SetValue(Instruction::GetAttribute("reply"), reply);
     }
 #ifdef LOG_DEBUG_ENABLE
   if (status)
