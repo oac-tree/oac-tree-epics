@@ -27,6 +27,7 @@
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
 
+#define LOG_DEBUG_ENABLE
 #include <common/log-api.h> // Syslog wrapper routines
 
 #include <common/AnyValue.h>
@@ -111,7 +112,7 @@ class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessIn
      * @brief Verify and handle attributes.
      */
 
-    bool Setup (Workspace * ws);
+    virtual bool SetupImpl (Workspace * ws);
 
     /**
      * @brief See sup::sequencer::Instruction.
@@ -158,7 +159,7 @@ class ChannelAccessWriteInstruction : public Instruction, public ChannelAccessIn
      * @brief Verify and handle attributes.
      */
 
-    bool Setup (Workspace * ws);
+    virtual bool SetupImpl (Workspace * ws);
 
     /**
      * @brief See sup::sequencer::Instruction.
@@ -245,15 +246,17 @@ bool ChannelAccessInstructionHelper::HandleDetach (void)
 
 }
 
-bool ChannelAccessFetchInstruction::Setup (Workspace * ws)
+bool ChannelAccessFetchInstruction::SetupImpl (Workspace * ws)
 {
+
+  log_debug("ChannelAccessFetchInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
 
   bool status = (Instruction::HasAttribute("channel") && Instruction::HasAttribute("variable"));
 
   if (status)
     {
-      log_debug("ChannelAccessFetchInstruction::Setup('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      log_debug("ChannelAccessFetchInstruction::Setup('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_debug("ChannelAccessFetchInstruction::SetupImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_debug("ChannelAccessFetchInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
 
       // Verify if the named variable exists in the workspace ..
       status = (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
@@ -277,10 +280,12 @@ bool ChannelAccessFetchInstruction::Setup (Workspace * ws)
 ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
+  log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
+
   (void)ui;
   (void)ws;
 
-  bool status = Setup(ws);
+  bool status = SetupImpl(ws);
 
   if (status)
     { // Attach to CA variable
@@ -314,14 +319,16 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
 }
 
-bool ChannelAccessWriteInstruction::Setup (Workspace * ws)
+bool ChannelAccessWriteInstruction::SetupImpl (Workspace * ws)
 {
+
+  log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
 
   bool status = Instruction::HasAttribute("channel");
 
   if (status)
     {
-      log_debug("ChannelAccessWriteInstruction::Setup('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
       status = ((Instruction::HasAttribute("variable") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))) ||
                 (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
@@ -330,13 +337,13 @@ bool ChannelAccessWriteInstruction::Setup (Workspace * ws)
     {
       if (Instruction::HasAttribute("variable"))
         {
-          log_debug("ChannelAccessWriteInstruction::Setup('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+          log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           status = ws->GetValue(Instruction::GetAttribute("variable"), _value);
         }
       else
         {
-          log_debug("ChannelAccessWriteInstruction::Setup('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
-          log_debug("ChannelAccessWriteInstruction::Setup('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
+          log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
+          log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
           _value = ccs::types::AnyValue (Instruction::GetAttribute("datatype").c_str());
           status = _value.ParseInstance(Instruction::GetAttribute("instance").c_str());
         }
@@ -355,10 +362,12 @@ bool ChannelAccessWriteInstruction::Setup (Workspace * ws)
 ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
+  log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
+
   (void)ui;
   (void)ws;
 
-  bool status = Setup(ws);
+  bool status = SetupImpl(ws);
 
   if (status)
     { // Attach to CA variable

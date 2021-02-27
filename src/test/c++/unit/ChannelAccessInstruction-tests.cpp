@@ -142,6 +142,9 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
     "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
     "            channel=\"SEQ-TEST:BOOL\"\n"
     "            variable=\"string\"/>\n"
+    "        <LogTrace input=\"boolean\"/>\n"
+    "        <LogTrace input=\"uint32\"/>\n"
+    "        <LogTrace input=\"string\"/>\n"
     "    </Sequence>\n"
     "    <Workspace>\n"
     "        <FileVariable name=\"boolean\" file=\"/tmp/file-variable-boolean.dat\"/>\n"
@@ -192,7 +195,7 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
   if (status)
     {
       ccs::types::AnyValue value; 
-      status = ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-boolean.dat");
+      status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-boolean.dat");
 
       if (status)
 	{
@@ -203,7 +206,7 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
   if (status)
     {
       ccs::types::AnyValue value; 
-      status = ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-uint32.dat");
+      status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-uint32.dat");
 
       if (status)
 	{
