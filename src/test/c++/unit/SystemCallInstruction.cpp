@@ -21,8 +21,6 @@
 
 // Global header files
 
-#include <cstdlib> // std::system, etc.
-
 #include <common/BasicTypes.h> // Misc. type definition
 //#include <common/SysTools.h> // Misc. helper functions
 
@@ -32,6 +30,8 @@
 #include <InstructionRegistry.h>
 
 // Local header files
+
+#include "SystemCall.h"
 
 // Constants
 
@@ -103,7 +103,7 @@ ExecutionStatus SystemCallInstruction::ExecuteSingleImpl (UserInterface * ui, Wo
   if (status)
     {
       log_info("SystemCallInstruction('%s')::ExecuteSingleImpl - Method called with system command '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("command").c_str());
-      status = (0 == std::system(Instruction::GetAttribute("command").c_str()));
+      status = ::ccs::HelperTools::ExecuteSystemCall(Instruction::GetAttribute("command").c_str());
     }
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);

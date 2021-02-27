@@ -32,6 +32,8 @@
 
 // Local header files
 
+#include "SystemCall.h"
+
 // Constants
 
 #undef LOG_ALTERN_SRC
@@ -41,55 +43,35 @@
 
 // Function declaration
 
-static inline bool ExecuteSystemCall (const ccs::types::char8 * const command);
-
 // Global variables
 
-static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
+static ::ccs::log::Func_t _log_handler = ::ccs::log::SetStdout();
 
 // Function definition
-
-static inline bool ExecuteSystemCall (const ccs::types::char8 * const command)
-{
-
-  bool status = (0 == std::system(command));
-
-  if (status)
-    {
-      log_info("ExecuteSystemCall - Invoking command '%s' successful", command);
-    }
-  else
-    {
-      log_error("ExecuteSystemCall - Error with '%s' command", command);
-    }
-
-  return status;
-
-}
 
 static inline bool Initialise (void)
 {
 
-  bool status = ccs::HelperTools::Exist("../resources/ChannelAccessClient.db");
+  bool status = ::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db");
 
   if (status)
     {
-      status = ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
     }
   else
     {
-      status = ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./src/test/resources/ChannelAccessClient.db &> /dev/null");
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./src/test/resources/ChannelAccessClient.db &> /dev/null");
     }
 
   if (status)
     {
-      (void)ccs::HelperTools::SleepFor(1000000000ul);
-      status = ExecuteSystemCall("/usr/bin/caget SEQ-TEST:BOOL SEQ-TEST:FLOAT > /tmp/softioc-initialise.log");
+      (void)::ccs::HelperTools::SleepFor(1000000000ul);
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caget SEQ-TEST:BOOL SEQ-TEST:FLOAT > /tmp/softioc-initialise.log");
     }
 
   if (status)
     {
-      status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>());
+      status = (NULL_PTR_CAST(::ccs::base::ChannelAccessClient*) != ::ccs::base::ChannelAccessInterface::GetInstance<::ccs::base::ChannelAccessClient>());
     }
 
   return status;
@@ -99,9 +81,9 @@ static inline bool Initialise (void)
 static inline bool Terminate (void)
 {
 
-  ccs::base::ChannelAccessInterface::Terminate<ccs::base::ChannelAccessClient>();
+  ::ccs::base::ChannelAccessInterface::Terminate<::ccs::base::ChannelAccessClient>();
 
-  bool status = ExecuteSystemCall("/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
+  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
 
   return status;
 
