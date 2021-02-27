@@ -25,6 +25,8 @@
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
 
+#define LOG_DEBUG_ENABLE
+#undef LOG_DEBUG_ENABLE
 #include <common/log-api.h> // Syslog wrapper routines
 
 #include <common/SharedReference.h>
@@ -181,7 +183,7 @@ bool ChannelAccessVariable::SetupImpl (void)
 
   if (status)
     { // Instantiate required datatype
-      log_info("ChannelAccessVariable('%s')::SetupImpl - Method called with '%s' datatype ..", Variable::GetName().c_str(), Variable::GetAttribute("datatype").c_str());
+      log_debug("ChannelAccessVariable('%s')::SetupImpl - Method called with '%s' datatype ..", Variable::GetName().c_str(), Variable::GetAttribute("datatype").c_str());
       status = (0u < ccs::HelperTools::Parse(_type, Variable::GetAttribute("datatype").c_str()));
     }
 
@@ -193,7 +195,7 @@ bool ChannelAccessVariable::SetupImpl (void)
 
   if (status)
     { // Instantiate variable cache
-      log_info("ChannelAccessVariable('%s')::SetupImpl - .. and '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
+      log_debug("ChannelAccessVariable('%s')::SetupImpl - .. and '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       status = _client->AddVariable(Variable::GetAttribute("channel").c_str(), ccs::types::AnyputVariable, _type);
     }
 #if 0
