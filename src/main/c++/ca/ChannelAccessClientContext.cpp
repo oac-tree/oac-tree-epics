@@ -50,7 +50,7 @@ namespace ccs {
 namespace HelperTools {
 
 namespace ChannelAccess {
-
+#if 0
 static inline bool CreateContext (bool preempt) // CA wrappers
 {
 
@@ -65,7 +65,7 @@ static inline bool CreateContext (bool preempt) // CA wrappers
   return status;
 
 }
-
+#endif
 static inline bool AttachContext (struct ca_client_context* context) // CA wrappers
 {
 
