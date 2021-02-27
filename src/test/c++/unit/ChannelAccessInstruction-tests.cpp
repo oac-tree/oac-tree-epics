@@ -101,7 +101,7 @@ static inline bool Terminate (void)
 TEST(ChannelAccessInstruction, Execute_missing)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("BlockingCAWriteNode");
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
 
   bool status = static_cast<bool>(instruction);
 
@@ -119,7 +119,7 @@ TEST(ChannelAccessInstruction, Execute_missing)
 TEST(ChannelAccessInstruction, Execute_novar)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("BlockingCAWriteNode");
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
 
   bool status = static_cast<bool>(instruction);
 
@@ -147,7 +147,7 @@ TEST(ChannelAccessInstruction, Execute_novar)
 TEST(ChannelAccessInstruction, Execute_success)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("BlockingCAWriteNode");
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
 
   bool status = static_cast<bool>(instruction);
 
