@@ -8,7 +8,7 @@ set_target_properties(sequencer-ca PROPERTIES
 target_sources(sequencer-ca
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClientContext.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessVariable.cpp
     )
 
