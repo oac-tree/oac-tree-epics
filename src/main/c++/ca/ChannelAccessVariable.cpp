@@ -172,6 +172,7 @@ static bool TerminateChannelAccessClientInstance (void)
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 bool ChannelAccessVariable::SetupImpl (void)
 {
 
@@ -207,6 +208,7 @@ bool ChannelAccessVariable::SetupImpl (void)
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 bool ChannelAccessVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
   // ToDo - Make an Instruction to start the CA variable cache with period ..
@@ -236,6 +238,7 @@ bool ChannelAccessVariable::GetValueImpl (ccs::types::AnyValue& value) const
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 bool ChannelAccessVariable::SetValueImpl (const ccs::types::AnyValue& value)
 {
   // ToDo - Make an Instruction to start the CA variable cache with period ..

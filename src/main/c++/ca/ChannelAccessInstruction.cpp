@@ -273,6 +273,7 @@ bool ChannelAccessFetchInstruction::Setup (Workspace * ws)
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
@@ -350,6 +351,7 @@ bool ChannelAccessWriteInstruction::Setup (Workspace * ws)
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
