@@ -33,11 +33,13 @@
 #include <common/AnyValue.h>
 #include <common/AnyValueHelper.h>
 
-//#include <common/ChannelAccessClient.h>
+//#include <common/ChannelAccessClientContext.h>
 #include <common/ChannelAccessHelper.h> // CA helper routines
 #include <common/AnyTypeToCA.h> // CA helper routines .. type conversion
 
 // Local header files
+
+#include "ChannelAccessClientContext.h"
 
 #include "ExecutionStatus.h"
 
@@ -179,60 +181,58 @@ ExecutionStatus BlockingCAFetchNode::ExecuteSingleImpl (UserInterface * ui, Work
   (void)ui;
   (void)ws;
 
-  bool status = (HasAttribute("channel") && HasAttribute("variable"));
+  bool status = (Instruction::HasAttribute("channel") && Instruction::HasAttribute("variable"));
 
   if (status)
     {
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", GetName().c_str(), GetAttribute("channel").c_str());
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", GetName().c_str(), GetAttribute("variable").c_str());
+      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
 
-      // Verify if the named variable exists in the workspace
-      if (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), GetAttribute("variable").c_str()))
-        { // .. in order to access the expected datatype
-          status = ws->GetValue(GetAttribute("variable"), _value);
-        }
-      else if (HasAttribute("datatype"))
-        {
-          _value = ccs::types::AnyValue (GetAttribute("datatype").c_str());
-          // ToDo - Create variable in the workspace
-          status = static_cast<bool>(_value.GetType());
-        }
-      else
-        {
-          status = false;
-        }
+      // Verify if the named variable exists in the workspace ..
+      status = (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
     }
 
   if (status)
-    { // Create CA context
-      status = ccs::HelperTools::ChannelAccess::CreateContext();
+    { // .. in order to access the expected datatype
+      status = ws->GetValue(Instruction::GetAttribute("variable"), _value);
     }
 
   if (status)
     {
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", GetName().c_str(), GetAttribute("channel").c_str());
-      //status = ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
-      (void)ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      status = static_cast<bool>(_value.GetType());
     }
 
-  if (status && ccs::HelperTools::ChannelAccess::IsConnected(_channel))
+  if (status)
+    { // Attach to CA context .. implicit create if necessary
+      status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
+    }
+
+  if (status)
     {
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", GetName().c_str(), _value.GetType()->GetName());
-      status = ccs::HelperTools::ChannelAccess::ReadVariable(_channel, ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      status = ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+    }
+
+  if (status && ::ccs::HelperTools::ChannelAccess::IsConnected(_channel))
+    {
+      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
+      status = ::ccs::HelperTools::ChannelAccess::ReadVariable(_channel, ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
     }
 
   if (status)
     { // Write to workspace
-      //status = ws->SetValue(GetAttribute("variable"), _value);
-      (void)ws->SetValue(GetAttribute("variable"), _value);
+      status = ws->SetValue(GetAttribute("variable"), _value);
     }
 
   if (status && ws->GetValue(GetAttribute("variable"), _value))
     {
       ccs::types::string buffer;
       _value.SerialiseInstance(buffer, ccs::types::MaxStringLength);
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. '%s' value in the workspace", GetName().c_str(), buffer);
+      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. variable has '%s' value in the workspace", Instruction::GetName().c_str(), buffer);
     }
+
+  // Detach from CA context .. implicit destroy when necessary
+  ::ccs::HelperTools::ChannelAccessClientContext::Detach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
@@ -244,48 +244,50 @@ ExecutionStatus BlockingCAWriteNode::ExecuteSingleImpl (UserInterface * ui, Work
   (void)ui;
   (void)ws;
 
-  bool status = HasAttribute("channel");
+  bool status = Instruction::HasAttribute("channel");
 
   if (status)
     {
-      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", GetName().c_str(), GetAttribute("channel").c_str());
-      status = ((HasAttribute("variable") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), GetAttribute("variable").c_str()))) ||
-                (HasAttribute("datatype") && HasAttribute("instance")));
+      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      status = ((Instruction::HasAttribute("variable") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))) ||
+                (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
 
   if (status)
     {
-      if (HasAttribute("variable"))
+      if (Instruction::HasAttribute("variable"))
         {
-          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", GetName().c_str(), GetAttribute("variable").c_str());
+          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           status = ws->GetValue(GetAttribute("variable"), _value);
         }
       else
         {
-          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using type '%s'", GetName().c_str(), GetAttribute("datatype").c_str());
-          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. and instance '%s'", GetName().c_str(), GetAttribute("instance").c_str());
-          _value = ccs::types::AnyValue (GetAttribute("datatype").c_str());
-          status = _value.ParseInstance(GetAttribute("instance").c_str());
+          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
+          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
+          _value = ccs::types::AnyValue (Instruction::GetAttribute("datatype").c_str());
+          status = _value.ParseInstance(Instruction::GetAttribute("instance").c_str());
         }
     }
 
   if (status)
-    { // Create CA context
-      status = ccs::HelperTools::ChannelAccess::CreateContext();
+    { // Attach to CA context .. implicit create if necessary
+      status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
     }
 
   if (status)
     {
-      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", GetName().c_str(), GetAttribute("channel").c_str());
-      //status = ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
-      (void)ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      status = ccs::HelperTools::ChannelAccess::ConnectVariable(Instruction::GetAttribute("channel").c_str(), _channel);
     }
 
-  if (status && ccs::HelperTools::ChannelAccess::IsConnected(_channel))
+  if (status && ::ccs::HelperTools::ChannelAccess::IsConnected(_channel))
     {
-      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Write as type '%s' ..", GetName().c_str(), _value.GetType()->GetName());
-      status = ccs::HelperTools::ChannelAccess::WriteVariable(_channel, ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
+      status = ::ccs::HelperTools::ChannelAccess::WriteVariable(_channel, ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
     }
+
+  // Detach from CA context .. implicit destroy when necessary
+  ::ccs::HelperTools::ChannelAccessClientContext::Detach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
