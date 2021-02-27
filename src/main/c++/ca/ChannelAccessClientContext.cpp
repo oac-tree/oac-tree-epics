@@ -30,6 +30,8 @@
 
 // Local header files
 
+#include "ChannelAccessClientContext.h"
+
 // Constants
 
 #undef LOG_ALTERN_SRC
@@ -49,14 +51,14 @@ namespace HelperTools {
 
 namespace ChannelAccess {
 
-static inline bool AttachContext (struct ca_client_context* context)
+static inline bool CreateContext (bool preempt) // CA wrappers
 {
 
   log_trace("%s - Entering method", __FUNCTION__);
   
   // Create CA context
-  log_debug("%s - Attach to CA context", __FUNCTION__);
-  bool status = (ECA_NORMAL == ca_attach_context(context));
+  log_debug("%s - Create CA context with '%s' preemptive callbacks", __FUNCTION__, (preempt ? "enabled" : "disabled"));
+  bool status = (ECA_NORMAL == ca_context_create((preempt ? ca_enable_preemptive_callback : ca_disable_preemptive_callback)));
 
   log_trace("%s - Leaving method", __FUNCTION__);
 
@@ -64,7 +66,23 @@ static inline bool AttachContext (struct ca_client_context* context)
 
 }
 
-static inline struct ca_client_context* GetContext (void)
+static inline bool AttachContext (struct ca_client_context* context) // CA wrappers
+{
+
+  log_trace("%s - Entering method", __FUNCTION__);
+  
+  // Create CA context
+  log_debug("%s - Attach to CA context", __FUNCTION__);
+  int _status = ca_attach_context(context);
+  bool status = ((ECA_NORMAL == _status) || (ECA_ISATTACHED == _status));
+
+  log_trace("%s - Leaving method", __FUNCTION__);
+
+  return status;
+
+}
+
+static inline struct ca_client_context* GetContext (void) // CA wrappers
 {
 
   log_trace("%s - Entering method", __FUNCTION__);
@@ -78,7 +96,7 @@ static inline struct ca_client_context* GetContext (void)
 
 }
 
-static inline bool DetachContext (void)
+static inline bool DetachContext (void) // CA wrappers
 {
 
   log_trace("%s - Entering method", __FUNCTION__);
@@ -107,9 +125,7 @@ namespace HelperTools {
 
 namespace ChannelAccessClientContext {
 
-static inline bool CreateAsNecessary (void);
 static inline bool IsInitialised (void);
-static inline bool TerminateWhenAppropriate (void);
 
 // Global variables
 
@@ -118,16 +134,17 @@ static ccs::types::uint32 _ca_client_count = 0u;
 
 // Function definition
 
-static inline bool CreateAsNecessary (void)
+bool CreateAsNecessary (void)
 {
+
+  log_debug("ChannelAccessClientContext::Create - Method called with '%u' counter", _ca_client_count);
 
   bool status = IsInitialised();
 
   if (!status)
     { // Reference counted client instances
       log_notice("ChannelAccessClientContext::Create - Initialise the shared reference ..");
-      //status = ::ccs::HelperTools::ChannelAccess::CreateContext(true);
-      status = ::ccs::HelperTools::ChannelAccess::CreateContext();
+      status = ::ccs::HelperTools::ChannelAccess::CreateContext(true);
       _ca_context = ::ccs::HelperTools::ChannelAccess::GetContext();
     }
 
@@ -142,27 +159,6 @@ static inline bool IsInitialised (void)
 {
 
   return (NULL_PTR_CAST(ca_client_context*) != _ca_context);
-
-}
-
-static inline bool TerminateWhenAppropriate (void)
-{
-
-  bool status = IsInitialised();
-
-  if (0u < _ca_client_count)
-    { // Decrement count
-      _ca_client_count -= 1u;
-    }
-
-  if (status && (0u == _ca_client_count))
-    { // Assume destroying the reference is sufficient for context tear-down
-      log_notice("ChannelAccessClientContext::Terminate - Forgetting the shared reference ..");
-      ::ccs::HelperTools::ChannelAccess::ClearContext();
-      _ca_context = NULL_PTR_CAST(ca_client_context*);
-    }
-
-  return status;
 
 }
 
@@ -188,9 +184,32 @@ bool Detach (void)
 
   if (status)
     { // Reference counted ccs::base::ChannelAccessClient instance
-      log_notice("ChannelAccessClientContext::Attach - Detach from the shared context..");
+      log_notice("ChannelAccessClientContext::Detach - Detach from the shared context..");
       ::ccs::HelperTools::ChannelAccess::DetachContext();
       status = TerminateWhenAppropriate();
+    }
+
+  return status;
+
+}
+
+bool TerminateWhenAppropriate (void)
+{
+
+  log_debug("ChannelAccessClientContext::Terminate - Method called with '%u' counter", _ca_client_count);
+
+  bool status = IsInitialised();
+
+  if (0u < _ca_client_count)
+    { // Decrement count
+      _ca_client_count -= 1u;
+    }
+
+  if (status && (0u == _ca_client_count))
+    { // Assume destroying the reference is sufficient for context tear-down
+      log_notice("ChannelAccessClientContext::Terminate - Forgetting the shared reference ..");
+      ::ccs::HelperTools::ChannelAccess::ClearContext();
+      _ca_context = NULL_PTR_CAST(ca_client_context*);
     }
 
   return status;

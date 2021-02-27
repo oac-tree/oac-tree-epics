@@ -21,13 +21,14 @@
 
 // Global header files
 
-#include <new> // std::nothrow, etc.
 #include <algorithm> // std::find, etc.
 
 #include <common/BasicTypes.h> // Misc. type definition
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
 
+//#define LOG_DEBUG_MODE
+//#undef LOG_DEBUG_MODE
 #include <common/log-api.h> // Syslog wrapper routines
 
 #include <common/AnyValue.h>
@@ -47,7 +48,6 @@
 #include "InstructionRegistry.h"
 
 #include "Workspace.h"
-#include "Variable.h"
 
 // Constants
 
@@ -62,7 +62,6 @@ namespace sequencer {
 
 /**
  * @brief Xxx
- * @todo Manage EPICS CA context as singleton and destroy when not necessary anylonger.
  * @todo Re-design to manage commonalities in separate class.
  */
 
@@ -76,6 +75,7 @@ class BlockingCAFetchNode : public Instruction
      */
 
     chid _channel;
+    bool _connected = false;
 
     /**
      * @brief Workspace variable copy.
@@ -105,6 +105,12 @@ class BlockingCAFetchNode : public Instruction
 
     ~BlockingCAFetchNode (void) override;
 
+    /**
+     * @brief Class name for InstructionRegistry.
+     */
+
+    static const std::string Type;
+
 };
 
 class BlockingCAWriteNode : public Instruction
@@ -117,6 +123,7 @@ class BlockingCAWriteNode : public Instruction
      */
 
     chid _channel;
+    bool _connected = false;
 
     /**
      * @brief Workspace variable copy.
@@ -146,34 +153,24 @@ class BlockingCAWriteNode : public Instruction
 
     ~BlockingCAWriteNode (void) override;
 
+    /**
+     * @brief Class name for InstructionRegistry.
+     */
+
+    static const std::string Type;
+
 };
 
 // Function declaration
 
-bool RegisterInstruction_ChannelAccessClient (void);
-
 // Global variables
 
-static bool global_caclient_initialised_flag = RegisterInstruction_ChannelAccessClient();
+const std::string BlockingCAFetchNode::Type = "BlockingCAFetchNode";
+const std::string BlockingCAWriteNode::Type = "BlockingCAWriteNode";
+
+static bool _caclient_initialised_flag = (RegisterGlobalInstruction<BlockingCAFetchNode>() && RegisterGlobalInstruction<BlockingCAWriteNode>());
 
 // Function definition
-
-bool RegisterInstruction_ChannelAccessClient (void)
-{
-
-  { // CAFetch registration
-    auto constructor = []() { return static_cast<Instruction*>(new BlockingCAFetchNode ()); };
-    GlobalInstructionRegistry().RegisterInstruction("BlockingCAFetchNode", constructor);
-  }
-
-  { // CAWrite registration
-    auto constructor = []() { return static_cast<Instruction*>(new BlockingCAWriteNode ()); };
-    GlobalInstructionRegistry().RegisterInstruction("BlockingCAWriteNode", constructor);
-  }
-
-  return true;
-
-}
 
 ExecutionStatus BlockingCAFetchNode::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
@@ -185,8 +182,8 @@ ExecutionStatus BlockingCAFetchNode::ExecuteSingleImpl (UserInterface * ui, Work
 
   if (status)
     {
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_debug("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_debug("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
 
       // Verify if the named variable exists in the workspace ..
       status = (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
@@ -209,29 +206,43 @@ ExecutionStatus BlockingCAFetchNode::ExecuteSingleImpl (UserInterface * ui, Work
 
   if (status)
     {
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      status = ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      log_debug("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      //status = ::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      (void)::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      (void)::ccs::HelperTools::SleepFor(100000000ul);
+      _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
     }
 
-  if (status && ::ccs::HelperTools::ChannelAccess::IsConnected(_channel))
+  if (status && _connected)
     {
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
+      log_debug("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
       status = ::ccs::HelperTools::ChannelAccess::ReadVariable(_channel, ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
     }
+  else
+    {
+      log_error("BlockingCAFetchNode::ExecuteSingleImpl('%s') - Variable '%s' not connected", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+    }
+
 
   if (status)
     { // Write to workspace
       status = ws->SetValue(GetAttribute("variable"), _value);
     }
-
+#ifdef LOG_DEBUG_ENABLE
   if (status && ws->GetValue(GetAttribute("variable"), _value))
     {
       ccs::types::string buffer;
       _value.SerialiseInstance(buffer, ccs::types::MaxStringLength);
-      log_info("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. variable has '%s' value in the workspace", Instruction::GetName().c_str(), buffer);
+      log_debug("BlockingCAFetchNode::ExecuteSingleImpl('%s') - .. variable has '%s' value in the workspace", Instruction::GetName().c_str(), buffer);
+    }
+#endif
+  if (_connected)
+    { // Detach from CA variable
+      (void)::ccs::HelperTools::ChannelAccess::DetachVariable(_channel);
+      _connected = false;
     }
 
-  // Detach from CA context .. implicit destroy when necessary
+  // Detach from CA context .. implicit destroy when necessary    
   ::ccs::HelperTools::ChannelAccessClientContext::Detach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
@@ -248,7 +259,7 @@ ExecutionStatus BlockingCAWriteNode::ExecuteSingleImpl (UserInterface * ui, Work
 
   if (status)
     {
-      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
       status = ((Instruction::HasAttribute("variable") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))) ||
                 (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
@@ -257,13 +268,13 @@ ExecutionStatus BlockingCAWriteNode::ExecuteSingleImpl (UserInterface * ui, Work
     {
       if (Instruction::HasAttribute("variable"))
         {
-          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+          log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           status = ws->GetValue(GetAttribute("variable"), _value);
         }
       else
         {
-          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
-          log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
+          log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
+          log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
           _value = ccs::types::AnyValue (Instruction::GetAttribute("datatype").c_str());
           status = _value.ParseInstance(Instruction::GetAttribute("instance").c_str());
         }
@@ -271,33 +282,70 @@ ExecutionStatus BlockingCAWriteNode::ExecuteSingleImpl (UserInterface * ui, Work
 
   if (status)
     { // Attach to CA context .. implicit create if necessary
+      log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Attach to context ..", Instruction::GetName().c_str());
       status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
     }
 
   if (status)
     {
-      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      status = ccs::HelperTools::ChannelAccess::ConnectVariable(Instruction::GetAttribute("channel").c_str(), _channel);
+      log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      //status = ::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      (void)::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
+      (void)::ccs::HelperTools::SleepFor(100000000ul);
+      _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
     }
 
-  if (status && ::ccs::HelperTools::ChannelAccess::IsConnected(_channel))
+  if (status && _connected)
     {
-      log_info("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
+      log_debug("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
       status = ::ccs::HelperTools::ChannelAccess::WriteVariable(_channel, ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
     }
+  else
+    {
+      log_error("BlockingCAWriteNode::ExecuteSingleImpl('%s') - Variable '%s' not connected", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      status = false;
+    }
 
-  // Detach from CA context .. implicit destroy when necessary
+  if (_connected)
+    { // Detach from CA variable
+      (void)::ccs::HelperTools::ChannelAccess::DetachVariable(_channel);
+      _connected = false;
+    }
+
+  // Detach from CA context .. implicit destroy when necessary    
   ::ccs::HelperTools::ChannelAccessClientContext::Detach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
 }
 
-BlockingCAFetchNode::BlockingCAFetchNode (void) : Instruction("BlockingCAFetchNode") {}
-BlockingCAFetchNode::~BlockingCAFetchNode (void) {}
+BlockingCAFetchNode::BlockingCAFetchNode (void) : Instruction(BlockingCAFetchNode::Type)
+{
+  // Create CA context
+  (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
 
-BlockingCAWriteNode::BlockingCAWriteNode (void) : Instruction("BlockingCAWriteNode") {}
-BlockingCAWriteNode::~BlockingCAWriteNode (void) {}
+}
+
+BlockingCAFetchNode::~BlockingCAFetchNode (void)
+{
+  // Destroy CA context
+  (void)::ccs::HelperTools::ChannelAccessClientContext::TerminateWhenAppropriate();
+
+}
+
+BlockingCAWriteNode::BlockingCAWriteNode (void) : Instruction(BlockingCAWriteNode::Type)
+{
+  // Create CA context
+  (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
+
+}
+
+BlockingCAWriteNode::~BlockingCAWriteNode (void)
+{
+  // Destroy CA context
+  (void)::ccs::HelperTools::ChannelAccessClientContext::TerminateWhenAppropriate();
+
+}
 
 } // namespace sequencer
 

@@ -42,8 +42,10 @@ namespace ChannelAccessClientContext {
 
 // Function declaration
 
+bool CreateAsNecessary (void);
 bool Attach (void);
 bool Detach (void);
+bool TerminateWhenAppropriate (void);
 
 // Global variables
 
