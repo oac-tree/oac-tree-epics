@@ -60,10 +60,9 @@ namespace sequencer {
 
 /**
  * @brief Xxx
- * @todo Re-design to manage commonalities in separate class.
  */
 
-class ChannelAccessFetchInstruction : public Instruction
+class ChannelAccessInstructionHelper
 {
 
   private:
@@ -74,6 +73,33 @@ class ChannelAccessFetchInstruction : public Instruction
 
     chid _channel;
     bool _connected = false;
+
+  protected:
+
+  public:
+
+    bool HandleConnect (const ccs::types::char8 * const channel, ccs::types::uint64 delay = 100000000ul);
+    bool HandleDetach (void);
+    chid GetChannel (void) const;
+
+    /**
+     * @brief Constructor.
+     */
+
+    ChannelAccessInstructionHelper (void);
+
+    /**
+     * @brief Destructor.
+     */
+
+    virtual ~ChannelAccessInstructionHelper (void);
+
+};
+
+class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessInstructionHelper
+{
+
+  private:
 
     /**
      * @brief Workspace variable copy.
@@ -111,17 +137,10 @@ class ChannelAccessFetchInstruction : public Instruction
 
 };
 
-class ChannelAccessWriteInstruction : public Instruction
+class ChannelAccessWriteInstruction : public Instruction, public ChannelAccessInstructionHelper
 {
 
   private:
-
-    /**
-     * @brief CA channel identifier attribute.
-     */
-
-    chid _channel;
-    bool _connected = false;
 
     /**
      * @brief Workspace variable copy.
@@ -170,6 +189,50 @@ static bool _caclient_initialised_flag = (RegisterGlobalInstruction<ChannelAcces
 
 // Function definition
 
+bool ChannelAccessInstructionHelper::HandleConnect (const ccs::types::char8 * const channel, ccs::types::uint64 delay)
+{
+
+  bool status = (false == _connected);
+
+  if (status)
+    { // Attach to CA context .. implicit create if necessary
+      status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
+    }
+
+  if (status)
+    {
+      log_debug("ChannelAccessInstructionHelper::HandleConnect - Connect to variable '%s' ..", channel);
+      //status = ::ccs::HelperTools::ChannelAccess::ConnectVariable(channel, _channel);
+      (void)::ccs::HelperTools::ChannelAccess::ConnectVariable(channel, _channel);
+      (void)::ccs::HelperTools::SleepFor(delay);
+      _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
+      status = _connected;
+    }
+
+  return status;
+
+}
+
+chid ChannelAccessInstructionHelper::GetChannel (void) const { return _channel; }
+
+bool ChannelAccessInstructionHelper::HandleDetach (void)
+{
+
+  bool status = _connected;
+
+  if (status)
+    { // Detach from CA variable
+      (void)::ccs::HelperTools::ChannelAccess::DetachVariable(_channel);
+      _connected = false;
+    }
+
+  // Detach from CA context .. implicit destroy when necessary    
+  ::ccs::HelperTools::ChannelAccessClientContext::Detach();
+
+  return status;
+
+}
+
 ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
@@ -198,28 +261,18 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
     }
 
   if (status)
-    { // Attach to CA context .. implicit create if necessary
-      status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
+    { // Attach to CA variable
+      status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
     }
 
   if (status)
     {
-      log_debug("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      //status = ::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
-      (void)::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
-      (void)::ccs::HelperTools::SleepFor(100000000ul);
-      _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
-    }
-
-  if (status && _connected)
-    {
       log_debug("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
-      status = ::ccs::HelperTools::ChannelAccess::ReadVariable(_channel, ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+      status = ::ccs::HelperTools::ChannelAccess::ReadVariable(ChannelAccessInstructionHelper::GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
     }
   else
     {
       log_error("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - Variable '%s' not connected", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      status = false;
     }
 
   if (status)
@@ -234,14 +287,10 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
       log_debug("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - .. variable has '%s' value in the workspace", Instruction::GetName().c_str(), buffer);
     }
 #endif
-  if (_connected)
+  if (status)
     { // Detach from CA variable
-      (void)::ccs::HelperTools::ChannelAccess::DetachVariable(_channel);
-      _connected = false;
+      (void)ChannelAccessInstructionHelper::HandleDetach();
     }
-
-  // Detach from CA context .. implicit destroy when necessary    
-  ::ccs::HelperTools::ChannelAccessClientContext::Detach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
@@ -279,71 +328,48 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
     }
 
   if (status)
-    { // Attach to CA context .. implicit create if necessary
-      log_debug("ChannelAccessWriteInstruction::ExecuteSingleImpl('%s') - Attach to context ..", Instruction::GetName().c_str());
-      status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
+    { // Attach to CA variable
+      status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
     }
 
   if (status)
     {
-      log_debug("ChannelAccessWriteInstruction::ExecuteSingleImpl('%s') - Connect to variable '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      //status = ::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
-      (void)::ccs::HelperTools::ChannelAccess::ConnectVariable(GetAttribute("channel").c_str(), _channel);
-      (void)::ccs::HelperTools::SleepFor(100000000ul);
-      _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
-    }
-
-  if (status && _connected)
-    {
       log_debug("ChannelAccessWriteInstruction::ExecuteSingleImpl('%s') - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
-      status = ::ccs::HelperTools::ChannelAccess::WriteVariable(_channel, ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+      status = ::ccs::HelperTools::ChannelAccess::WriteVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
     }
   else
     {
       log_error("ChannelAccessWriteInstruction::ExecuteSingleImpl('%s') - Variable '%s' not connected", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      status = false;
     }
 
-  if (_connected)
+  if (status)
     { // Detach from CA variable
-      (void)::ccs::HelperTools::ChannelAccess::DetachVariable(_channel);
-      _connected = false;
+      (void)ChannelAccessInstructionHelper::HandleDetach();
     }
-
-  // Detach from CA context .. implicit destroy when necessary    
-  ::ccs::HelperTools::ChannelAccessClientContext::Detach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
 }
 
-ChannelAccessFetchInstruction::ChannelAccessFetchInstruction (void) : Instruction(ChannelAccessFetchInstruction::Type)
+ChannelAccessInstructionHelper::ChannelAccessInstructionHelper (void)
 {
   // Create CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
 
 }
 
-ChannelAccessFetchInstruction::~ChannelAccessFetchInstruction (void)
+ChannelAccessInstructionHelper::~ChannelAccessInstructionHelper (void)
 {
   // Destroy CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::TerminateWhenAppropriate();
 
 }
 
-ChannelAccessWriteInstruction::ChannelAccessWriteInstruction (void) : Instruction(ChannelAccessWriteInstruction::Type)
-{
-  // Create CA context
-  (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
+ChannelAccessFetchInstruction::ChannelAccessFetchInstruction (void) : Instruction(ChannelAccessFetchInstruction::Type), ChannelAccessInstructionHelper() {}
+ChannelAccessFetchInstruction::~ChannelAccessFetchInstruction (void) {}
 
-}
-
-ChannelAccessWriteInstruction::~ChannelAccessWriteInstruction (void)
-{
-  // Destroy CA context
-  (void)::ccs::HelperTools::ChannelAccessClientContext::TerminateWhenAppropriate();
-
-}
+ChannelAccessWriteInstruction::ChannelAccessWriteInstruction (void) : Instruction(ChannelAccessWriteInstruction::Type), ChannelAccessInstructionHelper() {}
+ChannelAccessWriteInstruction::~ChannelAccessWriteInstruction (void) {}
 
 } // namespace sequencer
 
