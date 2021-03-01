@@ -65,7 +65,7 @@ static inline bool CreateContext (bool preempt) // CA wrappers
   return status;
 
 }
-#endif
+
 static inline bool AttachContext (struct ca_client_context* context) // CA wrappers
 {
 
@@ -110,7 +110,7 @@ static inline bool DetachContext (void) // CA wrappers
   return true;
 
 }
-
+#endif
 } // namespace ChannelAccess
 
 } // namespace HelperTools
