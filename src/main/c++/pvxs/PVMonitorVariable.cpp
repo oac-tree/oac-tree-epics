@@ -4,7 +4,7 @@
 *
 * Project       : CODAC Supervision and Automation (SUP) Sequencer component
 *
-* Description   : Instruction node implementation
+* Description   : Variable plugin implementation
 *
 * Author        : Bertrand Bauvir (IO)
 *

@@ -11,6 +11,7 @@ target_sources(sequencer-pvxs
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorCache.cpp
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/PVServerVariable.cpp
     )
 
 target_include_directories(sequencer-pvxs
