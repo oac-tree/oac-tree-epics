@@ -101,6 +101,7 @@ class ChannelAccessVariable : public Variable
 // Function declaration
 
 static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void);
+static bool LaunchChannelAccessClientInstance (void);
 static bool TerminateChannelAccessClientInstance (void);
 
 // Global variables
