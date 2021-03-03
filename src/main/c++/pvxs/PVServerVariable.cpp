@@ -54,10 +54,12 @@ namespace sequencer {
  * 'channel' (PV name) to instantiate.
  */
 
-class PVServerVariable : public Variable, public ::ccs::base::PVAccessServer
+class PVServerVariable : public Variable
 {
 
   private:
+
+    ccs::base::PVAccessServer* _server = NULL_PTR_CAST(ccs::base::PVAccessServer*);
 
   protected:
 
@@ -93,10 +95,78 @@ class PVServerVariable : public Variable, public ::ccs::base::PVAccessServer
 
 // Function declaration
 
+static ccs::base::PVAccessServer* GetPVAccessServerInstance (void);
+static bool LaunchPVAccessServerInstance (void);
+static bool TerminatePVAccessServerInstance (void);
+
 // Global variables
 
 const std::string PVServerVariable::Type = "PVServerVariable";
 static bool _pvserver_initialised_flag = RegisterGlobalVariable<PVServerVariable>();
+
+// ToDo - Replace the singleton mechanism in cpp-common-epics
+static ccs::types::boolean _pvxs_server_launch = false;
+static ccs::types::uint32 _pvxs_server_count = 0u;
+static ccs::base::PVAccessServer* _pvxs_server = NULL_PTR_CAST(ccs::base::PVAccessServer*);
+
+// Function definition
+
+static ccs::base::PVAccessServer* GetPVAccessServerInstance (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::PVAccessServer*) != _pvxs_server);
+
+  if (!status)
+    { // Reference counted instance
+      log_notice("PVAccessServerContext::GetInstance - Initialise the shared reference ..");
+      _pvxs_server = ccs::base::PVAccessInterface::GetInstance<ccs::base::PVAccessServer>();
+    }
+
+  // Increment count
+  _pvxs_server_count += 1u;
+
+  return _pvxs_server;
+
+}
+
+static bool LaunchPVAccessServerInstance (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::PVAccessServer*) != _pvxs_server);
+
+  if (status && (false == _pvxs_server_launch))
+    {
+      log_notice("PVAccessServerContext::Launch - Starting PVXS server thread ..");
+      (void)_pvxs_server->Launch();
+      (void)ccs::HelperTools::SleepFor(50000000ul);
+      _pvxs_server_launch = true;
+    }
+
+  return status;
+
+}
+
+static bool TerminatePVAccessServerInstance (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::PVAccessServer*) != _pvxs_server);
+
+  if (0u < _pvxs_server_count)
+    { // Decrement count
+      _pvxs_server_count -= 1u;
+    }
+
+  if (status && (0u == _pvxs_server_count))
+    { // Assume destroying the reference is sufficient for context tear-down
+      log_notice("PVAccessServerContext::Terminate - Forgetting the shared reference ..");
+      ccs::base::PVAccessInterface::Terminate<ccs::base::PVAccessServer>();
+      _pvxs_server = NULL_PTR_CAST(ccs::base::PVAccessServer*);
+      _pvxs_server_launch = false;
+    }
+
+  return status;
+
+}
 
 // Function definition
 
@@ -111,25 +181,25 @@ bool PVServerVariable::SetupImpl (void)
     }
 
   if (status)
-    { // Instantiate implementation
-      log_info("PVServerVariable('%s')::SetupImpl - Method called with '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
-      status = ::ccs::base::PVAccessServer::AddVariable(Variable::GetAttribute("channel").c_str(), ::ccs::types::AnyputVariable, Variable::GetAttribute("datatype").c_str());
+    { // Instantiate variable server ..  as necessary
+      _server = GetPVAccessServerInstance();
+      status = (NULL_PTR_CAST(ccs::base::PVAccessServer*) != _server);
     }
 
   if (status)
-    { // ToDo - Support more than one variable
-      log_info("PVServerVariable('%s')::SetupImpl - Starting server", Variable::GetName().c_str());
-      status = ::ccs::base::PVAccessServer::Launch();
+    { // Instantiate implementation
+      log_info("PVServerVariable('%s')::SetupImpl - Method called with '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
+      status = _server->AddVariable(Variable::GetAttribute("channel").c_str(), ::ccs::types::AnyputVariable, Variable::GetAttribute("datatype").c_str());
     }
 
   if (status && Variable::HasAttribute("instance"))
-    { // Provide default implementation
-      status = ::ccs::base::PVAccessServer::GetVariable(Variable::GetAttribute("channel").c_str())->ParseInstance(Variable::GetAttribute("instance").c_str());
+    { // Provide default instance
+      status = _server->GetVariable(Variable::GetAttribute("channel").c_str())->ParseInstance(Variable::GetAttribute("instance").c_str());
     }
 
   if (status)
     {
-      status = ::ccs::base::PVAccessServer::UpdateVariable(Variable::GetAttribute("channel").c_str());
+      status = _server->UpdateVariable(Variable::GetAttribute("channel").c_str());
     }
 
   return status;
@@ -139,11 +209,14 @@ bool PVServerVariable::SetupImpl (void)
 bool PVServerVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
 
-  bool status = ::ccs::base::PVAccessServer::IsValid(Variable::GetAttribute("channel").c_str());
+  // ToDo - Make an Instruction to start the PVXS variable server with period ..
+  (void)LaunchPVAccessServerInstance(); // Only if not already done
+
+  bool status = _server->IsValid(Variable::GetAttribute("channel").c_str());
 
   if (status)
     {
-      status = ::ccs::base::PVAccessServer::GetVariable(Variable::GetAttribute("channel").c_str(), value);
+      status = _server->GetVariable(Variable::GetAttribute("channel").c_str(), value);
     }
 
   return status;
@@ -153,19 +226,33 @@ bool PVServerVariable::GetValueImpl (ccs::types::AnyValue& value) const
 bool PVServerVariable::SetValueImpl (const ccs::types::AnyValue& value)
 {
 
-  bool status = ::ccs::base::PVAccessServer::IsValid(Variable::GetAttribute("channel").c_str());
+  // ToDo - Make an Instruction to start the PVXS variable server with period ..
+  (void)LaunchPVAccessServerInstance(); // Only if not already done
+
+  bool status = _server->IsValid(Variable::GetAttribute("channel").c_str());
 
   if (status)
     {
-      status = ::ccs::base::PVAccessServer::SetVariable(Variable::GetAttribute("channel").c_str(), value);
+      status = _server->SetVariable(Variable::GetAttribute("channel").c_str(), value);
     }
 
   return status;
 
 }
 
-PVServerVariable::PVServerVariable (void) : Variable(PVServerVariable::Type), ::ccs::base::PVAccessServer() {}
-PVServerVariable::~PVServerVariable (void) {}
+PVServerVariable::PVServerVariable (void) : Variable(PVServerVariable::Type) {}
+PVServerVariable::~PVServerVariable (void)
+{
+
+  bool status = (NULL_PTR_CAST(ccs::base::PVAccessServer*) != _server);
+
+  if (status)
+    { // Tear-down server context
+      _server = NULL_PTR_CAST(ccs::base::PVAccessServer*); // Forget about it locally ..
+      (void)TerminatePVAccessServerInstance(); // .. last instance should finalise clean-up
+    }
+
+}
 
 } // namespace sequencer
 
