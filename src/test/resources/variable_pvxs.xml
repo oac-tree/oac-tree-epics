@@ -7,6 +7,8 @@
         <Sequence>
             <Wait name="wait"
                 timeout="1.0"/>
+            <CopyInstruction input="curr-time" output="pvxs-variable.timestamp"/>
+            <CopyInstruction input="curr-time" output="pvxs-other.timestamp"/>
             <LogTrace name="variable"
                 input="pvxs-variable"/>
             <LogTrace name="other"
@@ -14,6 +16,7 @@
         </Sequence>
     </Repeat>
     <Workspace>
+        <SystemClock name="curr-time"/>
         <PVServerVariable name="pvxs-variable"
             channel="seq::test::variable"
             datatype='{"type":"seq::test::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'

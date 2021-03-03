@@ -2,8 +2,10 @@ add_executable(unit-tests)
 
 target_sources(unit-tests
     PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/CopyInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/LogInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/SystemClockVariable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/NullUserInterface.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessInstruction-tests.cpp
