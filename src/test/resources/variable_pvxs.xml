@@ -3,14 +3,17 @@
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <Sequence>
-        <Wait name="wait"
-            timeout="5.0"/>
-        <LogVariableNode name="log"
-            variable="pvxs"/>
-    </Sequence>
+    <Repeat maxCount="100">
+        <Sequence>
+            <Wait name="wait"
+                timeout="5.0"/>
+            <LogTrace name="server"
+                input="pvxs-server"/>
+        </Sequence>
+    </Repeat>
     <Workspace>
-        <PVMonitorVariable name="pvxs"
-            channel="CTRL-SYSM-COM-TRUNK-TSYNC"/>
+        <PVServerVariable name="pvxs-server"
+            channel="seq::test::variable"
+            datatype='{"type":"seq::test::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'/>
     </Workspace>
 </Procedure>
