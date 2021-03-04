@@ -21,6 +21,13 @@ record (stringout,"SEQ-TEST:STRING")
     field(DESC,"Some EPICSv3 record")
 }
 
+record (waveform,"SEQ-TEST:UIARRAY")
+{
+    field(DESC,"Some EPICSv3 record")
+    field(FTVL, "ULONG")
+    field(NELM, "8")
+}
+
 record (waveform,"SEQ-TEST:CHARRAY")
 {
     field(DESC,"Some EPICSv3 record")
