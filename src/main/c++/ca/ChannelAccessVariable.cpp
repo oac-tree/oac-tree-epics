@@ -6,9 +6,9 @@
 *
 * Description   : Instruction node implementation
 *
-* Author        : B.Bauvir (IO)
+* Author        : Bertrand Bauvir (IO)
 *
-* Copyright (c) : 2010-2020 ITER Organization,
+* Copyright (c) : 2010-2021 ITER Organization,
 *                 CS 90 046
 *                 13067 St. Paul-lez-Durance Cedex
 *                 France
@@ -37,6 +37,8 @@
 
 // Local header files
 
+#include "ToInteger.h"
+
 // Constants
 
 #undef LOG_ALTERN_SRC
@@ -49,10 +51,51 @@ namespace sup {
 namespace sequencer {
 
 /**
- * @brief Xxx
- * @todo Manage EPICS CA context as singleton and destroy when not necessary anylonger.
- * @todo Re-design to manage commonalities in separate class.
- * @todo StartChannelAccessCacheInstruction
+ * @brief Workspace variable interface to EPICS Channel Access Process Variable (PV).
+ * @details The class interfaces to ccs::base::ChannelAccessClient to manage asynchronous
+ * handling of EPICS CA connections, notification and update. The variable is configured
+ * with mandatory 'channel' (PV name) and 'datatype' attributes. The 'datatype' attribute
+ * constraints the client-side type to use for get/put requests; e.g. enumeration-type
+ * IOC records such as mbbi/mbbo can be accessed as integer or string. 
+ * The implementation provides as well a way to change the CA client thread period from
+ * default using an optional 'period' attribute with ns resolution.
+ *
+ * @code
+     <Workspace>
+       <ChannelAccessVariable name="boolean"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         datatype='{"type":"bool"}'
+         period="10000000"/>
+       <ChannelAccessVariable name="boolean-as-string"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         datatype='{"type":"string"}'/>
+       <ChannelAccessVariable name="boolean-as-integer"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         datatype='{"type":"uint32"}'/>
+       <ChannelAccessVariable name="integer"
+         channel="EPICS::CA::CHANNEL::INTEGER"
+         datatype='{"type":"uint32"}'/>
+       <ChannelAccessVariable name="array"
+         channel="EPICS::CA::CHANNEL::ARRAY"
+         datatype='{"type":"uint32[]","multiplicity":8,"element":{"type":"uint32"}}'/>
+     </Workspace>
+   @endcode
+ *
+ * @note Multiple variable instances use the same singleton CA client instance which is
+ * created and terminated as neceessary when variable instances come into procedure scope
+ * and leave it.
+ * @note The singleton CA client instance ignores new requests for already connected channels.
+ * The example above would not currently run as such as the 'boolean-as-string' and 'boolean-as
+ * -integer' would be ignored by the CA client implementation by reason of the channel name
+ * to have already been registered. This implementation limitation may be lifted in the future
+ * if required.
+ * @note EPICS CA support is provided through this class and also as blocking instructions.
+ * Procedures mixing asynchronous handling using this class and synchronous instructions have
+ * not been tested.
+ *
+ * @todo Assess if a default instance value should be provided for the variable cache.
+ * @todo Assess if an additional status variable should be provided to reflect to the
+ * procedure if the channel is connected, etc.
  */
 
 class ChannelAccessVariable : public Variable
@@ -100,9 +143,9 @@ class ChannelAccessVariable : public Variable
 
 // Function declaration
 
-static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void);
-static bool LaunchChannelAccessClientInstance (void);
-static bool TerminateChannelAccessClientInstance (void);
+static inline ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void);
+static inline bool LaunchChannelAccessClientInstance (void);
+static inline bool TerminateChannelAccessClientInstance (void);
 
 // Global variables
 
@@ -116,7 +159,7 @@ static ccs::base::ChannelAccessClient* _ca_client = NULL_PTR_CAST(ccs::base::Cha
 
 // Function definition
 
-static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
+static inline ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
 {
 
   bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
@@ -134,7 +177,7 @@ static ccs::base::ChannelAccessClient* GetChannelAccessClientInstance (void)
 
 }
 
-static bool LaunchChannelAccessClientInstance (void)
+static inline bool LaunchChannelAccessClientInstance (void)
 {
 
   bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
@@ -151,7 +194,7 @@ static bool LaunchChannelAccessClientInstance (void)
 
 }
 
-static bool TerminateChannelAccessClientInstance (void)
+static inline bool TerminateChannelAccessClientInstance (void)
 {
 
   bool status = (NULL_PTR_CAST(ccs::base::ChannelAccessClient*) != _ca_client);
@@ -198,13 +241,13 @@ bool ChannelAccessVariable::SetupImpl (void)
       log_debug("ChannelAccessVariable('%s')::SetupImpl - .. and '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       status = _client->AddVariable(Variable::GetAttribute("channel").c_str(), ccs::types::AnyputVariable, _type);
     }
-#if 0
+
   if (status && Variable::HasAttribute("period"))
-    { // ToDo
-      ccs::types::uint64 _period = 100000000ul;
+    {
+      ccs::types::uint64 _period = ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Variable::GetAttribute("period").c_str());
       status = _client->SetPeriod(_period);
     }
-#endif
+
   return status;
 
 }
@@ -256,12 +299,7 @@ bool ChannelAccessVariable::SetValueImpl (const ccs::types::AnyValue& value)
     {
       status = _client->SetVariable(Variable::GetAttribute("channel").c_str(), value);
     }
-#if 0 // Implicit with SetVariable .. would be required if copying memory
-  if (status)
-    {
-      status = _client->UpdateVariable(Variable::GetAttribute("channel").c_str());
-    }
-#endif
+
   return status;
 
 }

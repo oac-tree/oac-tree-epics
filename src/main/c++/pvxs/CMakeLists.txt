@@ -17,6 +17,7 @@ target_sources(sequencer-pvxs
 target_include_directories(sequencer-pvxs
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/../include
         $ENV{CODAC_ROOT}/include
         $ENV{CODAC_ROOT}/include/sup
     )

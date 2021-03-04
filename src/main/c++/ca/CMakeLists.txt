@@ -15,6 +15,7 @@ target_sources(sequencer-ca
 target_include_directories(sequencer-ca
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${CMAKE_CURRENT_LIST_DIR}/../include
         $ENV{CODAC_ROOT}/include
         $ENV{CODAC_ROOT}/include/sup
 ## ChannelAccess support now through static inline wrappers requires EPICS header files

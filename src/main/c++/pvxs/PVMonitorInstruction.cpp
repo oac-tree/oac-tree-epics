@@ -35,6 +35,8 @@
 
 // Local header files
 
+#include "ToInteger.h"
+
 #include "PVMonitorCache.h"
 
 #include "Instruction.h"
@@ -110,31 +112,12 @@ class PVMonitorInstruction : public Instruction, public PVMonitorCache
 
 // Function declaration
 
-template <typename Type> inline Type ToInteger (const ccs::types::char8 * const buffer);
-
 // Global variables
 
 const std::string PVMonitorInstruction::Type = "PVMonitorInstruction";
 static bool _pvmonitor_initialised_flag = RegisterGlobalInstruction<PVMonitorInstruction>();
 
 // Function definition
-
-template <> inline ccs::types::uint64 ToInteger<ccs::types::uint64> (const ccs::types::char8 * const buffer)
-{
-
-  ccs::types::uint64 ret = 0ul;
-
-  bool status = (ccs::HelperTools::IsIntegerString(buffer) == true);
-
-  if (status)
-    {
-      ccs::types::char8* p = NULL_PTR_CAST(ccs::types::char8*);
-      ret = static_cast<ccs::types::uint64>(strtoul(buffer, &p, 10));
-    }
-
-  return ret;
-
-}
 
 bool PVMonitorInstruction::SetupImpl (Workspace * ws)
 {
@@ -154,7 +137,7 @@ bool PVMonitorInstruction::SetupImpl (Workspace * ws)
 
   if (status && Instruction::HasAttribute("timeout"))
     { // Move to HelperTools namespace
-      _timeout = ToInteger<ccs::types::uint64>(Instruction::GetAttribute("timeout").c_str());
+      _timeout = ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Instruction::GetAttribute("timeout").c_str());
     }
 
   if (status)
