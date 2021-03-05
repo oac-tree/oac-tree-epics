@@ -6,6 +6,7 @@
     <Sequence>
         <ChannelAccessWriteInstruction name="put-client"
             channel="SEQ-TEST:BOOL"
+            delay="100000000"
             datatype='{"type":"string"}'
             instance='"TRUE"'/>
         <ChannelAccessFetchInstruction name="get-client"

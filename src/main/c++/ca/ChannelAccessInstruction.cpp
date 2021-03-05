@@ -59,7 +59,9 @@ namespace sup {
 namespace sequencer {
 
 /**
- * @brief Xxx
+ * @brief Implementation base class.
+ * @details Handles channel connection and disconnection which is common for
+ * read/write operations.
  */
 
 class ChannelAccessInstructionHelper
@@ -95,6 +97,45 @@ class ChannelAccessInstructionHelper
     virtual ~ChannelAccessInstructionHelper (void);
 
 };
+
+/**
+ * @brief Instruction interfacing to EPICS Channel Access Process Variable (PV).
+ * @details The class provides a blocking read to EPICS CA. The instruction fails
+ * in case the configured 'channel' can not be accessed. Upon successful read, the
+ * specified workspace 'variable' is updated. The datatype of the workspace variable
+ * defines how the client-side tries and read the remove channel.
+ *
+ * @code
+     <Sequence>
+       <ChannelAccessFetchInstruction name="get-client"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         variable="boolean"/>
+       <ChannelAccessFetchInstruction name="get-client"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         variable="uint32"/>
+       <ChannelAccessFetchInstruction name="get-client"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         variable="string"/>
+     </Sequence>
+     <Workspace>
+       <Local name="boolean"
+         type='{"type":"bool"}'
+         value="false"/>
+       <Local name="uint32"
+         type='{"type":"uint32"}'
+         value="0"/>
+       <Local name="string"
+         type='{"type":"string"}'
+         value='"undefined"'/>
+     </Workspace>
+   @endcode
+ *
+ * @note EPICS CA support is provided through this class and also as asynchronous variables.
+ * Procedures mixing asynchronous handling and synchronous instructions have not been tested.
+ * @note A single EPICS CA context is created for the sequencer procedure and shared among
+ * all instruction instances. An explicit context attach/detach is performed by each call to
+ * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
+ */
 
 class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessInstructionHelper
 {
@@ -142,6 +183,46 @@ class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessIn
     static const std::string Type;
 
 };
+
+/**
+ * @brief Instruction interfacing to EPICS Channel Access Process Variable (PV).
+ * @details The class provides a blocking write to EPICS CA. The instruction fails
+ * in case the configured 'channel' can not be accessed. The instruction provides
+ * two ways EPICS CA channels are updated:
+ *
+ *   Using 'datatype' and 'instance' specification through attributes, or
+ *   By reference to a workspace 'variable' holding the value to be written.
+ *
+ * The EPICS CA connection is verified after an optional 'delay' period specified in
+ * ns resolution which is defaulted to 100ms.
+ * @code
+     <Sequence>
+       <ChannelAccessWriteInstruction name="put-client"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         delay="100000000"
+         variable="boolean"/>
+       <ChannelAccessFetchInstruction name="put-as-integer"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         datatype='{"type":"uint32"}'
+         instance="0"/>
+       <ChannelAccessFetchInstruction name="put-as-string"
+         channel="EPICS::CA::CHANNEL::BOOLEAN"
+         datatype='{"type":"string"}'
+         instance='"FALSE"'/> <!-- As appropriate as per record specification --> <!-- Note the quotes -->
+     </Sequence>
+     <Workspace>
+       <Local name="boolean"
+         type='{"type":"bool"}'
+         value="false"/>
+     </Workspace>
+   @endcode
+ *
+ * @note EPICS CA support is provided through this class and also as asynchronous variables.
+ * Procedures mixing asynchronous handling and synchronous instructions have not been tested.
+ * @note A single EPICS CA context is created for the sequencer procedure and shared among
+ * all instruction instances. An explicit context attach/detach is performed by each call to
+ * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
+ */
 
 class ChannelAccessWriteInstruction : public Instruction, public ChannelAccessInstructionHelper
 {
@@ -288,7 +369,14 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     { // Attach to CA variable
-      status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
+      if (Instruction::HasAttribute("delay"))
+        {
+          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str(), ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Instruction::GetAttribute("delay").c_str()));
+        }
+      else
+        {
+          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
+        }
     }
 
   if (status)
@@ -370,7 +458,14 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     { // Attach to CA variable
-      status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
+      if (Instruction::HasAttribute("delay"))
+        {
+          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str(), ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Instruction::GetAttribute("delay").c_str()));
+        }
+      else
+        {
+          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
+        }
     }
 
   if (status)
