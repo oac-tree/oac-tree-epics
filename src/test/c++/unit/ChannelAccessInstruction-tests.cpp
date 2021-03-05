@@ -363,6 +363,76 @@ TEST(ChannelAccessInstruction, Write_float32)
 
 }
 
+TEST(ChannelAccessInstruction, Write_array)
+{
+
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    {
+      status = instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY");
+    }
+
+  if (status)
+    {
+      status = (instruction->AddAttribute("datatype", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}") &&
+                instruction->AddAttribute("instance", "[1 2 3 4 5 6 7 8]"));
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
+    }
+
+  // Test variable
+
+  // At this point, the instruction has diconnected form the channel and thread detached from the context
+
+  if (status)
+    {
+      status = ccs::HelperTools::ChannelAccessClientContext::Attach();
+    }
+
+  chid channel;
+
+  if (status)
+    {
+      (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:UIARRAY", channel);
+      (void)ccs::HelperTools::SleepFor(100000000ul);
+      status = ccs::HelperTools::ChannelAccess::IsConnected(channel);
+    }
+
+  ccs::types::AnyValue value ("{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}");
+
+  if (status)
+    {
+      status = ccs::HelperTools::ChannelAccess::ReadVariable(channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), 8u, value.GetInstance());
+    }
+
+  if (status)
+    {
+      log_info("TEST(ChannelAccessInstruction, Execute_array) - Test variable ..");
+      status = (4u == ccs::HelperTools::GetAttributeValue<ccs::types::uint32>(&value, "[3]"));
+    }
+
+  (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
+  (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
+
+  (void)Terminate();
+
+  ASSERT_EQ(true, status);
+
+}
+
 TEST(ChannelAccessInstruction, ProcedureFile)
 {
 

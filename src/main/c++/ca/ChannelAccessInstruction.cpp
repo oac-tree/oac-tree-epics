@@ -137,8 +137,6 @@ class ChannelAccessInstructionHelper
  * @note A single EPICS CA context is created for the sequencer procedure and shared among
  * all instruction instances. An explicit context attach/detach is performed by each call to
  * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
- *
- * @todo Evaluate impact of supporting arrays, e.g. wavefore EPICS records.
  */
 
 class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessInstructionHelper
@@ -226,8 +224,6 @@ class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessIn
  * @note A single EPICS CA context is created for the sequencer procedure and shared among
  * all instruction instances. An explicit context attach/detach is performed by each call to
  * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
- *
- * @todo Evaluate impact of supporting arrays, e.g. wavefore EPICS records.
  */
 
 class ChannelAccessWriteInstruction : public Instruction, public ChannelAccessInstructionHelper
@@ -358,6 +354,13 @@ bool ChannelAccessFetchInstruction::SetupImpl (Workspace * ws)
       status = static_cast<bool>(_value.GetType());
     }
 
+  if (status)
+    {
+      ::ccs::base::SharedReference<const ccs::types::AnyType> _type = _value.GetType();
+      status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
+                ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
+    }
+
   return status;
 
 }
@@ -388,7 +391,16 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
   if (status)
     {
       log_debug("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
-      status = ::ccs::HelperTools::ChannelAccess::ReadVariable(ChannelAccessInstructionHelper::GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+
+      if (::ccs::HelperTools::Is<ccs::types::ScalarType>(_value.GetType()))
+        {
+          status = ::ccs::HelperTools::ChannelAccess::ReadVariable(ChannelAccessInstructionHelper::GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+        }
+      else
+        {
+          ::ccs::base::SharedReference<const ccs::types::ArrayType> _type = _value.GetType();
+          status = ::ccs::HelperTools::ChannelAccess::ReadVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _type->GetMultiplicity(), _value.GetInstance());
+        }
     }
 
   if (status)
@@ -447,6 +459,13 @@ bool ChannelAccessWriteInstruction::SetupImpl (Workspace * ws)
       status = static_cast<bool>(_value.GetType());
     }
 
+  if (status)
+    {
+      ::ccs::base::SharedReference<const ccs::types::AnyType> _type = _value.GetType();
+      status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
+                ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
+    }
+
   return status;
 
 }
@@ -477,7 +496,16 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
   if (status)
     {
       log_debug("ChannelAccessWriteInstruction::ExecuteSingleImpl('%s') - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
-      status = ::ccs::HelperTools::ChannelAccess::WriteVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+
+      if (::ccs::HelperTools::Is<ccs::types::ScalarType>(_value.GetType()))
+        {
+          status = ::ccs::HelperTools::ChannelAccess::WriteVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
+        }
+      else
+        {
+          ::ccs::base::SharedReference<const ccs::types::ArrayType> _type = _value.GetType();
+          status = ::ccs::HelperTools::ChannelAccess::WriteVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _type->GetMultiplicity(), _value.GetInstance());
+        }
     }
 
   if (status)
