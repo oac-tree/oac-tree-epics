@@ -137,6 +137,8 @@ class ChannelAccessInstructionHelper
  * @note A single EPICS CA context is created for the sequencer procedure and shared among
  * all instruction instances. An explicit context attach/detach is performed by each call to
  * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
+ *
+ * @todo Evaluate impact of supporting arrays, e.g. wavefore EPICS records.
  */
 
 class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessInstructionHelper
@@ -224,6 +226,8 @@ class ChannelAccessFetchInstruction : public Instruction, public ChannelAccessIn
  * @note A single EPICS CA context is created for the sequencer procedure and shared among
  * all instruction instances. An explicit context attach/detach is performed by each call to
  * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
+ *
+ * @todo Evaluate impact of supporting arrays, e.g. wavefore EPICS records.
  */
 
 class ChannelAccessWriteInstruction : public Instruction, public ChannelAccessInstructionHelper
