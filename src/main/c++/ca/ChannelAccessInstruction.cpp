@@ -38,6 +38,8 @@
 
 // Local header files
 
+#include "ToInteger.h"
+
 #include "ChannelAccessClientContext.h"
 
 #include "ExecutionStatus.h"
