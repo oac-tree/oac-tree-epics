@@ -14,5 +14,6 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 add_subdirectory(ca)
+add_subdirectory(misc)
 add_subdirectory(pvxs)
 
