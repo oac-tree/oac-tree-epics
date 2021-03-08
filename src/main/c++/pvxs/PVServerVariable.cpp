@@ -51,7 +51,24 @@ namespace sequencer {
 /**
  * @brief PVServerVariable class.
  * @detail Workspace variable associated with a locally hosted pvAccess server. Mandatory attribute is the named
- * 'channel' (PV name) to instantiate.
+ * 'channel' (PV name) to instantiate as well as the PV 'datatype'. An optional 'instance' attribute is used to
+ * allow for providing a default value upon server start.
+ * @code
+     <Workspace>
+       <PVServerVariable name="pvxs-variable"
+         channel="seq::pvxs::variable"
+         datatype='{"type":"seq::pvxs::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'
+         instance='{"timestamp":0,"value":0.0}'/>
+       <PVServerVariable name="other-variable" .. />
+       <PVServerVariable name="yet-another-variable" .. />
+     </Workspace>
+   @endcode
+ *
+ * @note The singleton PVXS server instance is created and terminated as necessary. It is launched at the first call
+ * to Variable::GetValue or SetValue interface to one of the workspace variables.
+ *
+ * @todo Highly structured variable datatypes would benefit from a mechanism by which types can be declared and loaded
+ * in the GlobalTypeDatabase. E.g. by means of a RegisterType instructioon.
  */
 
 class PVServerVariable : public Variable

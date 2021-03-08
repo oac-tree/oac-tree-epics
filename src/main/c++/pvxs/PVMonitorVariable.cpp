@@ -52,11 +52,12 @@ namespace sequencer {
 /**
  * @brief PVMonitorVariable class.
  * @detail Workspace variable with asynchronous PVAccess monitoring. Mandatory attribute is the named
- * 'channel' (PV name) to connect to. The implementation allows for providing an optional 'status' attribute
- * specifying the name of an additional variable to host status information as part of the workspace.
+ * 'channel' (PV name) to connect to.
  * @note Data access protection between concurrent calls to GetValue and SetValue is provided through the
  * Variable interface. Additional guard is provided between PVMonitorCache::HandleMonitor and
  * PVMonitorCache::GetValue.
+ * @todo Assess if the implementation should allows for providing an optional 'status' attribute
+ * specifying the name of an additional variable to host status information as part of the workspace.
  */
 
 class PVMonitorVariable : public Variable, public PVMonitorCache

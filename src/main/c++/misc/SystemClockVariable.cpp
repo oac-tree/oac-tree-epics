@@ -44,6 +44,10 @@ namespace sequencer {
 
 /**
  * @brief SystemClockVariable class.
+ * @details Returns current time when Variable::GetValueImpl is being called.
+ * @note Variable::SetValueImpl is not supported and returns false if called.
+ * @todo Assess if different format should be supported, e.g. ISO8601 is the passed value
+ * is string, etc.
  */
 
 class SystemClockVariable : public Variable
