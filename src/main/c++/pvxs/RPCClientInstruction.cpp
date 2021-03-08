@@ -50,7 +50,28 @@ namespace sup {
 namespace sequencer {
 
 /**
- * @brief Xxx
+ * @brief RPC client instruction.
+ * @details The instruction provides Remote Procedure Call (RPC) support to a named 'service', sending
+ * a request from a named workspace 'request' variable or using 'datatype' and 'instance' attributes.
+ * The reply is written back to the workspace if specified.
+ *
+ * @code
+     <Sequence>
+       <RPCClientInstruction name="rpc-client"
+         service="rpc@plant-system"
+         request="request" reply="reply"/>
+     </Sequence>
+     <Workspace>
+       <Local name="request"
+         type='{"type":"Request_t","attributes":[{"qualifier":{"type":"string"}},{"value":{"type":"uint32"}},{"enable":{"type":"bool"}}]}'
+         value='{"qualifier":"configure","value":1234,"enable":true}'/>
+       <Local name="reply"/>
+     </Workspace>
+   @endcode
+ *
+ * @todo Fix LocalVariable implementation as this use-case requires variables to be instantiated without
+ * pre-determined datatype. Provision of the RPC 'reply' to the workspace would currently not work with
+ * LocalVariable.
  */
 
 class RPCClientInstruction : public Instruction
