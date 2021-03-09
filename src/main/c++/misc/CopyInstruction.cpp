@@ -41,7 +41,7 @@ namespace sup {
 namespace sequencer {
 
 /**
- * @brief Instruction copying named variable from/to workspace
+ * @brief Instruction copying named variable from/to workspace.
  */
 
 class CopyInstruction : public Instruction
@@ -50,7 +50,8 @@ class CopyInstruction : public Instruction
   private:
 
     /**
-     * @brief Copy variables identified with 'input' and 'output' attributes.
+     * @brief See sup::sequencer::Instruction.
+     * @details Copy variables identified with 'input' and 'output' attributes.
      */
 
     ExecutionStatus ExecuteSingleImpl (UserInterface * ui, Workspace * ws) override;
@@ -71,27 +72,22 @@ class CopyInstruction : public Instruction
 
     ~CopyInstruction (void) override;
 
+    /**
+     * @brief Class name for InstructionRegistry.
+     */
+
+    static const std::string Type;
+
 };
 
 // Function declaration
 
-bool RegisterCopyInstruction (void);
-
 // Global variables
 
-static bool global_copyinstruction_initialised_flag = RegisterCopyInstruction();
+const std::string CopyInstruction::Type = "CopyInstruction";
+static bool _copyinstruction_initialised_flag = RegisterGlobalInstruction<CopyInstruction>();
 
 // Function definition
-
-bool RegisterCopyInstruction (void)
-{
-
-  auto constructor = []() { return static_cast<Instruction*>(new CopyInstruction ()); };
-  GlobalInstructionRegistry().RegisterInstruction("CopyInstruction", constructor);
-
-  return true;
-
-}
 
 ExecutionStatus CopyInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {

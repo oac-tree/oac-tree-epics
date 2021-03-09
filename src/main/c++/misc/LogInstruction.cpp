@@ -56,7 +56,8 @@ class LogInstruction : public Instruction
   private:
 
     /**
-     * @brief Logging trace using 'message' attribute value.
+     * @brief See sup::sequencer::Instruction.
+     * @details Logging trace using 'message' attribute value.
      */
 
     ExecutionStatus ExecuteSingleImpl (UserInterface * ui, Workspace * ws) override;
