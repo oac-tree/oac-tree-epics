@@ -55,6 +55,8 @@ class SystemClockVariable : public Variable
 
   private:
 
+    ::ccs::base::SharedReference<const ::ccs::types::AnyType> _type;
+
   protected:
 
   public:
@@ -75,8 +77,9 @@ class SystemClockVariable : public Variable
      * @brief See sup::sequencer::Variable.
      */
 
-    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
+    virtual bool SetupImpl (void);
+    virtual bool GetValueImpl (::ccs::types::AnyValue& value) const;
+    virtual bool SetValueImpl (const ::ccs::types::AnyValue& value);
 
     /**
      * @brief Class name for VariableRegistry.
@@ -95,25 +98,68 @@ static bool _sysclockvariable_initialised_flag = RegisterGlobalVariable<SystemCl
 
 // Function definition
 
+bool SystemClockVariable::SetupImpl (void)
+{
+
+  if (Variable::HasAttribute("datatype")) // Has 'datatype' attribute
+    {
+      ::ccs::base::SharedReference<::ccs::types::AnyType> type;
+      bool status = (0u < ::ccs::HelperTools::Parse(type, Variable::GetAttribute("datatype").c_str())); 
+
+      if (status)
+        { // Now going to const type
+          _type = type;
+        }
+    }
+  else
+    { // Default to 'uint64' type
+      _type = ::ccs::types::UnsignedInteger64;
+    }
+
+  return static_cast<bool>(_type);
+
+}
+
 bool SystemClockVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
 
-  bool status = static_cast<bool>(value.GetType());
+  ccs::types::uint64 _time = ::ccs::HelperTools::GetCurrentTime();
 
-  if (!status)
+  bool status = static_cast<bool>(_type);
+
+  ccs::types::AnyValue _value; // Placeholder
+
+  if (status)
     {
-      value = ccs::types::AnyValue (ccs::types::UnsignedInteger64);
-      status = static_cast<bool>(value.GetType()); 
+      _value = ccs::types::AnyValue (_type);
+    }
+
+  if (ccs::types::UnsignedInteger64 == _type)
+    {
+      _value = _time;
+    }
+
+  if (ccs::types::String == _type)
+    {
+      ::ccs::HelperTools::ToISO8601(_time, static_cast<ccs::types::char8*>(_value.GetInstance()), _type->GetSize());
+    }
+
+  if (std::string(_type->GetName()) == "sup::FractionalTime/v1.0")
+    {
+      struct { ::ccs::types::uint32 secs; ::ccs::types::uint32 nsec; } _fract = { 0u, 0u};
+      _fract.secs = static_cast<::ccs::types::uint32>(_time / 1000000000ul);
+      _fract.nsec = static_cast<::ccs::types::uint32>(_time - (1000000000ul * static_cast<::ccs::types::uint64>(_fract.secs)));
+      _value = _fract;
     }
 
   if (status)
     {
-      status = (ccs::types::UnsignedInteger64 == value.GetType());
-    }
-
-  if (status)
-    {
-      value = ::ccs::HelperTools::GetCurrentTime();
+      if ((false == static_cast<bool>(value.GetType())) ||
+          ((value.GetType())->GetSize() == _type->GetSize()))
+        {
+          value = _value;
+          status = static_cast<bool>(value.GetType());
+        }
     }
 
   return status;
@@ -122,7 +168,18 @@ bool SystemClockVariable::GetValueImpl (ccs::types::AnyValue& value) const
 
 bool SystemClockVariable::SetValueImpl (const ccs::types::AnyValue& value) { return false; } // Unimplemented
 
-SystemClockVariable::SystemClockVariable (void) : Variable(SystemClockVariable::Type) {}
+SystemClockVariable::SystemClockVariable (void) : Variable(SystemClockVariable::Type)
+{
+  // Register timespec equivalent type to the GlobalTypeDatabase
+  ::ccs::types::char8 type [] = "{\"type\":\"sup::FractionalTime/v1.0\",\"attributes\":["
+    "{\"seconds\":{\"type\":\"uint32\"}},"
+    "{\"nanosec\":{\"type\":\"uint32\"}}"
+    "]}";
+
+  (void)::ccs::base::GlobalTypeDatabase::Register(type);
+
+}
+
 SystemClockVariable::~SystemClockVariable (void) {}
 
 } // namespace sequencer
