@@ -54,7 +54,8 @@ class SystemCallInstruction : public Instruction
   private:
 
     /**
-     * @brief System call using 'command' attribute value.
+     * @brief See sup::sequencer::Instruction.
+     * @details System call using 'command' attribute value.
      */
 
     ExecutionStatus ExecuteSingleImpl (UserInterface * ui, Workspace * ws) override;
