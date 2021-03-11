@@ -468,4 +468,120 @@ TEST(ChannelAccessInstruction, ProcedureFile)
 
 }
 
+TEST(ChannelAccessInstruction, Procedure_repeat)
+{
+
+  auto proc = sup::sequencer::ParseProcedureString(
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
+    "           name=\"Trivial procedure for testing purposes\"\n"
+    "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+    "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
+    "    <Repeat maxCount=\"10\">\n"
+    "        <Sequence>\n"
+    "            <Wait name=\"wait\" timeout=\"0.1\"/>\n"
+    "            <ChannelAccessWriteInstruction name=\"put-client\"\n"
+    "                channel=\"SEQ-TEST:STRING\"\n"
+    "                variable=\"time\"/>\n"
+    "            <ChannelAccessFetchInstruction name=\"get-client\"\n"
+    "                channel=\"SEQ-TEST:STRING\"\n"
+    "                variable=\"string\"/>\n"
+    "            <LogTrace input=\"time\"/>\n"
+    "            <LogTrace input=\"string\"/>\n"
+    "        </Sequence>\n"
+    "    </Repeat>\n"
+    "    <Workspace>\n"
+    "        <SystemClock name=\"time\" datatype='{\"type\":\"string\"}'/>\n"
+    "        <Local name=\"string\" type='{\"type\":\"string\"}' value='\"undefined\"'/>\n"
+    "    </Workspace>\n"
+    "</Procedure>");
+
+  bool status = static_cast<bool>(proc);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+
+      do
+        {
+          (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
+          proc->ExecuteSingle(&ui);
+          exec = proc->GetStatus();
+        }
+      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+             (sup::sequencer::ExecutionStatus::FAILURE != exec));
+
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
+    }
+
+  (void)Terminate();
+
+  ASSERT_EQ(true, status);
+
+}
+#if 0 // Issue during the tear-down process
+TEST(ChannelAccessInstruction, Procedure_parallel)
+{
+
+  auto proc = sup::sequencer::ParseProcedureString(
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+    "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
+    "           name=\"Trivial procedure for testing purposes\"\n"
+    "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
+    "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
+    "    <Repeat maxCount=\"10\">\n"
+    "        <ParallelSequence>\n"
+    "            <Wait name=\"wait\" timeout=\"0.1\"/>\n"
+    "            <ChannelAccessWriteInstruction name=\"put-client\"\n"
+    "                channel=\"SEQ-TEST:STRING\"\n"
+    "                variable=\"time\"/>\n"
+    "            <ChannelAccessFetchInstruction name=\"get-client\"\n"
+    "                channel=\"SEQ-TEST:STRING\"\n"
+    "                variable=\"string\"/>\n"
+    "            <LogTrace input=\"time\"/>\n"
+    "            <LogTrace input=\"string\"/>\n"
+    "        </ParallelSequence>\n"
+    "    </Repeat>\n"
+    "    <Workspace>\n"
+    "        <SystemClock name=\"time\" datatype='{\"type\":\"string\"}'/>\n"
+    "        <Local name=\"string\" type='{\"type\":\"string\"}' value='\"undefined\"'/>\n"
+    "    </Workspace>\n"
+    "</Procedure>");
+
+  bool status = static_cast<bool>(proc);
+
+  if (status)
+    {
+      status = Initialise();
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+
+      do
+        {
+          (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
+          proc->ExecuteSingle(&ui);
+          exec = proc->GetStatus();
+        }
+      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+             (sup::sequencer::ExecutionStatus::FAILURE != exec));
+
+      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
+    }
+
+  (void)Terminate();
+
+  ASSERT_EQ(true, status);
+
+}
+#endif
 #undef LOG_ALTERN_SRC
