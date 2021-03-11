@@ -22,6 +22,7 @@
 // Global header files
 
 #include <algorithm> // std::find, etc.
+#include <mutex> // std::mutex, etc.
 
 #include <common/BasicTypes.h> // Misc. type definition
 #include <common/StringTools.h> // Misc. helper functions
@@ -53,6 +54,8 @@
 
 #undef LOG_ALTERN_SRC
 #define LOG_ALTERN_SRC "sup::sequencer"
+
+#define USE_MUTEX
 
 // Type definition
 
@@ -282,10 +285,18 @@ const std::string ChannelAccessWriteInstruction::Type = "ChannelAccessWriteInstr
 
 static bool _caclient_initialised_flag = (RegisterGlobalInstruction<ChannelAccessFetchInstruction>() && RegisterGlobalInstruction<ChannelAccessWriteInstruction>());
 
+/**
+ * @brief Mutex for concurrent access of CA helper routines.
+ */
+
+static std::mutex _async_mutex;
+
 // Function definition
 
 bool ChannelAccessInstructionHelper::HandleConnect (const ccs::types::char8 * const channel, ccs::types::uint64 delay)
 {
+
+  log_debug("ChannelAccessInstructionHelper::HandleConnect - Method called for '%s'", channel);
 
   bool status = (false == _connected);
 
@@ -313,6 +324,8 @@ chid ChannelAccessInstructionHelper::GetChannel (void) const { return _channel; 
 bool ChannelAccessInstructionHelper::HandleDetach (void)
 {
 
+  log_debug("ChannelAccessInstructionHelper::HandleDetach - Method called for '%u'", _channel);
+
   bool status = _connected;
 
   if (status)
@@ -337,8 +350,8 @@ bool ChannelAccessFetchInstruction::SetupImpl (Workspace * ws)
 
   if (status)
     {
-      log_debug("ChannelAccessFetchInstruction::SetupImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      log_debug("ChannelAccessFetchInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_debug("ChannelAccessFetchInstruction('%s')::SetupImpl - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_debug("ChannelAccessFetchInstruction('%s')::SetupImpl - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
 
       // Verify if the named variable exists in the workspace ..
       status = (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
@@ -371,6 +384,9 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
   log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
 
+  // MUTEX across multiple threads
+  std::lock_guard<std::mutex> lock (_async_mutex);
+
   (void)ui;
   (void)ws;
 
@@ -390,7 +406,7 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     {
-      log_debug("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
+      log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
 
       if (::ccs::HelperTools::Is<ccs::types::ScalarType>(_value.GetType()))
         {
@@ -412,13 +428,11 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
     {
       ccs::types::string buffer;
       _value.SerialiseInstance(buffer, ccs::types::MaxStringLength);
-      log_debug("ChannelAccessFetchInstruction::ExecuteSingleImpl('%s') - .. variable has '%s' value in the workspace", Instruction::GetName().c_str(), buffer);
+      log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - .. variable has '%s' value in the workspace", Instruction::GetName().c_str(), buffer);
     }
 #endif
-  if (status)
-    { // Detach from CA variable
-      (void)ChannelAccessInstructionHelper::HandleDetach();
-    }
+  // Detach from CA variable
+  (void)ChannelAccessInstructionHelper::HandleDetach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
@@ -433,7 +447,7 @@ bool ChannelAccessWriteInstruction::SetupImpl (Workspace * ws)
 
   if (status)
     {
-      log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
+      log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - Method called with channel '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
       status = ((Instruction::HasAttribute("variable") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()))) ||
                 (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
@@ -442,13 +456,13 @@ bool ChannelAccessWriteInstruction::SetupImpl (Workspace * ws)
     {
       if (Instruction::HasAttribute("variable"))
         {
-          log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+          log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           status = ws->GetValue(Instruction::GetAttribute("variable"), _value);
         }
       else
         {
-          log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
-          log_debug("ChannelAccessWriteInstruction::SetupImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
+          log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
+          log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
           _value = ccs::types::AnyValue (Instruction::GetAttribute("datatype").c_str());
           status = _value.ParseInstance(Instruction::GetAttribute("instance").c_str());
         }
@@ -476,6 +490,9 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
   log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
 
+  // MUTEX across multiple threads
+  std::lock_guard<std::mutex> lock (_async_mutex);
+
   (void)ui;
   (void)ws;
 
@@ -495,7 +512,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     {
-      log_debug("ChannelAccessWriteInstruction::ExecuteSingleImpl('%s') - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
+      log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
 
       if (::ccs::HelperTools::Is<ccs::types::ScalarType>(_value.GetType()))
         {
@@ -508,10 +525,8 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
         }
     }
 
-  if (status)
-    { // Detach from CA variable
-      (void)ChannelAccessInstructionHelper::HandleDetach();
-    }
+  // Detach from CA variable
+  (void)ChannelAccessInstructionHelper::HandleDetach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
 
@@ -519,6 +534,12 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
 ChannelAccessInstructionHelper::ChannelAccessInstructionHelper (void)
 {
+
+  log_debug("ChannelAccessInstructionHelper::ChannelAccessInstructionHelper - Method called");
+
+  // MUTEX across multiple threads
+  std::lock_guard<std::mutex> lock (_async_mutex);
+
   // Create CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
 
@@ -526,6 +547,12 @@ ChannelAccessInstructionHelper::ChannelAccessInstructionHelper (void)
 
 ChannelAccessInstructionHelper::~ChannelAccessInstructionHelper (void)
 {
+
+  log_debug("ChannelAccessInstructionHelper::~ChannelAccessInstructionHelper - Method called");
+
+  // MUTEX across multiple threads
+  std::lock_guard<std::mutex> lock (_async_mutex);
+
   // Destroy CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::TerminateWhenAppropriate();
 
