@@ -525,17 +525,18 @@ TEST(ChannelAccessInstruction, Procedure_repeat)
   ASSERT_EQ(true, status);
 
 }
-#if 0 // Issue during the tear-down process
+#if 1 // Issue during the tear-down process
 TEST(ChannelAccessInstruction, Procedure_parallel)
 {
 
+  sup::sequencer::gtest::NullUserInterface ui; // Should have same or larger scope as procedure
   auto proc = sup::sequencer::ParseProcedureString(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
     "           name=\"Trivial procedure for testing purposes\"\n"
     "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
     "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
-    "    <Repeat maxCount=\"10\">\n"
+    "    <Repeat maxCount=\"100\">\n"
     "        <ParallelSequence>\n"
     "            <Wait name=\"wait\" timeout=\"0.1\"/>\n"
     "            <ChannelAccessWriteInstruction name=\"put-client\"\n"
@@ -563,7 +564,6 @@ TEST(ChannelAccessInstruction, Procedure_parallel)
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do

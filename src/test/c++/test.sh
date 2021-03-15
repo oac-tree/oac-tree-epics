@@ -29,7 +29,7 @@ retcode=${no_error}
 
 echo "***** Starting unit tests *****"
 
-../../../target/bin/unit-tests || retcode=${error}
+../../../target/bin/unit-tests --gtest_filter=-ChannelAccessInstruction.Procedure_parallel || retcode=${error}
 
 echo "***** End of unit tests *****"
 
