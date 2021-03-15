@@ -7,8 +7,8 @@
         <Sequence>
             <Wait name="wait"
                 timeout="1.0"/>
-            <CopyInstruction input="curr-time" output="pvxs-variable.timestamp"/>
-            <CopyInstruction input="curr-time" output="pvxs-other.timestamp"/>
+            <Copy input="curr-time" output="pvxs-variable.timestamp"/>
+            <Copy input="curr-time" output="pvxs-other.timestamp"/>
             <LogTrace name="variable"
                 input="pvxs-variable"/>
             <LogTrace name="other"
