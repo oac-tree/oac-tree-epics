@@ -126,6 +126,7 @@ TEST(ChannelAccessInstruction, Execute_novar)
 TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variable in the workspace
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureString(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
@@ -156,15 +157,25 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
   bool status = static_cast<bool>(proc);
 
   if (status)
-    {
-      status = Initialise();
-    }
-
-  if (status)
-    { // Create file to initialise the waorkspace variables with right datatype
+    { // Create file to initialise the workspace variables with right datatype
       ccs::types::AnyValue boolean_var (false); ccs::HelperTools::DumpToFile(&boolean_var, "/tmp/file-variable-boolean.dat");
       ccs::types::AnyValue uint32_var (0u); ccs::HelperTools::DumpToFile(&uint32_var, "/tmp/file-variable-uint32.dat");
       ccs::types::AnyValue string_var ("undefined"); ccs::HelperTools::DumpToFile(&string_var, "/tmp/file-variable-string.dat");
+    }
+
+  if (status)
+    { // Setup instructions
+      status = proc->Setup();
+
+      if (!status)
+        {
+          log_error("TEST(ChannelAccessInstruction, Fetch_boolean) - Procedure::Setup() failure");
+        }
+    }
+
+  if (status)
+    {
+      status = Initialise();
     }
 
   if (status)
@@ -175,7 +186,6 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do
@@ -248,6 +258,12 @@ TEST(ChannelAccessInstruction, Write_boolean)
     }
 
   if (status)
+    { // Setup to verify/process attributes
+      sup::sequencer::Procedure proc; // Dummy
+      status = instruction->Setup(proc);
+    }
+
+  if (status)
     {
       sup::sequencer::gtest::NullUserInterface ui;
       instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
@@ -314,6 +330,12 @@ TEST(ChannelAccessInstruction, Write_float32)
   if (status)
     {
       status = (instruction->AddAttribute("datatype", "{\"type\": \"string\"}") && instruction->AddAttribute("instance", "\"0.5\""));
+    }
+
+  if (status)
+    { // Setup to verify/process attributes
+      sup::sequencer::Procedure proc; // Dummy
+      status = instruction->Setup(proc);
     }
 
   if (status)
@@ -387,6 +409,12 @@ TEST(ChannelAccessInstruction, Write_array)
     }
 
   if (status)
+    { // Setup to verify/process attributes
+      sup::sequencer::Procedure proc; // Dummy
+      status = instruction->Setup(proc);
+    }
+
+  if (status)
     {
       sup::sequencer::gtest::NullUserInterface ui;
       instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
@@ -436,9 +464,15 @@ TEST(ChannelAccessInstruction, Write_array)
 TEST(ChannelAccessInstruction, ProcedureFile)
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureFile("../resources/sequence_ca.xml");
 
   bool status = static_cast<bool>(proc);
+
+  if (status)
+    { // Setup instructions
+      status = proc->Setup();
+    }
 
   if (status)
     {
@@ -447,7 +481,6 @@ TEST(ChannelAccessInstruction, ProcedureFile)
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do
@@ -471,6 +504,7 @@ TEST(ChannelAccessInstruction, ProcedureFile)
 TEST(ChannelAccessInstruction, Procedure_repeat)
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureString(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
@@ -499,13 +533,17 @@ TEST(ChannelAccessInstruction, Procedure_repeat)
   bool status = static_cast<bool>(proc);
 
   if (status)
+    { // Setup instructions
+      status = proc->Setup();
+    }
+
+  if (status)
     {
       status = Initialise();
     }
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do
@@ -525,7 +563,7 @@ TEST(ChannelAccessInstruction, Procedure_repeat)
   ASSERT_EQ(true, status);
 
 }
-#if 1 // Issue during the tear-down process
+// Issue during the tear-down process
 TEST(ChannelAccessInstruction, Procedure_parallel)
 {
 
@@ -536,7 +574,7 @@ TEST(ChannelAccessInstruction, Procedure_parallel)
     "           name=\"Trivial procedure for testing purposes\"\n"
     "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
     "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
-    "    <Repeat maxCount=\"100\">\n"
+    "    <Repeat maxCount=\"10\">\n"
     "        <ParallelSequence>\n"
     "            <Wait name=\"wait\" timeout=\"0.1\"/>\n"
     "            <ChannelAccessWriteInstruction name=\"put-client\"\n"
@@ -558,6 +596,11 @@ TEST(ChannelAccessInstruction, Procedure_parallel)
   bool status = static_cast<bool>(proc);
 
   if (status)
+    { // Setup instructions
+      status = proc->Setup();
+    }
+
+  if (status)
     {
       status = Initialise();
     }
@@ -583,5 +626,5 @@ TEST(ChannelAccessInstruction, Procedure_parallel)
   ASSERT_EQ(true, status);
 
 }
-#endif
+
 #undef LOG_ALTERN_SRC
