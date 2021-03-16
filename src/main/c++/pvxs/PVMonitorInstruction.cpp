@@ -21,8 +21,6 @@
 
 // Global header files
 
-#include <new> // std::nothrow, etc.
-#include <mutex> // std::mutex, etc.
 #include <algorithm> // std::find, etc.
 
 #include <common/BasicTypes.h> // Misc. type definition

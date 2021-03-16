@@ -109,6 +109,14 @@ class ChannelAccessVariable : public Variable
 
     ccs::base::ChannelAccessClient* _client = NULL_PTR_CAST(ccs::base::ChannelAccessClient*);
 
+    /**
+     * @brief See sup::sequencer::Variable.
+     */
+
+    virtual bool SetupImpl (void);
+    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
+    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
+
   protected:
 
   public:
@@ -124,14 +132,6 @@ class ChannelAccessVariable : public Variable
      */
 
     ~ChannelAccessVariable (void) override;
-
-    /**
-     * @brief See sup::sequencer::Variable.
-     */
-
-    virtual bool SetupImpl (void);
-    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
 
     /**
      * @brief Class name for VariableRegistry.

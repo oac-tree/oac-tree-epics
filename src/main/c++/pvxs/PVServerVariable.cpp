@@ -78,6 +78,14 @@ class PVServerVariable : public Variable
 
     ccs::base::PVAccessServer* _server = NULL_PTR_CAST(ccs::base::PVAccessServer*);
 
+    /**
+     * @brief See sup::sequencer::Variable.
+     */
+
+    virtual bool SetupImpl (void);
+    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
+    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
+
   protected:
 
   public:
@@ -93,14 +101,6 @@ class PVServerVariable : public Variable
      */
 
     ~PVServerVariable (void) override;
-
-    /**
-     * @brief See sup::sequencer::Variable.
-     */
-
-    virtual bool SetupImpl (void);
-    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
 
     /**
      * @brief Class name for VariableRegistry.

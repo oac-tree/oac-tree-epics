@@ -21,8 +21,6 @@
 
 // Global header files
 
-#include <mutex> // std::mutex, etc.
-
 #include <common/BasicTypes.h> // Misc. type definition
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
@@ -65,6 +63,14 @@ class PVMonitorVariable : public Variable, public PVMonitorCache
 
   private:
 
+    /**
+     * @brief See sup::sequencer::Variable.
+     */
+
+    virtual bool SetupImpl (void);
+    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
+    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
+
   protected:
 
   public:
@@ -80,14 +86,6 @@ class PVMonitorVariable : public Variable, public PVMonitorCache
      */
 
     ~PVMonitorVariable (void) override;
-
-    /**
-     * @brief See sup::sequencer::Variable.
-     */
-
-    virtual bool SetupImpl (void);
-    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
 
     /**
      * @brief Class name for VariableRegistry.
