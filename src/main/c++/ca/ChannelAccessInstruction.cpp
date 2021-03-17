@@ -346,6 +346,7 @@ bool ChannelAccessInstructionHelper::HandleDetach (void)
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 bool ChannelAccessFetchInstruction::SetupImpl (const Procedure& proc)
 {
 
@@ -378,12 +379,12 @@ bool ChannelAccessFetchInstruction::SetupImpl (const Procedure& proc)
       status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
                 ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
     }
-
+#ifdef LOG_DEBUG_ENABLE
   if (!status)
     {
       log_error("ChannelAccessFetchInstruction('%s')::SetupImpl - .. failure", Instruction::GetName().c_str());
     }
-
+#endif
   return status;
 
 }
@@ -448,6 +449,7 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
 }
 
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
 {
 
@@ -489,12 +491,12 @@ bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
       status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
                 ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
     }
-
+#ifdef LOG_DEBUG_ENABLE
   if (!status)
     {
       log_error("ChannelAccessWriteInstruction('%s')::SetupImpl - .. failure", Instruction::GetName().c_str());
     }
-
+#endif
   return status;
 
 }

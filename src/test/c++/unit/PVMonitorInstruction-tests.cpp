@@ -136,6 +136,7 @@ TEST(PVMonitorInstruction, Setup_missing)
 TEST(PVMonitorInstruction, Setup_novar)
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureString(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
@@ -155,8 +156,12 @@ TEST(PVMonitorInstruction, Setup_novar)
   bool status = static_cast<bool>(proc);
 
   if (status)
+    { // Setup procedure
+      status = proc->Setup();
+    }
+
+  if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do
@@ -178,6 +183,7 @@ TEST(PVMonitorInstruction, Setup_novar)
 TEST(PVMonitorInstruction, Execute_success)
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureString(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
@@ -199,13 +205,17 @@ TEST(PVMonitorInstruction, Execute_success)
   bool status = static_cast<bool>(proc);
 
   if (status)
+    { // Setup procedure
+      status = proc->Setup();
+    }
+
+  if (status)
     {
       status = Initialise();
     }
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do

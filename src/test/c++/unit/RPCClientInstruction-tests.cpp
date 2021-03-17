@@ -146,6 +146,12 @@ TEST(RPCClientInstruction, Execute_undefined)
 
   if (status)
     {
+      sup::sequencer::Procedure proc; // Dummy
+      status = instruction->Setup(proc);
+    }
+
+  if (status)
+    {
       sup::sequencer::gtest::NullUserInterface ui;
       instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
       status = (sup::sequencer::ExecutionStatus::FAILURE == instruction->GetStatus());
@@ -158,6 +164,7 @@ TEST(RPCClientInstruction, Execute_undefined)
 TEST(RPCClientAccessInstruction, Execute_success) // Must be associated to a variable in the workspace
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureString(
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
@@ -180,13 +187,17 @@ TEST(RPCClientAccessInstruction, Execute_success) // Must be associated to a var
   bool status = static_cast<bool>(proc);
 
   if (status)
+    { // Setup procedure
+      status = proc->Setup();
+    }
+
+  if (status)
     {
       status = Initialise();
     }
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do

@@ -34,6 +34,7 @@
 #include <Instruction.h>
 #include <InstructionRegistry.h>
 
+#include <Procedure.h>
 #include <Workspace.h>
 
 // Local header files
@@ -82,10 +83,10 @@ class RPCClientInstruction : public Instruction
     ccs::types::AnyValue _request;
 
     /**
-     * @brief Verify and handle attributes.
+     * @brief See sup::sequencer::Instruction.
      */
 
-    virtual bool SetupImpl (Workspace * ws);
+    virtual bool SetupImpl (const Procedure& proc);
 
     /**
      * @brief See sup::sequencer::Instruction.
@@ -126,7 +127,7 @@ static bool _rpcclient_initialised_flag = RegisterGlobalInstruction<RPCClientIns
 
 // Function definition
 
-bool RPCClientInstruction::SetupImpl (Workspace * ws)
+bool RPCClientInstruction::SetupImpl (const Procedure& proc)
 {
 
   log_debug("RPCClientInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
@@ -136,7 +137,7 @@ bool RPCClientInstruction::SetupImpl (Workspace * ws)
   if (status)
     {
       log_debug("RPCClientInstruction::SetupImpl('%s') - Method called with service '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("service").c_str());
-      status = ((Instruction::HasAttribute("request") && (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("request").c_str()))) ||
+      status = ((Instruction::HasAttribute("request") && (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), Instruction::GetAttribute("request").c_str()))) ||
                 (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
 
@@ -145,7 +146,7 @@ bool RPCClientInstruction::SetupImpl (Workspace * ws)
       if (Instruction::HasAttribute("request"))
         {
           log_debug("RPCClientInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("request").c_str());
-          status = ws->GetValue(Instruction::GetAttribute("request"), _request);
+          status = proc.GetVariableValue(Instruction::GetAttribute("request"), _request);
         }
       else
         {
@@ -173,7 +174,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
   (void)ui;
   (void)ws;
 
-  bool status = SetupImpl(ws);
+  bool status = static_cast<bool>(_request.GetType());
 #ifdef LOG_DEBUG_ENABLE
   if (status)
     {

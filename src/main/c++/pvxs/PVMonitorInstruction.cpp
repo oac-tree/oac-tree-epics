@@ -31,16 +31,17 @@
 
 #include <common/PVMonitor.h> // Plug-in managed through dynamic linking .. see Makefile
 
+#include <Instruction.h>
+#include <InstructionRegistry.h>
+
+#include <Procedure.h>
+#include <Workspace.h>
+
 // Local header files
 
 #include "ToInteger.h"
 
 #include "PVMonitorCache.h"
-
-#include "Instruction.h"
-#include "InstructionRegistry.h"
-
-#include "Workspace.h"
 
 // Constants
 
@@ -73,10 +74,10 @@ class PVMonitorInstruction : public Instruction, public PVMonitorCache
     ccs::types::uint64 _timeout = 5000000000ul;
 
     /**
-     * @brief Verify and handle attributes.
+     * @brief See sup::sequencer::Instruction.
      */
 
-    virtual bool SetupImpl (Workspace * ws);
+    virtual bool SetupImpl (const Procedure& proc);
 
     /**
      * @brief See sup::sequencer::Instruction.
@@ -117,7 +118,7 @@ static bool _pvmonitor_initialised_flag = RegisterGlobalInstruction<PVMonitorIns
 
 // Function definition
 
-bool PVMonitorInstruction::SetupImpl (Workspace * ws)
+bool PVMonitorInstruction::SetupImpl (const Procedure& proc)
 {
 
   log_debug("PVMonitorInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
@@ -130,7 +131,7 @@ bool PVMonitorInstruction::SetupImpl (Workspace * ws)
       log_debug("PVMonitorInstruction('%s')::SetupImpl - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
 
       // Verify the variable exists in the workspace
-      status = (ws->VariableNames().end() != std::find(ws->VariableNames().begin(), ws->VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
+      status = (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
     }
 
   if (status && Instruction::HasAttribute("timeout"))
@@ -155,7 +156,7 @@ ExecutionStatus PVMonitorInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
   (void)ui;
   (void)ws;
 
-  bool status = SetupImpl(ws);
+  bool status = (false == ::ccs::HelperTools::IsUndefinedString(PVMonitorCache::GetChannel())); // Has been Setup
 
   while (status && (0ul < _timeout) && (false == PVMonitorCache::IsInitialised()))
     { // Wait at most timeout for a monitor to be received
