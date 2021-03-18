@@ -69,8 +69,19 @@ static inline bool Terminate (void)
 TEST(PVServerVariable, ProcedureVariable)
 {
 
+  std::string file; // Placeholder
+
+  if (::ccs::HelperTools::Exist("../resources/variable_pvxs.xml"))
+    {
+      file = std::string("../resources/variable_pvxs.xml");
+    }
+  else
+    {
+      file = std::string("./target/test/resources/variable_pvxs.xml");
+    }
+
   sup::sequencer::gtest::NullUserInterface ui;
-  auto proc = sup::sequencer::ParseProcedureFile("../resources/variable_pvxs.xml");
+  auto proc = sup::sequencer::ParseProcedureFile(file);
 
   bool status = static_cast<bool>(proc);
 

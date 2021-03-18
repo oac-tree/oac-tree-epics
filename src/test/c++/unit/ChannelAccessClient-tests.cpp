@@ -60,7 +60,7 @@ static inline bool Initialise (void)
     }
   else
     {
-      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./src/test/resources/ChannelAccessClient.db &> /dev/null");
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
     }
 
   if (status)

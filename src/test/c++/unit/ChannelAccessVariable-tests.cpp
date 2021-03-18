@@ -32,13 +32,12 @@
 
 #include <SequenceParser.h>
 
-#include <Instruction.h>
-#include <InstructionRegistry.h>
-
 #include <Variable.h>
 #include <VariableRegistry.h>
 
 // Local header files
+
+#include "SystemCall.h"
 
 #include "NullUserInterface.h"
 
@@ -60,20 +59,15 @@ static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 static inline bool Initialise (void)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
-
-  bool status = static_cast<bool>(instruction);
+  bool status = ::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db");
 
   if (status)
     {
-      status = instruction->AddAttribute("command", "/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
     }
-
-  if (status)
+  else
     {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
     }
 
   return status;
@@ -83,21 +77,7 @@ static inline bool Initialise (void)
 static inline bool Terminate (void)
 {
 
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
-
-  bool status = static_cast<bool>(instruction);
-
-  if (status)
-    {
-      status = instruction->AddAttribute("command", "/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
-    }
+  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
 
   return status;
 
@@ -249,13 +229,24 @@ TEST(ChannelAccessVariable, SetValue_success)
 TEST(ChannelAccessVariable, ProcedureFile)
 {
 
-  auto proc = sup::sequencer::ParseProcedureFile("../resources/variable_ca.xml");
+  std::string file; // Placeholder
+
+  if (::ccs::HelperTools::Exist("../resources/variable_ca.xml"))
+    {
+      file = std::string("../resources/variable_ca.xml");
+    }
+  else
+    {
+      file = std::string("./target/test/resources/variable_ca.xml");
+    }
+
+  sup::sequencer::gtest::NullUserInterface ui;
+  auto proc = sup::sequencer::ParseProcedureFile(file);
 
   bool status = static_cast<bool>(proc);
 
   if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do

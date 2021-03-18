@@ -62,7 +62,16 @@ static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 static inline bool Initialise (void)
 {
 
-  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+  bool status = ::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db");
+
+  if (status)
+    {
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+    }
+  else
+    {
+      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
+    }
 
   return status;
 
@@ -464,8 +473,19 @@ TEST(ChannelAccessInstruction, Write_array)
 TEST(ChannelAccessInstruction, ProcedureFile)
 {
 
+  std::string file; // Placeholder
+
+  if (::ccs::HelperTools::Exist("../resources/sequence_ca.xml"))
+    {
+      file = std::string("../resources/sequence_ca.xml");
+    }
+  else
+    {
+      file = std::string("./target/test/resources/sequence_ca.xml");
+    }
+
   sup::sequencer::gtest::NullUserInterface ui;
-  auto proc = sup::sequencer::ParseProcedureFile("../resources/sequence_ca.xml");
+  auto proc = sup::sequencer::ParseProcedureFile(file);
 
   bool status = static_cast<bool>(proc);
 
