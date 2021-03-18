@@ -58,7 +58,8 @@
 #undef LOG_ALTERN_SRC
 #define LOG_ALTERN_SRC "sup::sequencer"
 
-#define USE_MUTEX
+//#define ChannelAccessInstruction_Use_Mutex
+//#define ChannelAccessInstruction_Share_Context
 
 // Type definition
 
@@ -312,9 +313,9 @@ static bool _caclient_initialised_flag = (RegisterGlobalInstruction<ChannelAcces
 /**
  * @brief Mutex for concurrent access of CA helper routines.
  */
-
+#ifdef ChannelAccessInstruction_Use_Mutex
 static std::mutex _async_mutex;
-
+#endif
 // Function definition
 
 bool ChannelAccessInstructionHelper::HandleConnect (const ccs::types::char8 * const channel)
@@ -326,39 +327,42 @@ bool ChannelAccessInstructionHelper::HandleConnect (const ccs::types::char8 * co
 
   if (!status)
     {
-      log_warning("ChannelAccessInstructionHelper::HandleConnect - Channel already connected ..");
+      log_warning("ChannelAccessInstructionHelper::HandleConnect('%s') - Channel already connected ..", channel);
     }
 
   if (status)
     { // Attach to CA context .. implicit create if necessary
+#ifdef ChannelAccessInstruction_Share_Context
       status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
-
+#else
+      status = ::ccs::HelperTools::ChannelAccess::CreateContext(true);
+#endif
       if (!status)
         {
-          log_error("ChannelAccessInstructionHelper::HandleConnect - .. unable to attach to CA context");
+          log_error("ChannelAccessInstructionHelper::HandleConnect('%s') - .. unable to attach to CA context", channel);
         }
     }
 
   if (status)
     {
-      log_info("ChannelAccessInstructionHelper::HandleConnect - Connect to variable '%s' ..", channel);
+      log_debug("ChannelAccessInstructionHelper::HandleConnect('%s') - Connect to variable ..", channel);
       _connected = ::ccs::HelperTools::ChannelAccess::ConnectVariable(channel, _channel);
 
       if (false == _connected)
         { // Might be related to the connection test included call above
-          log_notice("ChannelAccessInstructionHelper::HandleConnect - .. give it more time");
+          log_debug("ChannelAccessInstructionHelper::HandleConnect('%s') - .. give it more time", channel);
           (void)::ccs::HelperTools::SleepFor(_delay);
           _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
         }
 
       status = _connected;
     }
-
+#ifdef LOG_DEBUG_ENABLE
   if (!status)
     {
-      log_error("ChannelAccessInstructionHelper::HandleConnect - .. failure");
+      log_error("ChannelAccessInstructionHelper::HandleConnect('%s') - .. failure", channel);
     }
-
+#endif
   return status;
 
 }
@@ -452,8 +456,11 @@ bool ChannelAccessInstructionHelper::HandleDetach (void)
     }
 
   // Detach from CA context .. implicit destroy when necessary    
+#ifdef ChannelAccessInstruction_Share_Context
   ::ccs::HelperTools::ChannelAccessClientContext::Detach();
-
+#else
+  ::ccs::HelperTools::ChannelAccess::ClearContext();
+#endif
   return status;
 
 }
@@ -504,10 +511,10 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 {
 
   log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
-
+#ifdef ChannelAccessInstruction_Use_Mutex
   // MUTEX across multiple threads
   std::lock_guard<std::mutex> lock (_async_mutex);
-
+#endif
   (void)ui;
   (void)ws;
 
@@ -609,10 +616,10 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 {
 
   log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
-
+#ifdef ChannelAccessInstruction_Use_Mutex
   // MUTEX across multiple threads
   std::lock_guard<std::mutex> lock (_async_mutex);
-
+#endif
   (void)ui;
   (void)ws;
 
@@ -638,24 +645,26 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
 ChannelAccessInstructionHelper::ChannelAccessInstructionHelper (void)
 {
-
+#ifdef ChannelAccessInstruction_Use_Mutex
   // MUTEX across multiple threads
   std::lock_guard<std::mutex> lock (_async_mutex);
-
+#endif
+#ifdef ChannelAccessInstruction_Share_Context
   // Create CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
-
+#endif
 }
 
 ChannelAccessInstructionHelper::~ChannelAccessInstructionHelper (void)
 {
-
+#ifdef ChannelAccessInstruction_Use_Mutex
   // MUTEX across multiple threads
   std::lock_guard<std::mutex> lock (_async_mutex);
-
+#endif
+#ifdef ChannelAccessInstruction_Share_Context
   // Destroy CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::TerminateWhenAppropriate();
-
+#endif
 }
 
 ChannelAccessFetchInstruction::ChannelAccessFetchInstruction (void) : Instruction(ChannelAccessFetchInstruction::Type), ChannelAccessInstructionHelper() {}
