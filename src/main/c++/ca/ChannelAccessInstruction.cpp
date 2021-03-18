@@ -28,6 +28,8 @@
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
 
+//#include <common/ToInteger.h>
+
 #include <common/log-api.h> // Syslog wrapper routines
 
 #include <common/AnyValue.h>
@@ -37,19 +39,19 @@
 #include <common/ChannelAccessHelper.h> // CA helper routines
 #include <common/AnyTypeToCA.h> // CA helper routines .. type conversion
 
+#include <ExecutionStatus.h>
+
+#include <Instruction.h>
+#include <InstructionRegistry.h>
+
+#include <Procedure.h>
+#include <Workspace.h>
+
 // Local header files
 
 #include "ToInteger.h"
 
 #include "ChannelAccessClientContext.h"
-
-#include "ExecutionStatus.h"
-
-#include "Instruction.h"
-#include "InstructionRegistry.h"
-
-#include "Procedure.h"
-#include "Workspace.h"
 
 // Constants
 
@@ -82,13 +84,23 @@ class ChannelAccessInstructionHelper
     chid _channel;
     bool _connected = false;
 
+    ccs::types::uint64 _delay = 100000000ul;
+
   protected:
 
   public:
 
-    bool HandleConnect (const ccs::types::char8 * const channel, ccs::types::uint64 delay = 100000000ul);
+    bool HandleConnect (const ccs::types::char8 * const channel);
     bool HandleDetach (void);
     chid GetChannel (void) const;
+
+    bool SetDelay (ccs::types::uint64 delay);
+    bool SetDelay (const ccs::types::char8 * const delay);
+
+    bool VerifyValue (const ccs::types::AnyValue& value) const;
+
+    bool ReadChannel (ccs::types::AnyValue& value) const;
+    bool WriteChannel (const ccs::types::AnyValue& value) const;
 
     /**
      * @brief Constructor.
@@ -249,6 +261,13 @@ class ChannelAccessWriteInstruction : public Instruction, public ChannelAccessIn
      * @details Verify and handle attributes.
      */
 
+    bool VerifyAttributes (const Procedure& proc) const;
+
+    /**
+     * @brief See sup::sequencer::Instruction.
+     * @details Verify and handle attributes.
+     */
+
     virtual bool SetupImpl (const Procedure& proc);
 
     /**
@@ -298,33 +317,121 @@ static std::mutex _async_mutex;
 
 // Function definition
 
-bool ChannelAccessInstructionHelper::HandleConnect (const ccs::types::char8 * const channel, ccs::types::uint64 delay)
+bool ChannelAccessInstructionHelper::HandleConnect (const ccs::types::char8 * const channel)
 {
 
   log_debug("ChannelAccessInstructionHelper::HandleConnect - Method called for '%s'", channel);
 
   bool status = (false == _connected);
 
+  if (!status)
+    {
+      log_warning("ChannelAccessInstructionHelper::HandleConnect - Channel already connected ..");
+    }
+
   if (status)
     { // Attach to CA context .. implicit create if necessary
       status = ::ccs::HelperTools::ChannelAccessClientContext::Attach();
+
+      if (!status)
+        {
+          log_error("ChannelAccessInstructionHelper::HandleConnect - .. unable to attach to CA context");
+        }
     }
 
   if (status)
     {
-      log_debug("ChannelAccessInstructionHelper::HandleConnect - Connect to variable '%s' ..", channel);
-      //status = ::ccs::HelperTools::ChannelAccess::ConnectVariable(channel, _channel);
-      (void)::ccs::HelperTools::ChannelAccess::ConnectVariable(channel, _channel);
-      (void)::ccs::HelperTools::SleepFor(delay);
-      _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
+      log_info("ChannelAccessInstructionHelper::HandleConnect - Connect to variable '%s' ..", channel);
+      _connected = ::ccs::HelperTools::ChannelAccess::ConnectVariable(channel, _channel);
+
+      if (false == _connected)
+        { // Might be related to the connection test included call above
+          log_notice("ChannelAccessInstructionHelper::HandleConnect - .. give it more time");
+          (void)::ccs::HelperTools::SleepFor(_delay);
+          _connected = ::ccs::HelperTools::ChannelAccess::IsConnected(_channel);
+        }
+
       status = _connected;
+    }
+
+  if (!status)
+    {
+      log_error("ChannelAccessInstructionHelper::HandleConnect - .. failure");
     }
 
   return status;
 
 }
 
+bool ChannelAccessInstructionHelper::SetDelay (ccs::types::uint64 delay) { _delay = delay; return true; }
+bool ChannelAccessInstructionHelper::SetDelay (const ccs::types::char8 * const delay) { return SetDelay(::ccs::HelperTools::ToInteger<ccs::types::uint64>(delay)); }
+
 chid ChannelAccessInstructionHelper::GetChannel (void) const { return _channel; }
+
+bool ChannelAccessInstructionHelper::VerifyValue (const ccs::types::AnyValue& value) const
+{
+
+  ::ccs::base::SharedReference<const ccs::types::AnyType> _type = value.GetType();
+
+  bool status = static_cast<bool>(_type);
+
+  if (status)
+    { // ToDo - Should be scalar or scalar array .. not array of structures
+      status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
+                ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
+    }
+
+  return status;
+
+}
+
+bool ChannelAccessInstructionHelper::ReadChannel (ccs::types::AnyValue& value) const
+{
+
+  bool status = _connected;
+
+  if (status)
+    {
+      log_debug("ChannelAccessInstructionHelper::ReadChannel - Access as type '%s' ..", value.GetType()->GetName());
+
+      if (::ccs::HelperTools::Is<ccs::types::ScalarType>(value.GetType()))
+        {
+          status = ::ccs::HelperTools::ChannelAccess::ReadVariable(GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance());
+        }
+      else
+        {
+          ::ccs::base::SharedReference<const ccs::types::ArrayType> _type = value.GetType();
+          status = ::ccs::HelperTools::ChannelAccess::ReadVariable(GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), _type->GetMultiplicity(), value.GetInstance());
+        }
+    }
+
+  return status;
+
+}
+
+bool ChannelAccessInstructionHelper::WriteChannel (const ccs::types::AnyValue& value) const
+{
+
+  bool status = _connected;
+
+  if (status)
+    {
+      log_debug("ChannelAccessInstructionHelper::WriteChannel - Access as type '%s' ..", value.GetType()->GetName());
+
+      if (::ccs::HelperTools::Is<ccs::types::ScalarType>(value.GetType()))
+        {
+          status = ::ccs::HelperTools::ChannelAccess::WriteVariable(GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance());
+        }
+      else
+        {
+          ::ccs::base::SharedReference<const ccs::types::ArrayType> _type = value.GetType();
+          status = ::ccs::HelperTools::ChannelAccess::WriteVariable(GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), _type->GetMultiplicity(), value.GetInstance());
+        }
+    }
+
+  return status;
+
+}
 
 bool ChannelAccessInstructionHelper::HandleDetach (void)
 {
@@ -332,6 +439,11 @@ bool ChannelAccessInstructionHelper::HandleDetach (void)
   log_debug("ChannelAccessInstructionHelper::HandleDetach - Method called for '%u'", _channel);
 
   bool status = _connected;
+
+  if (!status)
+    {
+      log_warning("ChannelAccessInstructionHelper::HandleDetach - Channel not connected ..");
+    }
 
   if (status)
     { // Detach from CA variable
@@ -370,14 +482,7 @@ bool ChannelAccessFetchInstruction::SetupImpl (const Procedure& proc)
 
   if (status)
     {
-      status = static_cast<bool>(_value.GetType());
-    }
-
-  if (status)
-    {
-      ::ccs::base::SharedReference<const ccs::types::AnyType> _type = _value.GetType();
-      status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
-                ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
+      status = ChannelAccessInstructionHelper::VerifyValue(_value);
     }
 #ifdef LOG_DEBUG_ENABLE
   if (!status)
@@ -385,6 +490,11 @@ bool ChannelAccessFetchInstruction::SetupImpl (const Procedure& proc)
       log_error("ChannelAccessFetchInstruction('%s')::SetupImpl - .. failure", Instruction::GetName().c_str());
     }
 #endif
+  if (status && Instruction::HasAttribute("delay"))
+    {
+      status = ChannelAccessInstructionHelper::SetDelay(Instruction::GetAttribute("delay").c_str());
+    }
+
   return status;
 
 }
@@ -405,33 +515,19 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     { // Attach to CA variable
-      if (Instruction::HasAttribute("delay"))
-        {
-          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str(), ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Instruction::GetAttribute("delay").c_str()));
-        }
-      else
-        {
-          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
-        }
+      log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Connect ..", Instruction::GetName().c_str());
+      status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
     }
 
   if (status)
     {
-      log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Fetch as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
-
-      if (::ccs::HelperTools::Is<ccs::types::ScalarType>(_value.GetType()))
-        {
-          status = ::ccs::HelperTools::ChannelAccess::ReadVariable(ChannelAccessInstructionHelper::GetChannel(), ::ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
-        }
-      else
-        {
-          ::ccs::base::SharedReference<const ccs::types::ArrayType> _type = _value.GetType();
-          status = ::ccs::HelperTools::ChannelAccess::ReadVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _type->GetMultiplicity(), _value.GetInstance());
-        }
+      log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Read channel ..", Instruction::GetName().c_str());
+      status = ChannelAccessInstructionHelper::ReadChannel(_value);
     }
 
   if (status)
     { // Write to workspace
+      log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Update workspace ..", Instruction::GetName().c_str());
       status = ws->SetValue(Instruction::GetAttribute("variable"), _value);
     }
 #ifdef LOG_DEBUG_ENABLE
@@ -449,11 +545,8 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
 
 }
 
-// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
-bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
+bool ChannelAccessWriteInstruction::VerifyAttributes (const Procedure& proc) const
 {
-
-  log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
 
   bool status = Instruction::HasAttribute("channel");
 
@@ -463,6 +556,18 @@ bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
       status = ((Instruction::HasAttribute("variable") && (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), Instruction::GetAttribute("variable").c_str()))) ||
                 (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
     }
+
+  return status;
+
+}
+
+// cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
+bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
+{
+
+  log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
+
+  bool status = VerifyAttributes(proc);
 
   if (status)
     {
@@ -482,14 +587,7 @@ bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
 
   if (status)
     {
-      status = static_cast<bool>(_value.GetType());
-    }
-
-  if (status)
-    {
-      ::ccs::base::SharedReference<const ccs::types::AnyType> _type = _value.GetType();
-      status = (::ccs::HelperTools::Is<ccs::types::ArrayType>(_type) ||
-                ::ccs::HelperTools::Is<ccs::types::ScalarType>(_type));
+      status = ChannelAccessInstructionHelper::VerifyValue(_value);
     }
 #ifdef LOG_DEBUG_ENABLE
   if (!status)
@@ -497,6 +595,11 @@ bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
       log_error("ChannelAccessWriteInstruction('%s')::SetupImpl - .. failure", Instruction::GetName().c_str());
     }
 #endif
+  if (status && Instruction::HasAttribute("delay"))
+    {
+      status = ChannelAccessInstructionHelper::SetDelay(Instruction::GetAttribute("delay").c_str());
+    }
+
   return status;
 
 }
@@ -517,29 +620,13 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     { // Attach to CA variable
-      if (Instruction::HasAttribute("delay"))
-        {
-          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str(), ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Instruction::GetAttribute("delay").c_str()));
-        }
-      else
-        {
-          status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
-        }
+      status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
     }
 
   if (status)
     {
-      log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Write as type '%s' ..", Instruction::GetName().c_str(), _value.GetType()->GetName());
-
-      if (::ccs::HelperTools::Is<ccs::types::ScalarType>(_value.GetType()))
-        {
-          status = ::ccs::HelperTools::ChannelAccess::WriteVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _value.GetInstance());
-        }
-      else
-        {
-          ::ccs::base::SharedReference<const ccs::types::ArrayType> _type = _value.GetType();
-          status = ::ccs::HelperTools::ChannelAccess::WriteVariable(ChannelAccessInstructionHelper::GetChannel(), ccs::HelperTools::AnyTypeToCAScalar(_value.GetType()), _type->GetMultiplicity(), _value.GetInstance());
-        }
+      log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Write ..", Instruction::GetName().c_str());
+      status = ChannelAccessInstructionHelper::WriteChannel(_value);
     }
 
   // Detach from CA variable
