@@ -69,13 +69,18 @@ static inline bool Terminate (void)
 TEST(PVServerVariable, ProcedureVariable)
 {
 
+  sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureFile("../resources/variable_pvxs.xml");
 
   bool status = static_cast<bool>(proc);
 
   if (status)
+    { // Setup procedure
+      status = proc->Setup();
+    }
+
+  if (status)
     {
-      sup::sequencer::gtest::NullUserInterface ui;
       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
       do
