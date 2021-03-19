@@ -115,9 +115,7 @@ bool PVMonitorVariable::SetupImpl (void)
       status = PVMonitorCache::SetChannel(Variable::GetAttribute("channel").c_str());
     }
 
-  if (Variable::HasAttribute("status"))
-    { // ToDo - Additional status variable
-    }
+  // ToDo - Additional status variable
 
   return status;
 

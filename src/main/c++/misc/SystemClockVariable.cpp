@@ -57,6 +57,14 @@ class SystemClockVariable : public Variable
 
     ::ccs::base::SharedReference<const ::ccs::types::AnyType> _type;
 
+    /**
+     * @brief See sup::sequencer::Variable.
+     */
+
+    virtual bool SetupImpl (void);
+    virtual bool GetValueImpl (::ccs::types::AnyValue& value) const;
+    virtual bool SetValueImpl (const ::ccs::types::AnyValue& value);
+
   protected:
 
   public:
@@ -72,14 +80,6 @@ class SystemClockVariable : public Variable
      */
 
     ~SystemClockVariable (void) override;
-
-    /**
-     * @brief See sup::sequencer::Variable.
-     */
-
-    virtual bool SetupImpl (void);
-    virtual bool GetValueImpl (::ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ::ccs::types::AnyValue& value);
 
     /**
      * @brief Class name for VariableRegistry.

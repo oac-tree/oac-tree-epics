@@ -546,6 +546,7 @@ ExecutionStatus ChannelAccessFetchInstruction::ExecuteSingleImpl (UserInterface 
     }
 #endif
   // Detach from CA variable
+  log_debug("ChannelAccessFetchInstruction('%s')::ExecuteSingleImpl - Detach ..", Instruction::GetName().c_str());
   (void)ChannelAccessInstructionHelper::HandleDetach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
@@ -627,6 +628,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
 
   if (status)
     { // Attach to CA variable
+      log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Connect ..", Instruction::GetName().c_str());
       status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
     }
 
@@ -637,6 +639,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
     }
 
   // Detach from CA variable
+  log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Detach ..", Instruction::GetName().c_str());
   (void)ChannelAccessInstructionHelper::HandleDetach();
 
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);

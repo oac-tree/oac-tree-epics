@@ -73,6 +73,7 @@ namespace sequencer {
  * @todo Fix LocalVariable implementation as this use-case requires variables to be instantiated without
  * pre-determined datatype. Provision of the RPC 'reply' to the workspace would currently not work with
  * LocalVariable.
+ * @todo Provide 'delay' attribute.
  */
 
 class RPCClientInstruction : public Instruction
@@ -197,7 +198,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
       status = client.Launch();
 
       if (status)
-        {
+        { // ToDo - Add 'delay' parameter
           (void)::ccs::HelperTools::SleepFor(100000000ul);
           status = client.IsConnected();
         }
