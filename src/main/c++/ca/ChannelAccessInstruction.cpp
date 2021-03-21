@@ -580,7 +580,7 @@ bool ChannelAccessWriteInstruction::SetupImpl (const Procedure& proc)
   if (status)
     {
       if (Instruction::HasAttribute("variable"))
-        {
+        { // Read variable to allow verifying the type
           log_debug("ChannelAccessWriteInstruction('%s')::SetupImpl - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
           status = proc.GetVariableValue(Instruction::GetAttribute("variable"), _value);
         }
@@ -632,6 +632,12 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface 
       status = ChannelAccessInstructionHelper::HandleConnect(Instruction::GetAttribute("channel").c_str());
     }
 
+  if (status && Instruction::HasAttribute("variable"))
+    { // Update from workspace variable that may have changed since setup
+      log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Use workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      status = ws->GetValue(Instruction::GetAttribute("variable"), _value);
+    }
+
   if (status)
     {
       log_debug("ChannelAccessWriteInstruction('%s')::ExecuteSingleImpl - Write ..", Instruction::GetName().c_str());
@@ -653,7 +659,7 @@ ChannelAccessInstructionHelper::ChannelAccessInstructionHelper (void)
   std::lock_guard<std::mutex> lock (_async_mutex);
 #endif
 #ifdef ChannelAccessInstruction_Share_Context
-  // Create CA context
+/  // Create CA context
   (void)::ccs::HelperTools::ChannelAccessClientContext::CreateAsNecessary();
 #endif
 }
