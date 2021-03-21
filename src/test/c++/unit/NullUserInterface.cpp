@@ -46,7 +46,7 @@ namespace gtest {
 
 // Function definition
 
-void NullUserInterface::UpdateInstructionStatus (const Instruction * instruction) {}
+void NullUserInterface::UpdateInstructionStatusImpl (const Instruction * instruction) {}
 NullUserInterface::NullUserInterface (void) {}
 NullUserInterface::~NullUserInterface (void) {}
 

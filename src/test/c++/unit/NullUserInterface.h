@@ -50,7 +50,7 @@ class NullUserInterface : public UserInterface
     NullUserInterface (void);
     ~NullUserInterface (void) override;
 
-    virtual void UpdateInstructionStatus (const Instruction * instruction);
+    virtual void UpdateInstructionStatusImpl (const Instruction * instruction);
 
 };
 
