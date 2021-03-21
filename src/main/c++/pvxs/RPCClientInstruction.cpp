@@ -218,8 +218,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
 
   if (status && Instruction::HasAttribute("reply"))
     {
-      //status = ws->SetValue(Instruction::GetAttribute("reply"), reply);
-      (void)ws->SetValue(Instruction::GetAttribute("reply"), reply); // Does LocalVariable need to know the type beforehand ?
+      status = ws->SetValue(Instruction::GetAttribute("reply"), reply);
     }
 #ifdef LOG_DEBUG_ENABLE
   if (status)
