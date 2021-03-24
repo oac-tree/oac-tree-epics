@@ -470,6 +470,40 @@ TEST(ChannelAccessInstruction, Write_array)
 
 }
 
+TEST(ChannelAccessInstruction, Write_NoSuchChannel)
+{
+
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+
+  bool status = static_cast<bool>(instruction);
+
+  if (status)
+    {
+      status = instruction->AddAttribute("channel", "UNDEFINED");
+    }
+
+  if (status)
+    {
+      status = (instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}") && instruction->AddAttribute("instance", "1"));
+    }
+
+  if (status)
+    { // Setup to verify/process attributes
+      sup::sequencer::Procedure proc; // Dummy
+      status = instruction->Setup(proc);
+    }
+
+  if (status)
+    {
+      sup::sequencer::gtest::NullUserInterface ui;
+      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+      status = (sup::sequencer::ExecutionStatus::FAILURE == instruction->GetStatus()); // Expect failure
+    }
+
+  ASSERT_EQ(true, status);
+
+}
+
 TEST(ChannelAccessInstruction, ProcedureFile)
 {
 
