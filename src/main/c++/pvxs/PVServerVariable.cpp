@@ -234,20 +234,17 @@ bool PVServerVariable::SetupImpl (void)
 bool PVServerVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
 
-  if ((false == _setup) && (false == _server->IsValid(Variable::GetAttribute("channel").c_str())))
+  bool status = _server->IsValid(Variable::GetAttribute("channel").c_str());
+
+  if (!status && (false == _setup))
     { // Try and finish Setup
       log_info("PVServerVariable('%s')::GetValueImpl - Try once more setting up the server for '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       (void)GetPVAccessServerInstance()->AddVariable(Variable::GetAttribute("channel").c_str(), ::ccs::types::AnyputVariable, Variable::GetAttribute("datatype").c_str());
       *const_cast<bool*>(&_setup) = true;
     }
 
-  //  Make an Instruction to start the PVXS variable server with period ..
-  (void)LaunchPVAccessServerInstance(); // Only if not already done
-
   // ToDo - Make an Instruction to start the PVXS variable server with period ..
   (void)LaunchPVAccessServerInstance(); // Only if not already done
-
-  bool status = _server->IsValid(Variable::GetAttribute("channel").c_str());
 
   if (status)
     {
@@ -261,7 +258,9 @@ bool PVServerVariable::GetValueImpl (ccs::types::AnyValue& value) const
 bool PVServerVariable::SetValueImpl (const ccs::types::AnyValue& value)
 {
 
-  if ((false == _setup) && (false == _server->IsValid(Variable::GetAttribute("channel").c_str())))
+  bool status = _server->IsValid(Variable::GetAttribute("channel").c_str());
+
+  if (!status && (false == _setup))
     { // Try and finish Setup
       log_info("PVServerVariable('%s')::SetValueImpl - Try once more setting up the server for '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
       (void)GetPVAccessServerInstance()->AddVariable(Variable::GetAttribute("channel").c_str(), ::ccs::types::AnyputVariable, Variable::GetAttribute("datatype").c_str());
@@ -270,8 +269,6 @@ bool PVServerVariable::SetValueImpl (const ccs::types::AnyValue& value)
 
   // ToDo - Make an Instruction to start the PVXS variable server with period ..
   (void)LaunchPVAccessServerInstance(); // Only if not already done
-
-  bool status = _server->IsValid(Variable::GetAttribute("channel").c_str());
 
   if (status)
     {
