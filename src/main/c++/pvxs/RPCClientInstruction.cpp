@@ -131,30 +131,30 @@ static bool _rpcclient_initialised_flag = RegisterGlobalInstruction<RPCClientIns
 bool RPCClientInstruction::SetupImpl (const Procedure& proc)
 {
 
-  log_debug("RPCClientInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
+  log_debug("RPCClientInstruction('%s')::SetupImpl - Method called ..", GetName().c_str());
 
-  bool status = Instruction::HasAttribute("service");
+  bool status = HasAttribute("service");
 
   if (status)
     {
-      log_debug("RPCClientInstruction::SetupImpl('%s') - Method called with service '%s' ..", Instruction::GetName().c_str(), Instruction::GetAttribute("service").c_str());
-      status = ((Instruction::HasAttribute("request") && (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), Instruction::GetAttribute("request").c_str()))) ||
-                (Instruction::HasAttribute("datatype") && Instruction::HasAttribute("instance")));
+      log_debug("RPCClientInstruction::SetupImpl('%s') - Method called with service '%s' ..", GetName().c_str(), GetAttribute("service").c_str());
+      status = ((HasAttribute("request") && (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), GetAttribute("request").c_str()))) ||
+                (HasAttribute("datatype") && HasAttribute("instance")));
     }
 
   if (status)
     {
-      if (Instruction::HasAttribute("request"))
+      if (HasAttribute("request"))
         {
-          log_debug("RPCClientInstruction::SetupImpl('%s') - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("request").c_str());
-          status = proc.GetVariableValue(Instruction::GetAttribute("request"), _request);
+          log_debug("RPCClientInstruction::SetupImpl('%s') - .. using workspace variable '%s'", GetName().c_str(), GetAttribute("request").c_str());
+          status = proc.GetVariableValue(GetAttribute("request"), _request);
         }
       else
         {
-          log_debug("RPCClientInstruction::SetupImpl('%s') - .. using type '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("datatype").c_str());
-          log_debug("RPCClientInstruction::SetupImpl('%s') - .. and instance '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("instance").c_str());
-          _request = ccs::types::AnyValue (Instruction::GetAttribute("datatype").c_str());
-          status = _request.ParseInstance(Instruction::GetAttribute("instance").c_str());
+          log_debug("RPCClientInstruction::SetupImpl('%s') - .. using type '%s'", GetName().c_str(), GetAttribute("datatype").c_str());
+          log_debug("RPCClientInstruction::SetupImpl('%s') - .. and instance '%s'", GetName().c_str(), GetAttribute("instance").c_str());
+          _request = ccs::types::AnyValue (GetAttribute("datatype").c_str());
+          status = _request.ParseInstance(GetAttribute("instance").c_str());
         }
     }
 
@@ -170,31 +170,38 @@ bool RPCClientInstruction::SetupImpl (const Procedure& proc)
 ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
-  log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Method called ..", Instruction::GetName().c_str());
+  log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Method called ..", GetName().c_str());
 
   (void)ui;
   (void)ws;
 
   bool status = static_cast<bool>(_request.GetType());
+
+  if (HasAttribute("request"))
+  {
+    log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. reading workspace variable '%s'", GetName().c_str(), GetAttribute("request").c_str());
+    status = ws->GetValue(GetAttribute("request"), _request);
+  }
+
 #ifdef LOG_DEBUG_ENABLE
   if (status)
     {
       ccs::types::char8 buffer [1024];
 
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Using request ..", Instruction::GetName().c_str());
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Using request ..", GetName().c_str());
       _request.SerialiseType(buffer, 1024u);
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", GetName().c_str(), buffer);
       _request.SerialiseInstance(buffer, 1024u);
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", GetName().c_str(), buffer);
     }
 #endif
   ccs::types::AnyValue reply; // Placeholder
 
   if (status)
     { // Create RPC client
-      ccs::base::RPCClient client (Instruction::GetAttribute("service").c_str());
+      ccs::base::RPCClient client (GetAttribute("service").c_str());
 
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Launch ..", Instruction::GetName().c_str());
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Launch ..", GetName().c_str());
       status = client.Launch();
 
       if (status)
@@ -205,7 +212,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
 
       if (status)
         {
-          log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Send request ..", Instruction::GetName().c_str());
+          log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Send request ..", GetName().c_str());
           reply = client.SendRequest(_request);
           status = static_cast<bool>(reply.GetType());
         }
@@ -216,20 +223,20 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
       status = ::ccs::HelperTools::GetAttributeValue<bool>(&reply, "status");
     }
 
-  if (status && Instruction::HasAttribute("reply"))
+  if (status && HasAttribute("reply"))
     {
-      status = ws->SetValue(Instruction::GetAttribute("reply"), reply);
+      status = ws->SetValue(GetAttribute("reply"), reply);
     }
 #ifdef LOG_DEBUG_ENABLE
   if (status)
     {
       ccs::types::char8 buffer [1024];
 
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Received reply ..", Instruction::GetName().c_str());
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - Received reply ..", GetName().c_str());
       reply.SerialiseType(buffer, 1024u);
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. type '%s'", GetName().c_str(), buffer);
       reply.SerialiseInstance(buffer, 1024u);
-      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", Instruction::GetName().c_str(), buffer);
+      log_debug("RPCClientInstruction::ExecuteSingleImpl('%s') - .. instance '%s'", GetName().c_str(), buffer);
     }
 #endif
   return (status ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE);
