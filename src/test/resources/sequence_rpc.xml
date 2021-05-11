@@ -5,8 +5,10 @@
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <RPCClientInstruction name="client"
         service="rpc@service"
-        datatype="{&quot;type&quot;:&quot;rpcStruct&quot;,&quot;attributes&quot;:[{&quot;value&quot;:{&quot;type&quot;:&quot;uint64&quot;,&quot;size&quot;:8}}]}"
-        instance="{&quot;value&quot;:0}"/>
+        datatype='{"type":"rpcStruct","attributes":[{"value":{"type":"uint64","size":8}}]}'
+        instance='{"value":0}'
+        reply="reply"/>
     <Workspace>
+        <Local name="reply"/>
     </Workspace>
 </Procedure>
