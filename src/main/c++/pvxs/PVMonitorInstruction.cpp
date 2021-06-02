@@ -121,20 +121,20 @@ static bool _pvmonitor_initialised_flag = RegisterGlobalInstruction<PVMonitorIns
 bool PVMonitorInstruction::SetupImpl (const Procedure& proc)
 {
 
-  log_debug("PVMonitorInstruction('%s')::SetupImpl - Method called ..", Instruction::GetName().c_str());
+  log_debug("PVMonitorInstruction('%s')::SetupImpl - Method called ..", GetName().c_str());
 
   bool status = (HasAttribute("channel") && HasAttribute("variable") && (false == PVMonitorCache::IsInitialised()));
 
   if (status)
     {
-      log_debug("PVMonitorInstruction('%s')::SetupImpl - .. with channel '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("channel").c_str());
-      log_debug("PVMonitorInstruction('%s')::SetupImpl - .. using workspace variable '%s'", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_debug("PVMonitorInstruction('%s')::SetupImpl - .. with channel '%s'", GetName().c_str(), GetAttribute("channel").c_str());
+      log_debug("PVMonitorInstruction('%s')::SetupImpl - .. using workspace variable '%s'", GetName().c_str(), GetAttribute("variable").c_str());
 
       // Verify the variable exists in the workspace
-      status = (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), Instruction::GetAttribute("variable").c_str()));
+      status = (proc.VariableNames().end() != std::find(proc.VariableNames().begin(), proc.VariableNames().end(), GetAttribute("variable").c_str()));
     }
 
-  if (status && Instruction::HasAttribute("timeout"))
+  if (status && HasAttribute("timeout"))
     { // Move to HelperTools namespace
       _timeout = ::ccs::HelperTools::ToInteger<ccs::types::uint64>(Instruction::GetAttribute("timeout").c_str());
     }
@@ -151,7 +151,7 @@ bool PVMonitorInstruction::SetupImpl (const Procedure& proc)
 ExecutionStatus PVMonitorInstruction::ExecuteSingleImpl (UserInterface * ui, Workspace * ws)
 {
 
-  log_debug("PVMonitorInstruction('%s')::ExecuteSingleImpl - Method called ..", Instruction::GetName().c_str());
+  log_debug("PVMonitorInstruction('%s')::ExecuteSingleImpl - Method called ..", GetName().c_str());
 
   (void)ui;
   (void)ws;
@@ -186,7 +186,7 @@ ExecutionStatus PVMonitorInstruction::ExecuteSingleImpl (UserInterface * ui, Wor
 
   if (status)
     { // Write to workspace
-      log_debug("PVMonitorInstruction('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", Instruction::GetName().c_str(), Instruction::GetAttribute("variable").c_str());
+      log_debug("PVMonitorInstruction('%s')::ExecuteSingleImpl - .. update '%s' workspace variable", GetName().c_str(), GetAttribute("variable").c_str());
       status = ws->SetValue(GetAttribute("variable"), _value);
     }
 
