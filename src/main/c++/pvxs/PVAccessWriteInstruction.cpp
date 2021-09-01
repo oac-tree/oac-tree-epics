@@ -64,18 +64,18 @@ class PVAccessWriteInstruction : public Instruction
     /**
      * @brief See sup::sequencer::Instruction.
      */
-    virtual bool SetupImpl (const Procedure& proc);
+    bool SetupImpl(const Procedure& proc) override;
 
     /**
      * @brief See sup::sequencer::Instruction.
      */
-    ExecutionStatus ExecuteSingleImpl (UserInterface * ui, Workspace * ws) override;
+    ExecutionStatus ExecuteSingleImpl(UserInterface * ui, Workspace * ws) override;
 
   protected:
 
   public:
-    PVAccessWriteInstruction (void);
-    ~PVAccessWriteInstruction (void) override;
+    PVAccessWriteInstruction();
+    ~PVAccessWriteInstruction() override;
 
     /**
      * @brief Instruction name for InstructionRegistry.
@@ -118,6 +118,11 @@ bool PVAccessWriteInstruction::SetupImpl(const Procedure &proc)
     status = pva_client.AddVariable(GetAttribute("channel").c_str(), ::ccs::types::OutputVariable);
   }
 
+  if (status)
+  {
+    status = pva_client.Launch();
+  }
+
   return status;
 }
 
@@ -133,10 +138,10 @@ ExecutionStatus PVAccessWriteInstruction::ExecuteSingleImpl (UserInterface * ui,
 
   if (status)
   {
-    status = pva_client.IsConnected(GetAttribute("channel").c_str()); // Has received monitor and valid value
+    status = pva_client.IsConnected(GetAttribute("channel").c_str());
   }
 
-  ccs::types::AnyValue _value; // Placeholder
+  ccs::types::AnyValue _value;
 
   if (status)
   {

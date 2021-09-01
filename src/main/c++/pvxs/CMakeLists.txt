@@ -8,6 +8,7 @@ set_target_properties(sequencer-pvxs PROPERTIES
 target_sources(sequencer-pvxs
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/RPCClientInstruction.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/PVAccessWriteInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorCache.cpp
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction.cpp
