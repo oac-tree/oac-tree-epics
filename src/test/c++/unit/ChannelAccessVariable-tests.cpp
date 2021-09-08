@@ -243,26 +243,18 @@ TEST(ChannelAccessVariable, ProcedureFile)
   sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureFile(file);
 
-  bool status = static_cast<bool>(proc);
+  ASSERT_TRUE(static_cast<bool>(proc));
 
-  if (status)
-    {
-      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-      do
-        {
-          (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-          proc->ExecuteSingle(&ui);
-          exec = proc->GetStatus();
-        }
-      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-             (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
-    }
-
-  ASSERT_EQ(true, status);
-
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+  do
+  {
+    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  }
+  while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+         (sup::sequencer::ExecutionStatus::FAILURE != exec));
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
 }
 
 #undef LOG_ALTERN_SRC

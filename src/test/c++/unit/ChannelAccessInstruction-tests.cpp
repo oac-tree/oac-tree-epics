@@ -189,7 +189,7 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
 
   if (status)
     {
-      (void)::ccs::HelperTools::SleepFor(100000000ul);
+      (void)::ccs::HelperTools::SleepFor(500000000ul);
       status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caput SEQ-TEST:BOOL TRUE");
     }
 
@@ -213,7 +213,7 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
 
   if (status)
     {
-      ccs::types::AnyValue value; 
+      ccs::types::AnyValue value;
       status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-boolean.dat");
 
       if (status)
@@ -224,7 +224,7 @@ TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variabl
 
   if (status)
     {
-      ccs::types::AnyValue value; 
+      ccs::types::AnyValue value;
       status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-uint32.dat");
 
       if (status)
