@@ -11,13 +11,13 @@
                 <SystemCall name="softioc"
                     command='/usr/bin/find ../resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
                 <SystemCall name="softioc"
-                    command='/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
+                    command='/usr/bin/screen -d -m -S cavariabletestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
             </Sequence>
             <Sequence>
                 <SystemCall name="softioc"
                     command='/usr/bin/find ./target/test/resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
                 <SystemCall name="softioc"
-                    command='/usr/bin/screen -d -m /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
+                    command='/usr/bin/screen -d -m -S cavariabletestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &amp;&gt; /dev/null'/>
             </Sequence>
         </Fallback>
         <LogTrace level="info" message="Step 2 - Wait for some time"/>
@@ -32,7 +32,7 @@
         <LogTrace level="info" input="float32"/>
         <LogTrace level="info" message="Step 4 - Kill softioc"/>
         <SystemCall name="kill"
-            command='/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &amp;&gt; /dev/null'/>
+            command='/usr/bin/screen -S cavariabletestIOC -X quit &amp;&gt; /dev/null'/>
         <LogTrace level="info" message="Step 5 - Terminate"/>
     </Sequence>
     <Workspace>
