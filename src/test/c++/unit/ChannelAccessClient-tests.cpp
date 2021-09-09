@@ -56,11 +56,13 @@ static inline bool Initialise (void)
 
   if (status)
     {
-      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+      status = ::ccs::HelperTools::ExecuteSystemCall(
+        "/usr/bin/screen -d -m -S caclienttestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
     }
   else
     {
-      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -d -m /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
+      status = ::ccs::HelperTools::ExecuteSystemCall(
+        "/usr/bin/screen -d -m -S caclienttestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
     }
 
   if (status)
@@ -83,7 +85,7 @@ static inline bool Terminate (void)
 
   ::ccs::base::ChannelAccessInterface::Terminate<::ccs::base::ChannelAccessClient>();
 
-  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/kill -9 `/usr/sbin/pidof softIoc` &> /dev/null");
+  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S caclienttestIOC -X quit &> /dev/null");
 
   return status;
 

@@ -31,7 +31,7 @@
         <LogTrace level="info" input="uint32-array"/>
         <LogTrace level="info" input="float32"/>
         <LogTrace level="info" message="Step 4 - Kill softioc"/>
-        <SystemCall name="kill"
+        <SystemCall name="kill softIoc"
             command='/usr/bin/screen -S cavariabletestIOC -X quit &amp;&gt; /dev/null'/>
         <LogTrace level="info" message="Step 5 - Terminate"/>
     </Sequence>
