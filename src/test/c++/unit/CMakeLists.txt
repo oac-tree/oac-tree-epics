@@ -38,4 +38,18 @@ target_link_directories(unit-tests
 
 find_package(GTest REQUIRED)
 
-target_link_libraries(unit-tests sequencer sequencer-ca sequencer-misc sequencer-pvxs GTest::GTest GTest::Main ccs-types ccs-base ccs-common ca ccs-ca ccs-pvxs)
+target_link_libraries(unit-tests
+    PUBLIC
+        sequencer
+        sequencer-ca
+        sequencer-misc
+        sequencer-pvxs
+        GTest::GTest
+        GTest::Main
+        ccs-types
+        ccs-base
+        ccs-common
+        ca
+        ccs-ca
+        ccs-pvxs
+    )
