@@ -49,6 +49,8 @@
 static const std::string BOOLCONNECTEDTYPE =
   R"RAW({"type":"boolconnected","attributes":[{"value":{"type":"bool"}},{"connected":{"type":"bool"}}]})RAW";
 
+static const std::string BOOLEXTENDEDTYPE =
+  R"RAW({"type":"boolconnected","attributes":[{"value":{"type":"bool"}},{"connected":{"type":"bool"}},{"timestamp":{"type":"uint64"}},{"status":{"type":"int16"}},{"severity":{"type":"int16"}}]})RAW";
 
 static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
@@ -57,6 +59,8 @@ class ChannelAccessVariableTest : public ::testing::Test
 protected:
   ChannelAccessVariableTest();
   virtual ~ChannelAccessVariableTest();
+
+  void StopIOC();
 
   bool init_success;
 };
@@ -85,7 +89,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_success)
   log_info("'%s'", buffer);
 }
 
-TEST_F(ChannelAccessVariableTest, GetValue_extended)
+TEST_F(ChannelAccessVariableTest, GetValue_connected)
 {
   ASSERT_TRUE(init_success);
 
@@ -95,15 +99,62 @@ TEST_F(ChannelAccessVariableTest, GetValue_extended)
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLCONNECTEDTYPE));
 
-  ccs::types::AnyValue value; // Placeholder
-
+  ccs::types::AnyValue value;
   ASSERT_TRUE(variable->GetValue(value, "value"));
   EXPECT_TRUE(ccs::types::Boolean == value.GetType());
 
-  ccs::types::AnyValue connected; // Placeholder
+  ccs::types::AnyValue connected;
+  ASSERT_TRUE(variable->GetValue(connected, "connected"));
+  EXPECT_TRUE(ccs::types::Boolean == connected.GetType());
+  bool is_connected = connected;
+  EXPECT_TRUE(is_connected);
+
+  StopIOC();
+  (void)ccs::HelperTools::SleepFor(500000000ul);
 
   ASSERT_TRUE(variable->GetValue(connected, "connected"));
   EXPECT_TRUE(ccs::types::Boolean == connected.GetType());
+  is_connected = connected;
+  EXPECT_FALSE(is_connected);
+}
+
+TEST_F(ChannelAccessVariableTest, GetValue_extended)
+{
+  ASSERT_TRUE(init_success);
+
+  auto variable = sup::sequencer::GlobalVariableRegistry().Create("ChannelAccessVariable");
+  ASSERT_TRUE(static_cast<bool>(variable));
+
+  ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
+              variable->AddAttribute("datatype", BOOLEXTENDEDTYPE));
+
+  ccs::types::AnyValue value;
+  ASSERT_TRUE(variable->GetValue(value, "value"));
+  EXPECT_TRUE(ccs::types::Boolean == value.GetType());
+
+  ccs::types::AnyValue connected;
+  ASSERT_TRUE(variable->GetValue(connected, "connected"));
+  EXPECT_TRUE(ccs::types::Boolean == connected.GetType());
+  bool is_connected = connected;
+  EXPECT_TRUE(is_connected);
+
+  ccs::types::AnyValue timestamp;
+  ASSERT_TRUE(variable->GetValue(timestamp, "timestamp"));
+  EXPECT_TRUE(ccs::types::UnsignedInteger64 == timestamp.GetType());
+  ccs::types::uint64 ts = timestamp;
+  EXPECT_TRUE(ts > 0);
+
+  ccs::types::AnyValue status;
+  ASSERT_TRUE(variable->GetValue(status, "status"));
+  EXPECT_TRUE(ccs::types::SignedInteger16 == status.GetType());
+  ccs::types::int16 stat = status;
+  EXPECT_EQ(stat, 0);
+
+  ccs::types::AnyValue severity;
+  ASSERT_TRUE(variable->GetValue(severity, "severity"));
+  EXPECT_TRUE(ccs::types::SignedInteger16 == severity.GetType());
+  stat = severity;
+  EXPECT_EQ(stat, 0);
 }
 
 TEST_F(ChannelAccessVariableTest, GetValue_error)
@@ -199,9 +250,15 @@ ChannelAccessVariableTest::ChannelAccessVariableTest()
 
 ChannelAccessVariableTest::~ChannelAccessVariableTest()
 {
+  StopIOC();
+}
+
+void ChannelAccessVariableTest::StopIOC()
+{
   if (init_success)
   {
     ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S cavariabletestIOC -X quit &> /dev/null");
+    init_success = false;
   }
 }
 
