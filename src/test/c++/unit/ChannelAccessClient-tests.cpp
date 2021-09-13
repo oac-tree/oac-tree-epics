@@ -47,84 +47,68 @@
 
 static ::ccs::log::Func_t _log_handler = ::ccs::log::SetStdout();
 
+class ChannelAccessClientTest : public ::testing::Test
+{
+protected:
+  ChannelAccessClientTest();
+  virtual ~ChannelAccessClientTest();
+
+  void StopIOC();
+
+  bool init_success;
+};
+
 // Function definition
 
-static inline bool Initialise (void)
+TEST_F(ChannelAccessClientTest, Launch)
 {
+  ASSERT_TRUE(init_success);
+  (void)ccs::HelperTools::SleepFor(1000000000ul);
 
-  bool status = ::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db");
+  ccs::base::SharedReference<ccs::types::AnyType> _type;
 
-  if (status)
-    {
-      status = ::ccs::HelperTools::ExecuteSystemCall(
+  ASSERT_TRUE(0u < ccs::HelperTools::Parse(_type, "{\"type\":\"string\"}"));
+  ASSERT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
+    ->AddVariable("SEQ-TEST:BOOL", ccs::types::AnyputVariable, _type));
+  (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->Launch();
+  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  ccs::types::AnyValue value;
+  EXPECT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
+      ->GetAnyValue("SEQ-TEST:BOOL", value));
+  ccs::types::char8 buffer [1024];
+  ccs::HelperTools::SerialiseToJSONStream(&value, buffer, 1024u);
+  log_info("TEST_F(ChannelAccessClientTest, Launch) - Value is ..");
+  log_info("'%s'", buffer);
+  EXPECT_FALSE(ccs::HelperTools::IsUndefinedString(reinterpret_cast<char*>(value.GetInstance())));
+}
+
+ChannelAccessClientTest::ChannelAccessClientTest()
+  : init_success{false}
+{
+  if (::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db"))
+  {
+    init_success = ::ccs::HelperTools::ExecuteSystemCall(
         "/usr/bin/screen -d -m -S caclienttestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
-    }
+  }
   else
-    {
-      status = ::ccs::HelperTools::ExecuteSystemCall(
+  {
+    init_success = ::ccs::HelperTools::ExecuteSystemCall(
         "/usr/bin/screen -d -m -S caclienttestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
-    }
-
-  if (status)
-    {
-      (void)::ccs::HelperTools::SleepFor(1000000000ul);
-      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caget SEQ-TEST:BOOL SEQ-TEST:FLOAT > /tmp/softioc-initialise.log");
-    }
-
-  if (status)
-    {
-      status = (NULL_PTR_CAST(::ccs::base::ChannelAccessClient*) != ::ccs::base::ChannelAccessInterface::GetInstance<::ccs::base::ChannelAccessClient>());
-    }
-
-  return status;
-
+  }
 }
 
-static inline bool Terminate (void)
+ChannelAccessClientTest::~ChannelAccessClientTest()
 {
-
-  ::ccs::base::ChannelAccessInterface::Terminate<::ccs::base::ChannelAccessClient>();
-
-  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S caclienttestIOC -X quit &> /dev/null");
-
-  return status;
-
+  StopIOC();
 }
 
-// Function definition
-
-TEST(ChannelAccessClient, Launch)
+void ChannelAccessClientTest::StopIOC()
 {
-
-  bool status = Initialise();
-
-  ccs::base::SharedReference<ccs::types::AnyType> _type; // Placeholder
-
-  if (status)
-    {
-      status = (0u < ccs::HelperTools::Parse(_type, "{\"type\":\"string\"}"));
-    }
-
-  if (status)
-    {
-      status = ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->AddVariable("SEQ-TEST:BOOL", ccs::types::AnyputVariable, _type);
-    }
-
-  if (status)
-    {
-      (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->Launch();
-      (void)ccs::HelperTools::SleepFor(1000000000ul);
-    }
-
-  if (status)
-    { // Verify CA notification callbacks do  work
-      status = (false == ccs::HelperTools::IsUndefinedString(reinterpret_cast<char*>(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->GetVariable("SEQ-TEST:BOOL")->GetInstance())));
-    }
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
+  if (init_success)
+  {
+    ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S caclienttestIOC -X quit &> /dev/null");
+    init_success = false;
+  }
 }
 
 #undef LOG_ALTERN_SRC
