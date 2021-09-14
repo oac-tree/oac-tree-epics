@@ -8,7 +8,6 @@ set_target_properties(sequencer-misc PROPERTIES
 target_sources(sequencer-misc
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/LogInstruction.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/RegisterTypeInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/SystemClockVariable.cpp
     )

@@ -4,15 +4,16 @@
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <Plugin>libsequencer-pvxs.so</Plugin>
-    <Plugin>libsequencer-misc.so</Plugin>
     <RegisterType jsontype='{"type":"seq::test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <Sequence>
         <Copy input="old-pvxs-value" output="pvxs-variable"/>
+        <Equals lhs="pvxs-variable" rhs="old-pvxs-value"/>
         <Wait timeout="2.0"/>
         <PVAccessWriteInstruction name="write to pv"
             channel="seq::test::variable"
             variable="new-pvxs-value"/>
-        <LogTrace level="error" input="pvxs-variable"/>
+        <Wait timeout="2.0"/>
+        <Equals lhs="pvxs-variable" rhs="new-pvxs-value"/>
     </Sequence>
     <Workspace>
         <PVServerVariable name="pvxs-variable"
