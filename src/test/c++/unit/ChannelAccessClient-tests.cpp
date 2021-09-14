@@ -75,6 +75,7 @@ TEST_F(ChannelAccessClientTest, Launch)
   ccs::types::AnyValue value;
   EXPECT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
       ->GetAnyValue("SEQ-TEST:BOOL", value));
+  ccs::base::ChannelAccessInterface::Terminate<ccs::base::ChannelAccessClient>();
   ccs::types::char8 buffer [1024];
   ccs::HelperTools::SerialiseToJSONStream(&value, buffer, 1024u);
   log_info("TEST_F(ChannelAccessClientTest, Launch) - Value is ..");
