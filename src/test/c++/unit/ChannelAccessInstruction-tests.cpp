@@ -136,36 +136,6 @@ protected:
   bool init_success;
 };
 
-
-static inline bool Initialise (void)
-{
-
-  bool status = ::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db");
-
-  if (status)
-    {
-      status = ::ccs::HelperTools::ExecuteSystemCall(
-        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
-    }
-  else
-    {
-      status = ::ccs::HelperTools::ExecuteSystemCall(
-        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
-    }
-
-  return status;
-
-}
-
-static inline bool Terminate (void)
-{
-
-  bool status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S cainstructiontestIOC -X quit &> /dev/null");
-
-  return status;
-
-}
-
 TEST(ChannelAccessInstruction, Execute_missing)
 {
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
