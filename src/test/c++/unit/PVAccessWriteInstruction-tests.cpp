@@ -23,15 +23,10 @@
 
 #include <gtest/gtest.h> // Google test framework
 
-#include <common/BasicTypes.h>
-#include <common/TimeTools.h>
-
-#include <common/AnyValueHelper.h>
-
-#include <common/ChannelAccessClient.h>
-
 #include <SequenceParser.h>
 
+#include <Instruction.h>
+#include <InstructionRegistry.h>
 #include <Variable.h>
 #include <VariableRegistry.h>
 
@@ -75,6 +70,24 @@ static const std::string PVACCESSWRITEPROCEDURE = R"RAW(<?xml version="1.0" enco
     </Workspace>
 </Procedure>)RAW";
 
+static const std::string PVACCESSMISSINGCHANNELPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <RegisterType jsontype='{"type":"seq::missing-channel-test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+    <Sequence>
+        <PVAccessWriteInstruction name="write to pv"
+            channel="seq::test::missing-channel"
+            variable="pvxs-value"/>
+    </Sequence>
+    <Workspace>
+        <Local name="pvxs-value"
+               type='{"type":"seq::missing-channel-test::Type/v1.0"}'
+               value='{"value":1.0}'/>
+    </Workspace>
+</Procedure>)RAW";
+
 static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
 class PVAccessWriteInstructionTest : public ::testing::Test
@@ -84,39 +97,82 @@ protected:
   virtual ~PVAccessWriteInstructionTest();
 
   sup::sequencer::gtest::NullUserInterface ui;
-  bool plugins_loaded;
+  sup::sequencer::Procedure proc;
 };
 
 // Tests
 
 TEST_F(PVAccessWriteInstructionTest, write_success)
 {
-  ASSERT_TRUE(plugins_loaded);
-
-  auto proc = sup::sequencer::ParseProcedureString(PVACCESSWRITEPROCEDURE);
-  ASSERT_TRUE(static_cast<bool>(proc));
-  ASSERT_TRUE(proc->Setup());
+  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSWRITEPROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(procedure));
+  ASSERT_TRUE(procedure->Setup());
 
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
   do
   {
     (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-    proc->ExecuteSingle(&ui);
-    exec = proc->GetStatus();
+    procedure->ExecuteSingle(&ui);
+    exec = procedure->GetStatus();
   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
            (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
   EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
 }
 
+TEST_F(PVAccessWriteInstructionTest, missing_attributes)
+{
+  proc.AddVariable("SOME_VARIABLE",
+    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PVAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
+  EXPECT_FALSE(instruction->Setup(proc));
+
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
+  EXPECT_FALSE(instruction->Setup(proc));
+  EXPECT_TRUE(instruction->AddAttribute("variable", "SOME_VARIABLE"));
+  EXPECT_TRUE(instruction->Setup(proc));
+}
+
+TEST_F(PVAccessWriteInstructionTest, missing_variable)
+{
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PVAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
+  EXPECT_FALSE(instruction->Setup(proc));
+
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
+  EXPECT_FALSE(instruction->Setup(proc));
+  EXPECT_TRUE(instruction->AddAttribute("variable", "SOME_VARIABLE"));
+  EXPECT_FALSE(instruction->Setup(proc));
+  proc.AddVariable("SOME_VARIABLE",
+    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
+  EXPECT_TRUE(instruction->Setup(proc));
+}
+
+TEST_F(PVAccessWriteInstructionTest, missing_channel)
+{
+  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(procedure));
+  ASSERT_TRUE(procedure->Setup());
+
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+
+  do
+  {
+    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    procedure->ExecuteSingle(&ui);
+    exec = procedure->GetStatus();
+  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+           (sup::sequencer::ExecutionStatus::FAILURE != exec));
+
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::FAILURE);
+}
+
 PVAccessWriteInstructionTest::PVAccessWriteInstructionTest()
   : ui{}
-  , plugins_loaded{false}
-{
-  plugins_loaded = true; // sup::sequencer::LoadPlugin("../../../target/lib/libsequencer-pvxs.so")
-    // && sup::sequencer::LoadPlugin("../../../target/lib/libsequencer-misc.so");
-}
+  , proc{}
+{}
 
 PVAccessWriteInstructionTest::~PVAccessWriteInstructionTest() = default;
 
