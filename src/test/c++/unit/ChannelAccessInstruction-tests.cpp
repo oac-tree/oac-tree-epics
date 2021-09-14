@@ -49,15 +49,93 @@
 #undef LOG_ALTERN_SRC
 #define LOG_ALTERN_SRC "unit-test"
 
-// Type declaration
-
-// Function declaration
-
-// Global variables
-
 static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
-// Function definition
+static const std::string FETCHBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Sequence>
+        <ChannelAccessFetchInstruction name="get-client"
+            channel="SEQ-TEST:BOOL"
+            variable="boolean"/>
+        <ChannelAccessFetchInstruction name="get-client"
+            channel="SEQ-TEST:BOOL"
+            variable="uint32"/>
+        <ChannelAccessFetchInstruction name="get-client"
+            channel="SEQ-TEST:BOOL"
+            variable="string"/>
+        <LogTrace input="boolean"/>
+        <LogTrace input="uint32"/>
+        <LogTrace input="string"/>
+    </Sequence>
+    <Workspace>
+        <FileVariable name="boolean" file="/tmp/file-variable-boolean.dat"/>
+        <FileVariable name="uint32" file="/tmp/file-variable-uint32.dat"/>
+        <FileVariable name="string" file="/tmp/file-variable-string.dat"/>
+    </Workspace>
+</Procedure>)RAW";
+
+static const std::string REPEATPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Repeat maxCount="10">
+        <Sequence>
+            <Wait name="wait" timeout="0.1"/>
+            <ChannelAccessWriteInstruction name="put-client"
+                channel="SEQ-TEST:STRING"
+                variable="time"/>
+            <ChannelAccessFetchInstruction name="get-client"
+                channel="SEQ-TEST:STRING"
+                variable="string"/>
+            <LogTrace input="time"/>
+            <LogTrace input="string"/>
+        </Sequence>
+    </Repeat>
+    <Workspace>
+        <SystemClock name="time" datatype='{"type":"string"}'/>
+        <Local name="string" type='{"type":"string"}' value='"undefined"'/>
+    </Workspace>
+</Procedure>)RAW";
+
+static const std::string PARALLELPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Repeat maxCount="10">
+        <ParallelSequence>
+            <Wait name="wait" timeout="0.1"/>
+            <ChannelAccessWriteInstruction name="put-client"
+                channel="SEQ-TEST:STRING"
+                variable="time"/>
+            <ChannelAccessFetchInstruction name="get-client"
+                channel="SEQ-TEST:STRING"
+                variable="string"/>
+            <LogTrace input="time"/>
+            <LogTrace input="string"/>
+        </ParallelSequence>
+    </Repeat>
+    <Workspace>
+        <SystemClock name="time" datatype='{"type":"string"}'/>
+        <Local name="string" type='{"type":"string"}' value='"undefined"'/>
+    </Workspace>
+</Procedure>)RAW";
+
+class ChannelAccessInstructionTest : public ::testing::Test
+{
+protected:
+  ChannelAccessInstructionTest();
+  virtual ~ChannelAccessInstructionTest();
+
+  void StopIOC();
+
+  bool init_success;
+};
+
 
 static inline bool Initialise (void)
 {
@@ -90,597 +168,320 @@ static inline bool Terminate (void)
 
 TEST(ChannelAccessInstruction, Execute_missing)
 {
-
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-  bool status = static_cast<bool>(instruction);
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::FAILURE == instruction->GetStatus());
-    }
-
-  ASSERT_EQ(true, status);
-
+  sup::sequencer::gtest::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, nullptr);
+  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::FAILURE);
 }
 
 TEST(ChannelAccessInstruction, Execute_novar)
 {
-
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-  bool status = static_cast<bool>(instruction);
-
-  if (status)
-    {
-      status = instruction->AddAttribute("channel", "undefined");
-    }
-
-  if (status)
-    {
-      status = (instruction->AddAttribute("datatype", "{\"type\": \"string\"}") && instruction->AddAttribute("instance", "\"undefined\""));
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::FAILURE == instruction->GetStatus());
-    }
-
-  ASSERT_EQ(true, status);
-
-}
-
-TEST(ChannelAccessInstruction, Fetch_boolean) // Must be associated to a variable in the workspace
-{
+  EXPECT_TRUE(instruction->AddAttribute("channel", "undefined"));
+  EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"string\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("instance", "\"undefined\""));
 
   sup::sequencer::gtest::NullUserInterface ui;
-  auto proc = sup::sequencer::ParseProcedureString(
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-    "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
-    "           name=\"Trivial procedure for testing purposes\"\n"
-    "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-    "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
-    "    <Sequence>\n"
-    "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
-    "            channel=\"SEQ-TEST:BOOL\"\n"
-    "            variable=\"boolean\"/>\n"
-    "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
-    "            channel=\"SEQ-TEST:BOOL\"\n"
-    "            variable=\"uint32\"/>\n"
-    "        <ChannelAccessFetchInstruction name=\"get-client\"\n"
-    "            channel=\"SEQ-TEST:BOOL\"\n"
-    "            variable=\"string\"/>\n"
-    "        <LogTrace input=\"boolean\"/>\n"
-    "        <LogTrace input=\"uint32\"/>\n"
-    "        <LogTrace input=\"string\"/>\n"
-    "    </Sequence>\n"
-    "    <Workspace>\n"
-    "        <FileVariable name=\"boolean\" file=\"/tmp/file-variable-boolean.dat\"/>\n"
-    "        <FileVariable name=\"uint32\" file=\"/tmp/file-variable-uint32.dat\"/>\n"
-    "        <FileVariable name=\"string\" file=\"/tmp/file-variable-string.dat\"/>\n"
-    "    </Workspace>\n"
-    "</Procedure>");
+  instruction->ExecuteSingle(&ui, nullptr);
+  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::FAILURE);
+}
 
-  bool status = static_cast<bool>(proc);
+TEST_F(ChannelAccessInstructionTest, Fetch_boolean) // Must be associated to a variable in the workspace
+{
+  sup::sequencer::gtest::NullUserInterface ui;
+  auto proc = sup::sequencer::ParseProcedureString(FETCHBOOLPROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(proc));
 
-  if (status)
-    { // Create file to initialise the workspace variables with right datatype
-      ccs::types::AnyValue boolean_var (false); ccs::HelperTools::DumpToFile(&boolean_var, "/tmp/file-variable-boolean.dat");
-      ccs::types::AnyValue uint32_var (0u); ccs::HelperTools::DumpToFile(&uint32_var, "/tmp/file-variable-uint32.dat");
-      ccs::types::AnyValue string_var ("undefined"); ccs::HelperTools::DumpToFile(&string_var, "/tmp/file-variable-string.dat");
-    }
+  // Create file to initialise the workspace variables with right datatype
+  ccs::types::AnyValue boolean_var (false); ccs::HelperTools::DumpToFile(&boolean_var, "/tmp/file-variable-boolean.dat");
+  ccs::types::AnyValue uint32_var (0u); ccs::HelperTools::DumpToFile(&uint32_var, "/tmp/file-variable-uint32.dat");
+  ccs::types::AnyValue string_var ("undefined"); ccs::HelperTools::DumpToFile(&string_var, "/tmp/file-variable-string.dat");
 
-  if (status)
-    { // Setup instructions
-      status = proc->Setup();
+  ASSERT_TRUE(proc->Setup());
+  ASSERT_TRUE(init_success);
 
-      if (!status)
-        {
-          log_error("TEST(ChannelAccessInstruction, Fetch_boolean) - Procedure::Setup() failure");
-        }
-    }
+  (void)::ccs::HelperTools::SleepFor(500000000ul);
+  EXPECT_TRUE(::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caput SEQ-TEST:BOOL TRUE"));
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
-  if (status)
-    {
-      (void)::ccs::HelperTools::SleepFor(500000000ul);
-      status = ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caput SEQ-TEST:BOOL TRUE");
-    }
+  do
+  {
+    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+           (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
-  if (status)
-    {
-      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-      do
-        {
-          (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-          proc->ExecuteSingle(&ui);
-          exec = proc->GetStatus();
-        }
-      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-             (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
-    }
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
 
   // Test variable
 
-  if (status)
-    {
-      ccs::types::AnyValue value;
-      status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-boolean.dat");
+  ccs::types::AnyValue val_bool;
+  EXPECT_TRUE(::ccs::HelperTools::ReadFromFile(&val_bool, "/tmp/file-variable-boolean.dat"));
 
-      if (status)
-	{
-	  status = (true == static_cast<bool>(value));
-	}
-    }
+  EXPECT_TRUE(static_cast<bool>(val_bool));
 
-  if (status)
-    {
-      ccs::types::AnyValue value;
-      status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-uint32.dat");
+   ccs::types::AnyValue val_uint32;
+  EXPECT_TRUE(::ccs::HelperTools::ReadFromFile(&val_uint32, "/tmp/file-variable-uint32.dat"));
 
-      if (status)
-	{
-	  status = (1u == static_cast<ccs::types::uint32>(value));
-	}
-    }
+  EXPECT_EQ(static_cast<ccs::types::uint32>(val_uint32), 1u);
 
   // Remove temp. files
   (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-boolean.dat");
   (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-uint32.dat");
   (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-string.dat");
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
 }
 
-TEST(ChannelAccessInstruction, Write_boolean)
+TEST_F(ChannelAccessInstructionTest, Write_boolean)
 {
-
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-  bool status = static_cast<bool>(instruction);
+  ASSERT_TRUE(init_success);
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
+  EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("instance", "1"));
 
-  if (status)
-    {
-      status = instruction->AddAttribute("channel", "SEQ-TEST:BOOL");
-    }
+  // Setup to verify/process attributes
+  sup::sequencer::Procedure proc; // Dummy
+  EXPECT_TRUE(instruction->Setup(proc));
 
-  if (status)
-    {
-      status = (instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}") && instruction->AddAttribute("instance", "1"));
-    }
-
-  if (status)
-    { // Setup to verify/process attributes
-      sup::sequencer::Procedure proc; // Dummy
-      status = instruction->Setup(proc);
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
-    }
+  sup::sequencer::gtest::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::SUCCESS);
 
   // Test variable
 
   // At this point, the instruction has diconnected form the channel and thread detached from the context
-
-  if (status)
-    {
-      status = ccs::HelperTools::ChannelAccessClientContext::Attach();
-    }
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccessClientContext::Attach());
 
   chid channel;
+  (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:BOOL", channel);
+  (void)ccs::HelperTools::SleepFor(100000000ul);
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
 
-  if (status)
-    {
-      (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:BOOL", channel);
-      (void)ccs::HelperTools::SleepFor(100000000ul);
-      status = ccs::HelperTools::ChannelAccess::IsConnected(channel);
-    }
+  ccs::types::AnyValue value(false);
 
-  ccs::types::AnyValue value (false);
+  EXPECT_TRUE(ccs::HelperTools::ChannelAccess::ReadVariable(
+    channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance()));
 
-  if (status)
-    {
-      status = ccs::HelperTools::ChannelAccess::ReadVariable(channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance());
-    }
-
-  if (status)
-    {
-      log_info("TEST(ChannelAccessInstruction, Execute_boolean) - Test variable ..");
-      status = (true == static_cast<bool>(value));
-    }
+  log_info("TEST(ChannelAccessInstruction, Execute_boolean) - Test variable ..");
+  EXPECT_TRUE(static_cast<bool>(value));
 
   (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
   (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
 }
 
-TEST(ChannelAccessInstruction, Write_float32)
+TEST_F(ChannelAccessInstructionTest, Write_float32)
 {
-
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-  bool status = static_cast<bool>(instruction);
+  ASSERT_TRUE(init_success);
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:FLOAT"));
+  EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"string\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("instance", "\"0.5\""));
 
-  if (status)
-    {
-      status = instruction->AddAttribute("channel", "SEQ-TEST:FLOAT");
-    }
+  // Setup to verify/process attributes
+  sup::sequencer::Procedure proc; // Dummy
+  ASSERT_TRUE(instruction->Setup(proc));
 
-  if (status)
-    {
-      status = (instruction->AddAttribute("datatype", "{\"type\": \"string\"}") && instruction->AddAttribute("instance", "\"0.5\""));
-    }
-
-  if (status)
-    { // Setup to verify/process attributes
-      sup::sequencer::Procedure proc; // Dummy
-      status = instruction->Setup(proc);
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
-    }
+  sup::sequencer::gtest::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::SUCCESS);
 
   // Test variable
 
   // At this point, the instruction has diconnected form the channel and thread detached from the context
-
-  if (status)
-    {
-      status = ccs::HelperTools::ChannelAccessClientContext::Attach();
-    }
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccessClientContext::Attach());
 
   chid channel;
-
-  if (status)
-    {
-      (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:FLOAT", channel);
-      (void)ccs::HelperTools::SleepFor(100000000ul);
-      status = ccs::HelperTools::ChannelAccess::IsConnected(channel);
-    }
+  (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:FLOAT", channel);
+  (void)ccs::HelperTools::SleepFor(100000000ul);
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
 
   ccs::types::AnyValue value (static_cast<ccs::types::float32>(0.0));
 
-  if (status)
-    {
-      status = ccs::HelperTools::ChannelAccess::ReadVariable(channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance());
-    }
+  EXPECT_TRUE(ccs::HelperTools::ChannelAccess::ReadVariable(channel,
+    ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance()));
 
-  if (status)
-    {
-      log_info("TEST(ChannelAccessInstruction, Execute_float32) - Test variable ..");
-      status = (static_cast<ccs::types::float32>(0.5) == static_cast<ccs::types::float32>(value));
-    }
+  log_info("TEST(ChannelAccessInstruction, Execute_float32) - Test variable ..");
+  EXPECT_EQ(static_cast<ccs::types::float32>(value), static_cast<ccs::types::float32>(0.5));
 
   (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
   (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
 }
 
-TEST(ChannelAccessInstruction, Write_array)
+TEST_F(ChannelAccessInstructionTest, Write_array)
 {
-
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-  bool status = static_cast<bool>(instruction);
+  ASSERT_TRUE(init_success);
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
+  EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}"));
+  EXPECT_TRUE(instruction->AddAttribute("instance", "[1 2 3 4 5 6 7 8]"));
 
-  if (status)
-    {
-      status = instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY");
-    }
+  // Setup to verify/process attributes
+  sup::sequencer::Procedure proc; // Dummy
+  ASSERT_TRUE(instruction->Setup(proc));
 
-  if (status)
-    {
-      status = (instruction->AddAttribute("datatype", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}") &&
-                instruction->AddAttribute("instance", "[1 2 3 4 5 6 7 8]"));
-    }
-
-  if (status)
-    { // Setup to verify/process attributes
-      sup::sequencer::Procedure proc; // Dummy
-      status = instruction->Setup(proc);
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == instruction->GetStatus());
-    }
+  sup::sequencer::gtest::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::SUCCESS);
 
   // Test variable
 
   // At this point, the instruction has diconnected form the channel and thread detached from the context
-
-  if (status)
-    {
-      status = ccs::HelperTools::ChannelAccessClientContext::Attach();
-    }
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccessClientContext::Attach());
 
   chid channel;
-
-  if (status)
-    {
-      (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:UIARRAY", channel);
-      (void)ccs::HelperTools::SleepFor(100000000ul);
-      status = ccs::HelperTools::ChannelAccess::IsConnected(channel);
-    }
+  (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:UIARRAY", channel);
+  (void)ccs::HelperTools::SleepFor(100000000ul);
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
 
   ccs::types::AnyValue value ("{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}");
 
-  if (status)
-    {
-      status = ccs::HelperTools::ChannelAccess::ReadVariable(channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), 8u, value.GetInstance());
-    }
+  ASSERT_TRUE(ccs::HelperTools::ChannelAccess::ReadVariable(channel,
+    ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), 8u, value.GetInstance()));
 
-  if (status)
-    {
-      log_info("TEST(ChannelAccessInstruction, Execute_array) - Test variable ..");
-      status = (4u == ccs::HelperTools::GetAttributeValue<ccs::types::uint32>(&value, "[3]"));
-    }
+  log_info("TEST(ChannelAccessInstruction, Execute_array) - Test variable ..");
+  EXPECT_EQ(ccs::HelperTools::GetAttributeValue<ccs::types::uint32>(&value, "[3]"), 4u);
 
   (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
   (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
 }
 
 TEST(ChannelAccessInstruction, Write_NoSuchChannel)
 {
-
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-  bool status = static_cast<bool>(instruction);
+  EXPECT_TRUE(instruction->AddAttribute("channel", "UNDEFINED"));
+  EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("instance", "1"));
 
-  if (status)
-    {
-      status = instruction->AddAttribute("channel", "UNDEFINED");
-    }
+  // Setup to verify/process attributes
+  sup::sequencer::Procedure proc; // Dummy
+  ASSERT_TRUE(instruction->Setup(proc));
 
-  if (status)
-    {
-      status = (instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}") && instruction->AddAttribute("instance", "1"));
-    }
-
-  if (status)
-    { // Setup to verify/process attributes
-      sup::sequencer::Procedure proc; // Dummy
-      status = instruction->Setup(proc);
-    }
-
-  if (status)
-    {
-      sup::sequencer::gtest::NullUserInterface ui;
-      instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
-      status = (sup::sequencer::ExecutionStatus::FAILURE == instruction->GetStatus()); // Expect failure
-    }
-
-  ASSERT_EQ(true, status);
-
+  sup::sequencer::gtest::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, NULL_PTR_CAST(sup::sequencer::Workspace*));
+  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::FAILURE); // Expect failure
 }
 
-TEST(ChannelAccessInstruction, ProcedureFile)
+TEST_F(ChannelAccessInstructionTest, ProcedureFile)
 {
-
   std::string file; // Placeholder
-
   if (::ccs::HelperTools::Exist("../resources/sequence_ca.xml"))
-    {
-      file = std::string("../resources/sequence_ca.xml");
-    }
+  {
+    file = std::string("../resources/sequence_ca.xml");
+  }
   else
-    {
-      file = std::string("./target/test/resources/sequence_ca.xml");
-    }
+  {
+    file = std::string("./target/test/resources/sequence_ca.xml");
+  }
 
   sup::sequencer::gtest::NullUserInterface ui;
   auto proc = sup::sequencer::ParseProcedureFile(file);
 
-  bool status = static_cast<bool>(proc);
+  ASSERT_TRUE(static_cast<bool>(proc));
+  ASSERT_TRUE(proc->Setup());
+  ASSERT_TRUE(init_success);
 
-  if (status)
-    { // Setup instructions
-      status = proc->Setup();
-    }
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  do
+  {
+    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+           (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
-  if (status)
-    {
-      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-      do
-        {
-          (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-          proc->ExecuteSingle(&ui);
-          exec = proc->GetStatus();
-        }
-      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-             (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
-    }
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
 }
 
-TEST(ChannelAccessInstruction, Procedure_repeat)
+TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
 {
-
   sup::sequencer::gtest::NullUserInterface ui;
-  auto proc = sup::sequencer::ParseProcedureString(
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-    "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
-    "           name=\"Trivial procedure for testing purposes\"\n"
-    "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-    "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
-    "    <Repeat maxCount=\"10\">\n"
-    "        <Sequence>\n"
-    "            <Wait name=\"wait\" timeout=\"0.1\"/>\n"
-    "            <ChannelAccessWriteInstruction name=\"put-client\"\n"
-    "                channel=\"SEQ-TEST:STRING\"\n"
-    "                variable=\"time\"/>\n"
-    "            <ChannelAccessFetchInstruction name=\"get-client\"\n"
-    "                channel=\"SEQ-TEST:STRING\"\n"
-    "                variable=\"string\"/>\n"
-    "            <LogTrace input=\"time\"/>\n"
-    "            <LogTrace input=\"string\"/>\n"
-    "        </Sequence>\n"
-    "    </Repeat>\n"
-    "    <Workspace>\n"
-    "        <SystemClock name=\"time\" datatype='{\"type\":\"string\"}'/>\n"
-    "        <Local name=\"string\" type='{\"type\":\"string\"}' value='\"undefined\"'/>\n"
-    "    </Workspace>\n"
-    "</Procedure>");
+  auto proc = sup::sequencer::ParseProcedureString(REPEATPROCEDURE);
 
-  bool status = static_cast<bool>(proc);
+  ASSERT_TRUE(static_cast<bool>(proc));
+  ASSERT_TRUE(proc->Setup());
+  ASSERT_TRUE(init_success);
 
-  if (status)
-    { // Setup instructions
-      status = proc->Setup();
-    }
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  do
+  {
+    (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+           (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
-  if (status)
-    {
-      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-      do
-        {
-          (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
-          proc->ExecuteSingle(&ui);
-          exec = proc->GetStatus();
-        }
-      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-             (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
-    }
-
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
 }
+
 // Issue during the tear-down process
-TEST(ChannelAccessInstruction, Procedure_parallel)
+TEST_F(ChannelAccessInstructionTest, Procedure_parallel)
 {
-
   sup::sequencer::gtest::NullUserInterface ui; // Should have same or larger scope as procedure
-  auto proc = sup::sequencer::ParseProcedureString(
-    "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-    "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
-    "           name=\"Trivial procedure for testing purposes\"\n"
-    "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-    "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
-    "    <Repeat maxCount=\"10\">\n"
-    "        <ParallelSequence>\n"
-    "            <Wait name=\"wait\" timeout=\"0.1\"/>\n"
-    "            <ChannelAccessWriteInstruction name=\"put-client\"\n"
-    "                channel=\"SEQ-TEST:STRING\"\n"
-    "                variable=\"time\"/>\n"
-    "            <ChannelAccessFetchInstruction name=\"get-client\"\n"
-    "                channel=\"SEQ-TEST:STRING\"\n"
-    "                variable=\"string\"/>\n"
-    "            <LogTrace input=\"time\"/>\n"
-    "            <LogTrace input=\"string\"/>\n"
-    "        </ParallelSequence>\n"
-    "    </Repeat>\n"
-    "    <Workspace>\n"
-    "        <SystemClock name=\"time\" datatype='{\"type\":\"string\"}'/>\n"
-    "        <Local name=\"string\" type='{\"type\":\"string\"}' value='\"undefined\"'/>\n"
-    "    </Workspace>\n"
-    "</Procedure>");
+  auto proc = sup::sequencer::ParseProcedureString(PARALLELPROCEDURE);
 
-  bool status = static_cast<bool>(proc);
+  ASSERT_TRUE(static_cast<bool>(proc));
+  ASSERT_TRUE(proc->Setup());
+  ASSERT_TRUE(init_success);
 
-  if (status)
-    { // Setup instructions
-      status = proc->Setup();
-    }
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
-  if (status)
-    {
-      status = Initialise();
-    }
+  do
+  {
+    (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+           (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
-  if (status)
-    {
-      sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
+}
 
-      do
-        {
-          (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
-          proc->ExecuteSingle(&ui);
-          exec = proc->GetStatus();
-        }
-      while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-             (sup::sequencer::ExecutionStatus::FAILURE != exec));
+ChannelAccessInstructionTest::ChannelAccessInstructionTest()
+  : init_success{false}
+{
+  if (::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db"))
+  {
+    init_success = ::ccs::HelperTools::ExecuteSystemCall(
+        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+  }
+  else
+  {
+    init_success = ::ccs::HelperTools::ExecuteSystemCall(
+        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
+  }
+}
 
-      status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
-    }
+ChannelAccessInstructionTest::~ChannelAccessInstructionTest()
+{
+  StopIOC();
+}
 
-  (void)Terminate();
-
-  ASSERT_EQ(true, status);
-
+void ChannelAccessInstructionTest::StopIOC()
+{
+  if (init_success)
+  {
+    ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S cainstructiontestIOC -X quit &> /dev/null");
+    init_success = false;
+  }
 }
 
 #undef LOG_ALTERN_SRC
