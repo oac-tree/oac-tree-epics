@@ -99,6 +99,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_connected)
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLCONNECTEDTYPE));
 
+  (void)ccs::HelperTools::SleepFor(1000000000ul);
   ccs::types::AnyValue value;
   ASSERT_TRUE(variable->GetValue(value, "value"));
   EXPECT_TRUE(ccs::types::Boolean == value.GetType());
@@ -128,6 +129,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_extended)
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLEXTENDEDTYPE));
 
+  (void)ccs::HelperTools::SleepFor(1000000000ul);
   ccs::types::AnyValue value;
   ASSERT_TRUE(variable->GetValue(value, "value"));
   EXPECT_TRUE(ccs::types::Boolean == value.GetType());
