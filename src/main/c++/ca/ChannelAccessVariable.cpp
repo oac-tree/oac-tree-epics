@@ -127,7 +127,12 @@ static bool _cavariable_registered_flag = RegisterGlobalVariable<ChannelAccessVa
 // cppcheck-suppress unusedFunction // Callbacks used in a separate translation unit
 bool ChannelAccessVariable::SetupImpl()
 {
-  bool status = (HasAttribute("channel") && HasAttribute("datatype"));
+  bool status = client.Reset();
+
+  if (status)
+  {
+    status = (HasAttribute("channel") && HasAttribute("datatype"));
+  }
 
   ccs::base::SharedReference<ccs::types::AnyType> type;
 
@@ -142,6 +147,11 @@ bool ChannelAccessVariable::SetupImpl()
     var_type = type;
     log_debug("ChannelAccessVariable('%s')::SetupImpl - .. and '%s' channel", GetName().c_str(), GetAttribute("channel").c_str());
     status = client.AddVariable(channel.c_str(), ccs::types::AnyputVariable, var_type);
+  }
+  if (status)
+  {
+    log_debug("ChannelAccessVariable('%s')::SetupImpl - launching", GetName().c_str());
+    status = client.Launch();
   }
   return status;
 }
