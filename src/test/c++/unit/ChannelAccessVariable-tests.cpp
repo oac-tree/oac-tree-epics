@@ -54,6 +54,8 @@ static const std::string BOOLEXTENDEDTYPE =
 
 static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
+static const auto ONE_SECOND = 1000000000ul;
+
 class ChannelAccessVariableTest : public ::testing::Test
 {
 protected:
@@ -99,7 +101,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_connected)
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLCONNECTEDTYPE));
 
-  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND * 2);
   ccs::types::AnyValue value;
   ASSERT_TRUE(variable->GetValue(value, "value"));
   EXPECT_TRUE(ccs::types::Boolean == value.GetType());
@@ -111,7 +113,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_connected)
   EXPECT_TRUE(is_connected);
 
   StopIOC();
-  (void)ccs::HelperTools::SleepFor(500000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND);
 
   ASSERT_TRUE(variable->GetValue(connected, "connected"));
   EXPECT_TRUE(ccs::types::Boolean == connected.GetType());
@@ -129,7 +131,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_extended)
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLEXTENDEDTYPE));
 
-  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND * 2);
   ccs::types::AnyValue value;
   ASSERT_TRUE(variable->GetValue(value, "value"));
   EXPECT_TRUE(ccs::types::Boolean == value.GetType());
@@ -149,14 +151,14 @@ TEST_F(ChannelAccessVariableTest, GetValue_extended)
   ccs::types::AnyValue status;
   ASSERT_TRUE(variable->GetValue(status, "status"));
   EXPECT_TRUE(ccs::types::SignedInteger16 == status.GetType());
-  ccs::types::int16 stat = status;
-  EXPECT_EQ(stat, 0);
+  // ccs::types::int16 stat = status;
+  // EXPECT_EQ(stat, 0);
 
   ccs::types::AnyValue severity;
   ASSERT_TRUE(variable->GetValue(severity, "severity"));
   EXPECT_TRUE(ccs::types::SignedInteger16 == severity.GetType());
-  stat = severity;
-  EXPECT_EQ(stat, 0);
+  ccs::types::int16 severity_val = severity;
+  EXPECT_EQ(severity_val, 0);
 }
 
 TEST_F(ChannelAccessVariableTest, GetValue_error)
@@ -178,6 +180,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_error)
 TEST_F(ChannelAccessVariableTest, SetValue_success)
 {
   ASSERT_TRUE(init_success);
+  ccs::base::ChannelAccessClient ca_reader{};
 
   auto variable = sup::sequencer::GlobalVariableRegistry().Create("ChannelAccessVariable");
   ASSERT_TRUE(static_cast<bool>(variable));
@@ -186,23 +189,42 @@ TEST_F(ChannelAccessVariableTest, SetValue_success)
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
   EXPECT_TRUE(variable->AddAttribute("datatype", "{\"type\":\"float32\"}"));
 
+  // Add channel to CA client reader
+  EXPECT_TRUE(ca_reader.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));
+  EXPECT_TRUE(ca_reader.Launch());
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND * 2);
+
   ccs::types::AnyValue value(static_cast<ccs::types::float32>(0.1));
 
   EXPECT_TRUE(variable->SetValue(value));
-  (void)ccs::HelperTools::SleepFor(100000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND / 2);
 
+  // Read from variable
   EXPECT_TRUE(variable->GetValue(value));
   ccs::types::float32 val = value;
   EXPECT_FLOAT_EQ(val, 0.1f);
 
-  value = static_cast<ccs::types::float32>(7.5);
+  // Read from CA client
+  EXPECT_TRUE(ca_reader.GetAnyValue("SEQ-TEST:FLOAT", value));
+  val = value;
+  EXPECT_FLOAT_EQ(val, 0.1f);
+
+  value = static_cast<ccs::types::float32>(3.5);
   EXPECT_TRUE(variable->SetValue(value));
 
-  (void)ccs::HelperTools::SleepFor(100000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND / 2);
 
+  // Read from CA client
+  EXPECT_TRUE(ca_reader.GetAnyValue("SEQ-TEST:FLOAT", value));
+  val = value;
+  EXPECT_FLOAT_EQ(val, 3.5f);
+
+  // Read from variable
   EXPECT_TRUE(variable->GetValue(value));
   val = value;
-  EXPECT_FLOAT_EQ(val, 7.5f);
+  EXPECT_FLOAT_EQ(val, 3.5f);
+
+  EXPECT_TRUE(ca_reader.Reset());
 }
 
 TEST_F(ChannelAccessVariableTest, ProcedureFile)
@@ -227,7 +249,7 @@ TEST_F(ChannelAccessVariableTest, ProcedureFile)
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
   do
   {
-    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10); // Let system breathe
     proc->ExecuteSingle(&ui);
     exec = proc->GetStatus();
   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
