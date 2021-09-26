@@ -40,16 +40,14 @@ find_package(GTest REQUIRED)
 
 target_link_libraries(unit-tests
     PUBLIC
+        GTest::GTest
+        GTest::Main
         sequencer
         sequencer-ca
         sequencer-misc
         sequencer-pvxs
-        GTest::GTest
-        GTest::Main
-        ccs-types
-        ccs-base
-        ccs-common
-        ca
+        ccs-core
         ccs-ca
         ccs-pvxs
+        ca
     )

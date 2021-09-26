@@ -52,6 +52,9 @@ static const std::string BOOLCONNECTEDTYPE =
 static const std::string BOOLEXTENDEDTYPE =
   R"RAW({"type":"boolconnected","attributes":[{"value":{"type":"bool"}},{"connected":{"type":"bool"}},{"timestamp":{"type":"uint64"}},{"status":{"type":"int16"}},{"severity":{"type":"int16"}}]})RAW";
 
+static const std::string FLOATTYPE =
+  R"RAW({"type":"float32"})RAW";
+
 static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
 static const auto ONE_SECOND = 1000000000ul;
@@ -180,14 +183,14 @@ TEST_F(ChannelAccessVariableTest, GetValue_error)
 TEST_F(ChannelAccessVariableTest, SetValue_success)
 {
   ASSERT_TRUE(init_success);
-  ccs::base::ChannelAccessClient ca_reader{};
+  ccs::base::ChannelAccessClient ca_reader;
 
   auto variable = sup::sequencer::GlobalVariableRegistry().Create("ChannelAccessVariable");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   // Setup implicit with AddAttribute .. access as 'float32'
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
-  EXPECT_TRUE(variable->AddAttribute("datatype", "{\"type\":\"float32\"}"));
+  EXPECT_TRUE(variable->AddAttribute("datatype", FLOATTYPE));
 
   // Add channel to CA client reader
   EXPECT_TRUE(ca_reader.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));

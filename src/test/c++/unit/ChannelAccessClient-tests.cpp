@@ -47,6 +47,8 @@
 
 static ::ccs::log::Func_t _log_handler = ::ccs::log::SetStdout();
 
+static const auto ONE_SECOND = 1000000000ul;
+
 class ChannelAccessClientTest : public ::testing::Test
 {
 protected:
@@ -63,7 +65,7 @@ protected:
 TEST_F(ChannelAccessClientTest, Launch)
 {
   ASSERT_TRUE(init_success);
-  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND);
 
   ccs::base::SharedReference<ccs::types::AnyType> _type;
 
@@ -71,7 +73,7 @@ TEST_F(ChannelAccessClientTest, Launch)
   ASSERT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
     ->AddVariable("SEQ-TEST:BOOL", ccs::types::AnyputVariable, _type));
   (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->Launch();
-  (void)ccs::HelperTools::SleepFor(1000000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND);
   ccs::types::AnyValue value;
   EXPECT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
       ->GetAnyValue("SEQ-TEST:BOOL", value));
@@ -81,6 +83,59 @@ TEST_F(ChannelAccessClientTest, Launch)
   log_info("TEST_F(ChannelAccessClientTest, Launch) - Value is ..");
   log_info("'%s'", buffer);
   EXPECT_FALSE(ccs::HelperTools::IsUndefinedString(reinterpret_cast<char*>(value.GetInstance())));
+}
+
+TEST_F(ChannelAccessClientTest, ReadWriteClients)
+{
+  ccs::HelperTools::SleepFor(ONE_SECOND);
+
+  // construct clients
+  ccs::base::ChannelAccessClient ca_client;
+  ccs::base::ChannelAccessClient ca_client_reader;
+
+  // preparing variable
+  ASSERT_TRUE(ca_client.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));
+  ASSERT_TRUE(ca_client_reader.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));
+
+  // starting clients
+  ASSERT_TRUE(ca_client.Launch());
+  ASSERT_TRUE(ca_client_reader.Launch());
+
+  // set first value
+  const ccs::types::float32 value1 = 3.5f;
+  ASSERT_TRUE(ca_client.SetVariable("SEQ-TEST:FLOAT", value1));
+
+  ccs::HelperTools::SleepFor(ONE_SECOND);
+
+  // reading variable through first client
+  ccs::types::float32 variable_float = 0.0f;
+  EXPECT_TRUE(ca_client.GetVariable("SEQ-TEST:FLOAT", variable_float));
+  EXPECT_FLOAT_EQ(variable_float, value1);
+
+  // reading variable through second client
+  variable_float = 0.0f;
+  EXPECT_TRUE(ca_client_reader.GetVariable("SEQ-TEST:FLOAT", variable_float));
+  EXPECT_FLOAT_EQ(variable_float, value1);
+
+  // set second value
+  const ccs::types::float32 value2 = -1.5f;
+  ASSERT_TRUE(ca_client.SetVariable("SEQ-TEST:FLOAT", value2));
+
+  ccs::HelperTools::SleepFor(ONE_SECOND);
+
+  // reading variable through first client
+  variable_float = 0.0f;
+  EXPECT_TRUE(ca_client.GetVariable("SEQ-TEST:FLOAT", variable_float));
+  EXPECT_FLOAT_EQ(variable_float, value2);
+
+  // reading variable through second client
+  variable_float = 0.0f;
+  EXPECT_TRUE(ca_client_reader.GetVariable("SEQ-TEST:FLOAT", variable_float));
+  EXPECT_FLOAT_EQ(variable_float, value2);
+
+  // reset clients
+  ASSERT_TRUE(ca_client.Reset());
+  ASSERT_TRUE(ca_client_reader.Reset());
 }
 
 ChannelAccessClientTest::ChannelAccessClientTest()

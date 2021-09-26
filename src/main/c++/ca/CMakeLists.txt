@@ -30,11 +30,9 @@ target_link_directories(sequencer-ca
 
 target_link_libraries(sequencer-ca
     PUBLIC
-        ccs-common
-        ccs-types
-        ccs-base
-        ccs-ca
         sequencer
+        ccs-core
+        ccs-ca
     )
 
 target_compile_definitions(sequencer-ca

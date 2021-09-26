@@ -29,11 +29,9 @@ target_link_directories(sequencer-pvxs
 
 target_link_libraries(sequencer-pvxs
     PUBLIC
-        ccs-common
-        ccs-types
-        ccs-base
-        ccs-pvxs
         sequencer
+        ccs-core
+        ccs-pvxs
     )
 
 target_compile_definitions(sequencer-pvxs

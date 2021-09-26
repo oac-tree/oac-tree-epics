@@ -26,10 +26,8 @@ target_link_directories(sequencer-misc
 
 target_link_libraries(sequencer-misc
     PUBLIC
-        ccs-common
-        ccs-types
-        ccs-base
         sequencer
+        ccs-core
     )
 
 target_compile_definitions(sequencer-misc
