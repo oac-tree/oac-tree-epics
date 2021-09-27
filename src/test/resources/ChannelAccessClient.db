@@ -6,6 +6,7 @@ record (bo,"SEQ-TEST:BOOL")
     field(ZNAM,"FALSE")
     field(ZSV,"NO_ALARM")
     field(VAL,"0")
+    field(PINI, "YES")
 }
 
 record (ao,"SEQ-TEST:FLOAT")
@@ -14,11 +15,13 @@ record (ao,"SEQ-TEST:FLOAT")
     field(DRVH,"5.0")
     field(DRVL,"-5.0")
     field(VAL,"0")
+    field(PINI, "YES")
 }
 
 record (stringout,"SEQ-TEST:STRING")
 {
     field(DESC,"Some EPICSv3 record")
+    field(PINI, "YES")
 }
 
 record (waveform,"SEQ-TEST:UIARRAY")
@@ -26,6 +29,7 @@ record (waveform,"SEQ-TEST:UIARRAY")
     field(DESC,"Some EPICSv3 record")
     field(FTVL, "ULONG")
     field(NELM, "8")
+    field(PINI, "YES")
 }
 
 record (waveform,"SEQ-TEST:CHARRAY")
@@ -33,5 +37,6 @@ record (waveform,"SEQ-TEST:CHARRAY")
     field(DESC,"Some EPICSv3 record")
     field(FTVL, "CHAR")
     field(NELM, "1024")
+    field(PINI, "YES")
 }
 

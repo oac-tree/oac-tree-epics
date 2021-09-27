@@ -273,6 +273,7 @@ ChannelAccessVariableTest::ChannelAccessVariableTest()
     init_success = ::ccs::HelperTools::ExecuteSystemCall(
         "/usr/bin/screen -d -m -S cavariabletestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
   }
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND);
 }
 
 ChannelAccessVariableTest::~ChannelAccessVariableTest()
