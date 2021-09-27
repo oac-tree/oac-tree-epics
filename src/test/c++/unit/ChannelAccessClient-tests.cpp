@@ -87,8 +87,6 @@ TEST_F(ChannelAccessClientTest, Launch)
 
 TEST_F(ChannelAccessClientTest, ReadWriteClients)
 {
-  ccs::HelperTools::SleepFor(ONE_SECOND);
-
   // construct clients
   ccs::base::ChannelAccessClient ca_client;
   ccs::base::ChannelAccessClient ca_client_reader;
@@ -100,6 +98,8 @@ TEST_F(ChannelAccessClientTest, ReadWriteClients)
   // starting clients
   ASSERT_TRUE(ca_client.Launch());
   ASSERT_TRUE(ca_client_reader.Launch());
+
+  ccs::HelperTools::SleepFor(ONE_SECOND * 2);
 
   // set first value
   const ccs::types::float32 value1 = 3.5f;
