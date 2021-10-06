@@ -47,10 +47,10 @@ static const std::string PVACCESSWRITEPROCEDURE = R"RAW(<?xml version="1.0" enco
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <Repeat maxCount="10">
+    <Repeat maxCount="3">
         <Sequence>
             <Wait name="wait"
-                timeout="1.0"/>
+                timeout="0.2"/>
             <Copy input="curr-time" output="pvxs-variable.timestamp"/>
             <Copy input="curr-time" output="pvxs-other.timestamp"/>
             <LogTrace name="variable"
