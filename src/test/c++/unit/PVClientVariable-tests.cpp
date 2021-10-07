@@ -37,4 +37,19 @@ TEST_F(PVClientVariableTest, VariableRegistration)
   auto registry = sup::sequencer::GlobalVariableRegistry();
   auto names = registry.RegisteredVariableNames();
   ASSERT_TRUE(std::find(names.begin(), names.end(), PVClientVariable::Type) != names.end());
+  ASSERT_TRUE(dynamic_cast<PVClientVariable*>(registry.Create(PVClientVariable::Type).get()));
+}
+
+TEST_F(PVClientVariableTest, InvalidSetup)
+{
+  PVClientVariable variable;
+  EXPECT_NO_THROW(variable.AddAttribute("channel", "PVClientVariableTest:INTEGER"));
+  EXPECT_THROW(variable.AddAttribute("datatype", "invalid-type"), std::runtime_error);
+}
+
+TEST_F(PVClientVariableTest, ValidSetup)
+{
+  PVClientVariable variable;
+  EXPECT_NO_THROW(variable.AddAttribute("channel", "PVClientVariableTest:INTEGER"));
+  EXPECT_NO_THROW(variable.AddAttribute("datatype", R"RAW({"type":"uint64"})RAW"));
 }
