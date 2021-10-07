@@ -69,6 +69,14 @@ struct PVClientVariable::PVClientVariableImpl
     // TODO Consider asking the server about existing variable already at this stage
     // throw if such variable doesn't exist or doesn't have a correct type.
   }
+
+  void CheckConnection()
+  {
+    if (!m_client.IsConnected(m_channel.c_str()))
+    {
+      throw std::runtime_error("Error: can't connect to the variable");
+    }
+  }
 };
 
 PVClientVariable::PVClientVariable()
@@ -98,7 +106,12 @@ bool PVClientVariable::SetupImpl()
 
 bool PVClientVariable::GetValueImpl(ccs::types::AnyValue& value) const
 {
-  return false;
+  p_impl->CheckConnection();
+  if (!p_impl->m_client.GetVariable(p_impl->m_channel.c_str(), value))
+  {
+    throw std::runtime_error("Error: can't get variable");
+  }
+  return true;
 }
 
 bool PVClientVariable::SetValueImpl(const ccs::types::AnyValue& value)
