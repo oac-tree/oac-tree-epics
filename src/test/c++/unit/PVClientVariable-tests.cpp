@@ -19,15 +19,22 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include <gtest/gtest.h> 
-
 #include "PVClientVariable.h"
+
+#include <VariableRegistry.h>
+#include <gtest/gtest.h>
+
+#include <algorithm>
+
+using sup::sequencer::PVClientVariable;
 
 class PVClientVariableTest : public ::testing::Test
 {
 };
 
-TEST_F(PVClientVariableTest, InitialState)
+TEST_F(PVClientVariableTest, VariableRegistration)
 {
-  EXPECT_EQ(1, 1);
+  auto registry = sup::sequencer::GlobalVariableRegistry();
+  auto names = registry.RegisteredVariableNames();
+  ASSERT_TRUE(std::find(names.begin(), names.end(), PVClientVariable::Type) != names.end());
 }

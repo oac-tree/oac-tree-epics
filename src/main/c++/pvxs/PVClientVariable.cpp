@@ -20,13 +20,23 @@
  ******************************************************************************/
 
 #include "PVClientVariable.h"
+#include <VariableRegistry.h>
 
 namespace sup {
 namespace sequencer {
 
 const std::string PVClientVariable::Type = "PVClientVariable";
+static bool PVClientVariable_initialised_flag = RegisterGlobalVariable<PVClientVariable>();
 
-PVClientVariable::PVClientVariable() : Variable(PVClientVariable::Type) {}
+//! Pointer implementation for PVClientVariable
+struct PVClientVariable::PVClientVariableImpl {
+  PVClientVariableImpl() {}
+};
+
+PVClientVariable::PVClientVariable()
+    : Variable(PVClientVariable::Type), p_impl(new PVClientVariableImpl) {}
+
+PVClientVariable::~PVClientVariable() { delete p_impl; }
 
 bool PVClientVariable::SetupImpl() { return false; }
 

@@ -21,15 +21,13 @@
 
 #include <Variable.h>
 
-namespace sup {
-
-namespace sequencer {
-
+namespace sup
+{
+namespace sequencer
+{
 /**
- * @brief PVClientVariable class.
- * @detail Workspace variable associated with a locally hosted pvAccess server.
- Mandatory attribute is the named
- * 'channel' (PV name) to instantiate as well as the PV 'datatype'.
+ * @brief Workspace variable associated with remote pvAccess server.
+ * The variable is configured with mandatory 'channel' (PV name) and 'datatype' attributes.
  * @code
      <Workspace>
        <PVClientVariable name="pvxs-variable"
@@ -39,18 +37,23 @@ namespace sequencer {
    @endcode
  */
 
-class PVClientVariable : public Variable {
+class PVClientVariable : public Variable
+{
 public:
   PVClientVariable();
+  ~PVClientVariable();
 
   static const std::string Type;
 
 private:
   bool SetupImpl() override;
-  bool GetValueImpl(ccs::types::AnyValue &value) const  override;
-  bool SetValueImpl(const ccs::types::AnyValue &value)  override;
+  bool GetValueImpl(ccs::types::AnyValue &value) const override;
+  bool SetValueImpl(const ccs::types::AnyValue &value) override;
+
+  struct PVClientVariableImpl;
+  PVClientVariableImpl *p_impl;
 };
 
-} // namespace sequencer
+}  // namespace sequencer
 
-} // namespace sup
+}  // namespace sup
