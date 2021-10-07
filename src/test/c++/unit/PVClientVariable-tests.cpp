@@ -23,6 +23,7 @@
 
 #include <VariableRegistry.h>
 #include <common/PVAccessServer.h>
+#include <common/PVAccessClient.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
@@ -72,7 +73,7 @@ TEST_F(PVClientVariableTest, GetNonExistingValue)
   EXPECT_THROW(variable.GetValue(value), std::runtime_error);
 }
 
-TEST_F(PVClientVariableTest, GetValue)
+TEST_F(PVClientVariableTest, PVAccessServerClientTest)
 {
   const std::string channel("PVClientVariableTest:INTEGER");
   ::ccs::base::PVAccessServer server;
@@ -110,8 +111,22 @@ TEST_F(PVClientVariableTest, GetValue)
       ccs::HelperTools::GetAttributeValue(server.GetVariable(channel.c_str()), "value", value2));
   EXPECT_EQ(value, value2);
 
+  // reading the value throught the client
+  ::ccs::base::PVAccessClient client;
+  EXPECT_TRUE(client.AddVariable(channel.c_str(), ccs::types::AnyputVariable));
+  EXPECT_TRUE(client.IsValid(channel.c_str()));
+
+  // ccs::types::uint32 client_value;
+  // ASSERT_TRUE(
+  //     ccs::HelperTools::GetAttributeValue(client.GetVariable(channel.c_str()), "value", client_value));
+  // EXPECT_EQ(value, client_value);
+
   // PVClientVariable variable;
   // EXPECT_NO_THROW(variable.AddAttribute("channel", channel));
-  // EXPECT_NO_THROW(variable.AddAttribute("datatype", R"RAW({"type":"uint32"})RAW"));  
-  // EXPECT_TRUE(variable.GetValue(any_value2));
+  // EXPECT_NO_THROW(variable.AddAttribute("datatype", R"RAW({"type":"uint32"})RAW"));
+
+  // ::ccs::types::AnyValue any_value;
+  // EXPECT_TRUE(variable.GetValue(any_value));
+  // ccs::types::uint32 int_from_anyvalue = any_value;
+  // EXPECT_EQ(int_from_anyvalue, value);
 }
