@@ -51,6 +51,8 @@
 
 static ccs::log::Func_t _log_handler = ccs::log::SetStdout();
 
+static const auto ONE_SECOND = 1000000000ul;
+
 static const std::string FETCHBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
@@ -174,14 +176,14 @@ TEST_F(ChannelAccessInstructionTest, Fetch_boolean) // Must be associated to a v
   ASSERT_TRUE(proc->Setup());
   ASSERT_TRUE(init_success);
 
-  (void)::ccs::HelperTools::SleepFor(500000000ul);
+  (void)::ccs::HelperTools::SleepFor(ONE_SECOND / 2);
   EXPECT_TRUE(::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caput SEQ-TEST:BOOL TRUE"));
 
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
   do
   {
-    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10); // Let system breathe
     proc->ExecuteSingle(&ui);
     exec = proc->GetStatus();
   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
@@ -233,7 +235,7 @@ TEST_F(ChannelAccessInstructionTest, Write_boolean)
 
   chid channel;
   (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:BOOL", channel);
-  (void)ccs::HelperTools::SleepFor(100000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10);
   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
 
   ccs::types::AnyValue value(false);
@@ -274,7 +276,7 @@ TEST_F(ChannelAccessInstructionTest, Write_float32)
 
   chid channel;
   (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:FLOAT", channel);
-  (void)ccs::HelperTools::SleepFor(100000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10);
   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
 
   ccs::types::AnyValue value (static_cast<ccs::types::float32>(0.0));
@@ -315,7 +317,7 @@ TEST_F(ChannelAccessInstructionTest, Write_array)
 
   chid channel;
   (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:UIARRAY", channel);
-  (void)ccs::HelperTools::SleepFor(100000000ul);
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10);
   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
 
   ccs::types::AnyValue value ("{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}");
@@ -371,7 +373,7 @@ TEST_F(ChannelAccessInstructionTest, ProcedureFile)
 
   do
   {
-    (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
+    (void)ccs::HelperTools::SleepFor(ONE_SECOND / 100); // Let system breathe
     proc->ExecuteSingle(&ui);
     exec = proc->GetStatus();
   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
@@ -393,7 +395,7 @@ TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
 
   do
   {
-    (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
+    (void)ccs::HelperTools::SleepFor(ONE_SECOND / 100); // Let system breathe
     proc->ExecuteSingle(&ui);
     exec = proc->GetStatus();
   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
@@ -416,7 +418,7 @@ TEST_F(ChannelAccessInstructionTest, Procedure_parallel)
 
   do
   {
-    (void)ccs::HelperTools::SleepFor(10000000ul); // Let system breathe
+    (void)ccs::HelperTools::SleepFor(ONE_SECOND / 100); // Let system breathe
     proc->ExecuteSingle(&ui);
     exec = proc->GetStatus();
   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
@@ -443,6 +445,7 @@ ChannelAccessInstructionTest::ChannelAccessInstructionTest()
 ChannelAccessInstructionTest::~ChannelAccessInstructionTest()
 {
   StopIOC();
+  (void)::ccs::HelperTools::SleepFor(ONE_SECOND / 2);
 }
 
 void ChannelAccessInstructionTest::StopIOC()

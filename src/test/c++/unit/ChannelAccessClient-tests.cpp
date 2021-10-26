@@ -156,6 +156,7 @@ ChannelAccessClientTest::ChannelAccessClientTest()
 ChannelAccessClientTest::~ChannelAccessClientTest()
 {
   StopIOC();
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND / 2);
 }
 
 void ChannelAccessClientTest::StopIOC()
