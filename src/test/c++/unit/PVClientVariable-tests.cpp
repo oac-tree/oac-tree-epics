@@ -36,6 +36,21 @@ using ccs::HelperTools::HasAttribute;
 namespace
 {
 const size_t kSecond = 1e9;
+
+std::string CreateProcedureString(const std::string &body)
+{
+  static const std::string header{
+      R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">)RAW"};
+
+  static const std::string footer{R"RAW(</Procedure>)RAW"};
+
+  return header + body + footer;
+}
+
 }
 
 class PVClientVariableTest : public ::testing::Test
@@ -130,4 +145,11 @@ TEST_F(PVClientVariableTest, PVAccessServerClientTest)
   ccs::types::float32 server_value = 0;
   ASSERT_TRUE(GetAttributeValue(server.GetVariable(channel), "value", server_value));
   EXPECT_EQ(server_value, 142.0);
+}
+
+//! Structure with timestamp and value is created on server
+
+TEST_F(PVClientVariableTest, ExecuteProcedure)
+{
+
 }

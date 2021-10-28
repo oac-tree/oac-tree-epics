@@ -116,7 +116,7 @@ bool PVClientVariable::GetValueImpl(ccs::types::AnyValue& value) const
 
 bool PVClientVariable::SetValueImpl(const ccs::types::AnyValue& value)
 {
-  return p_impl->m_client.SetValue(value);
+  return p_impl->m_client.SetVariable(p_impl->m_channel.c_str(), value);
 }
 
 }  // namespace sequencer
