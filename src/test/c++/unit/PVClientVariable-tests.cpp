@@ -29,10 +29,13 @@
 #include <algorithm>
 
 using sup::sequencer::PVClientVariable;
+using ccs::HelperTools::GetAttributeValue;
+using ccs::HelperTools::SetAttributeValue;
+using ccs::HelperTools::HasAttribute;
 
 namespace
 {
-const size_t kSececond = 1e9;
+const size_t kSecond = 1e9;
 }
 
 class PVClientVariableTest : public ::testing::Test
@@ -75,58 +78,56 @@ TEST_F(PVClientVariableTest, GetNonExistingValue)
 
 TEST_F(PVClientVariableTest, PVAccessServerClientTest)
 {
-  const std::string channel("PVClientVariableTest:INTEGER");
+  const std::string kDataType=R"({"type":"testtype","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]})";
+  const char* channel = "PVClientVariableTest:INTEGER";
+
   ::ccs::base::PVAccessServer server;
 
   // creating the variable
-  server.AddVariable(channel.c_str(), ccs::types::AnyputVariable, ccs::types::UnsignedInteger32);
+  server.AddVariable(channel, ccs::types::AnyputVariable, kDataType.c_str());
   server.Launch();
-  ccs::HelperTools::SleepFor(0.1 * kSececond);
+  ccs::HelperTools::SleepFor(0.1 * kSecond);
 
-  {
-    // Attempt to rely on server.SetVariable(channel, any_value)  - Doesn't work
-    // Tests for it are absent on PVAccessServer-test.cpp
+  // setting the value via PVAccessServer::GetVariable
+  ccs::types::float32 value = 42.1;
+  EXPECT_TRUE(SetAttributeValue(server.GetVariable(channel), "value", value));
+  EXPECT_TRUE(server.UpdateVariable(channel));  // without this call EXPECT below are failing
+  ccs::HelperTools::SleepFor(0.1 * kSecond);
 
-    // setting the value throught the server
-    // ::ccs::types::uint32 value = 42;
-    // ::ccs::types::AnyValue any_value(::ccs::types::UnsignedInteger32);
-    // any_value = value;
-    // ASSERT_TRUE(server.SetVariable(channel.c_str(), any_value));
-    // ccs::HelperTools::SleepFor(0.1*kSececond);
-
-    // reading the value through the server
-    // ccs::types::AnyValue any_value2;
-    // server.GetVariable(channel.c_str(), any_value2);
-    // EXPECT_EQ(any_value, any_value2);
-  }
-
-  // setting the value throught the server
-  ccs::types::uint32 value = 42;
-  ASSERT_TRUE(
-      ccs::HelperTools::SetAttributeValue(server.GetVariable(channel.c_str()), "value", value));
-
-  // reading the value through the server
-  ccs::types::uint32 value2{0};
-  ASSERT_TRUE(
-      ccs::HelperTools::GetAttributeValue(server.GetVariable(channel.c_str()), "value", value2));
-  EXPECT_EQ(value, value2);
-
-  // reading the value throught the client
+  // creating the client
   ::ccs::base::PVAccessClient client;
-  EXPECT_TRUE(client.AddVariable(channel.c_str(), ccs::types::AnyputVariable));
-  EXPECT_TRUE(client.IsValid(channel.c_str()));
+  EXPECT_TRUE(client.AddVariable(channel, ccs::types::AnyputVariable));
+  EXPECT_TRUE(client.IsValid(channel));
+  EXPECT_TRUE(client.Launch());
+  ccs::HelperTools::SleepFor(0.1 * kSecond);
+  EXPECT_TRUE(client.IsConnected(channel));
 
-  // ccs::types::uint32 client_value;
-  // ASSERT_TRUE(
-  //     ccs::HelperTools::GetAttributeValue(client.GetVariable(channel.c_str()), "value", client_value));
-  // EXPECT_EQ(value, client_value);
+  // reading the value using PVAccessClient::GetVariable
+  ccs::types::float32 client_value = 0;
+  ASSERT_TRUE(GetAttributeValue(client.GetVariable(channel), "value", client_value));
+  EXPECT_EQ(value, client_value);
 
-  // PVClientVariable variable;
-  // EXPECT_NO_THROW(variable.AddAttribute("channel", channel));
-  // EXPECT_NO_THROW(variable.AddAttribute("datatype", R"RAW({"type":"uint32"})RAW"));
+  // Creating sequencer's PVClientVariable
+  PVClientVariable variable;
+  EXPECT_NO_THROW(variable.AddAttribute("channel", channel));
+  EXPECT_NO_THROW(variable.AddAttribute("datatype", kDataType));
 
-  // ::ccs::types::AnyValue any_value;
-  // EXPECT_TRUE(variable.GetValue(any_value));
-  // ccs::types::uint32 int_from_anyvalue = any_value;
-  // EXPECT_EQ(int_from_anyvalue, value);
+  // Reading the value from PVClientVariable
+  ::ccs::types::AnyValue variable_any_value;
+  EXPECT_TRUE(variable.GetValue(variable_any_value));
+  EXPECT_TRUE(HasAttribute(&variable_any_value, "value"));
+  ccs::types::float32 variable_value = 0;
+  EXPECT_TRUE(GetAttributeValue(&variable_any_value, "value", variable_value));
+  EXPECT_FLOAT_EQ(variable_value, 42.1);
+
+  // setting the value
+  variable_value = 142.0;
+  EXPECT_TRUE(SetAttributeValue(&variable_any_value, "value", variable_value));
+  EXPECT_TRUE(variable.SetValue(variable_any_value));
+  ccs::HelperTools::SleepFor(0.1 * kSecond);
+
+  // reading from the server
+  ccs::types::float32 server_value = 0;
+  ASSERT_TRUE(GetAttributeValue(server.GetVariable(channel), "value", server_value));
+  EXPECT_EQ(server_value, 142.0);
 }
