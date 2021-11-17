@@ -133,9 +133,8 @@ protected:
   ChannelAccessInstructionTest();
   virtual ~ChannelAccessInstructionTest();
 
-  void StopIOC();
-
-  bool init_success;
+  static void SetUpTestCase();
+  static void TearDownTestCase();
 };
 
 TEST(ChannelAccessInstruction, Execute_missing)
@@ -174,7 +173,6 @@ TEST_F(ChannelAccessInstructionTest, Fetch_boolean) // Must be associated to a v
   ccs::types::AnyValue string_var ("undefined"); ccs::HelperTools::DumpToFile(&string_var, "/tmp/file-variable-string.dat");
 
   ASSERT_TRUE(proc->Setup());
-  ASSERT_TRUE(init_success);
 
   (void)::ccs::HelperTools::SleepFor(ONE_SECOND / 2);
   EXPECT_TRUE(::ccs::HelperTools::ExecuteSystemCall("/usr/bin/caput SEQ-TEST:BOOL TRUE"));
@@ -213,8 +211,6 @@ TEST_F(ChannelAccessInstructionTest, Write_boolean)
 {
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
   ASSERT_TRUE(static_cast<bool>(instruction));
-
-  ASSERT_TRUE(init_success);
 
   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}"));
@@ -255,8 +251,6 @@ TEST_F(ChannelAccessInstructionTest, Write_float32)
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
   ASSERT_TRUE(static_cast<bool>(instruction));
 
-  ASSERT_TRUE(init_success);
-
   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:FLOAT"));
   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"string\"}"));
   EXPECT_TRUE(instruction->AddAttribute("instance", "\"0.5\""));
@@ -295,8 +289,6 @@ TEST_F(ChannelAccessInstructionTest, Write_array)
 {
   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("ChannelAccessWriteInstruction");
   ASSERT_TRUE(static_cast<bool>(instruction));
-
-  ASSERT_TRUE(init_success);
 
   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}"));
@@ -367,8 +359,6 @@ TEST_F(ChannelAccessInstructionTest, ProcedureFile)
 
   ASSERT_TRUE(static_cast<bool>(proc));
   ASSERT_TRUE(proc->Setup());
-  ASSERT_TRUE(init_success);
-
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
   do
@@ -389,7 +379,6 @@ TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
 
   ASSERT_TRUE(static_cast<bool>(proc));
   ASSERT_TRUE(proc->Setup());
-  ASSERT_TRUE(init_success);
 
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
@@ -412,7 +401,6 @@ TEST_F(ChannelAccessInstructionTest, Procedure_parallel)
 
   ASSERT_TRUE(static_cast<bool>(proc));
   ASSERT_TRUE(proc->Setup());
-  ASSERT_TRUE(init_success);
 
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
@@ -427,34 +415,30 @@ TEST_F(ChannelAccessInstructionTest, Procedure_parallel)
   EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
 }
 
-ChannelAccessInstructionTest::ChannelAccessInstructionTest()
-  : init_success{false}
+ChannelAccessInstructionTest::ChannelAccessInstructionTest() = default;
+
+ChannelAccessInstructionTest::~ChannelAccessInstructionTest() = default;
+
+void ChannelAccessInstructionTest::SetUpTestCase()
 {
   if (::ccs::HelperTools::Exist("../resources/ChannelAccessClient.db"))
   {
-    init_success = ::ccs::HelperTools::ExecuteSystemCall(
-        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
+    ::ccs::HelperTools::ExecuteSystemCall(
+        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d "
+        "../resources/ChannelAccessClient.db &> /dev/null");
   }
   else
   {
-    init_success = ::ccs::HelperTools::ExecuteSystemCall(
-        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
+    ::ccs::HelperTools::ExecuteSystemCall(
+        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d "
+        "./target/test/resources/ChannelAccessClient.db &> /dev/null");
   }
+  (void)ccs::HelperTools::SleepFor(ONE_SECOND);
 }
 
-ChannelAccessInstructionTest::~ChannelAccessInstructionTest()
+void ChannelAccessInstructionTest::TearDownTestCase()
 {
-  StopIOC();
-  (void)::ccs::HelperTools::SleepFor(ONE_SECOND / 2);
-}
-
-void ChannelAccessInstructionTest::StopIOC()
-{
-  if (init_success)
-  {
-    ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S cainstructiontestIOC -X quit &> /dev/null");
-    init_success = false;
-  }
+  ::ccs::HelperTools::ExecuteSystemCall("/usr/bin/screen -S cainstructiontestIOC -X quit &> /dev/null");
 }
 
 #undef LOG_ALTERN_SRC
