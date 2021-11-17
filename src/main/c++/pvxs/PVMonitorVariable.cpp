@@ -104,21 +104,30 @@ static bool _pvmonitor_initialised_flag = RegisterGlobalVariable<PVMonitorVariab
 
 // Function definition
 
-bool PVMonitorVariable::SetupImpl (void)
+bool PVMonitorVariable::SetupImpl(void)
 {
-
-  bool status = ((false == PVMonitorCache::IsInitialised()) && Variable::HasAttribute("channel"));
+  bool status = ((false == PVMonitorCache::IsInitialised()) && HasAttribute("channel"));
+  auto channel = GetAttribute("channel");
 
   if (status)
-    { // Instantiate implementation
-      log_info("PVMonitorVariable('%s')::SetupImpl - Method called with '%s' channel", Variable::GetName().c_str(), Variable::GetAttribute("channel").c_str());
-      status = PVMonitorCache::SetChannel(Variable::GetAttribute("channel").c_str());
-    }
+  {  // Instantiate implementation
+    log_info("PVMonitorVariable('%s')::SetupImpl - Method called with '%s' channel",
+             GetName().c_str(), channel.c_str());
+    status = PVMonitorCache::SetChannel(channel.c_str());
+  }
+  if (status)
+  {
+    SetCallback(channel.c_str(),
+                [this](const ccs::types::AnyValue&)
+                {
+                  Notify();
+                  return;
+                });
+  }
 
   // ToDo - Additional status variable
 
   return status;
-
 }
 
 bool PVMonitorVariable::GetValueImpl (ccs::types::AnyValue& value) const

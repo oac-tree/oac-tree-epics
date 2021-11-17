@@ -59,6 +59,16 @@ struct PVClientVariable::PVClientVariableImpl
     }
   }
 
+  //! Sets callback for variable updates.
+  void SetCallback(const std::string& channel,
+                   const std::function<void(const ccs::types::AnyValue&)>& cb)
+  {
+    if (!m_client.SetCallback(m_channel.c_str(), cb))
+    {
+      throw std::runtime_error("Error: can't set callback to variable");
+    }
+  }
+
   // Launch the client.
   void Launch()
   {
@@ -99,6 +109,12 @@ bool PVClientVariable::SetupImpl()
 
   p_impl->InitType(GetAttribute("datatype"));
   p_impl->AddVariable(GetAttribute("channel"));
+  p_impl->SetCallback(GetAttribute("channel"),
+                      [this](const ccs::types::AnyValue&)
+                      {
+                        Notify();
+                        return;
+                      });
   p_impl->Launch();
 
   return true;
