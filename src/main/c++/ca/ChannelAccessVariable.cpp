@@ -152,6 +152,15 @@ bool ChannelAccessVariable::SetupImpl()
   }
   if (status)
   {
+    status = client.SetCallback(channel.c_str(),
+        [this](const ccs::types::char8*, const ccs::types::AnyValue&)
+        {
+          Notify();
+          return;
+        });
+  }
+  if (status)
+  {
     log_debug("ChannelAccessVariable('%s')::SetupImpl - launching", GetName().c_str());
     status = client.Launch();
   }
