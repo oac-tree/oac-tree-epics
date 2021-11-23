@@ -194,8 +194,7 @@ TEST_F(ChannelAccessVariableTest, SetValue_success)
 
   // Add channel to CA client reader
   EXPECT_TRUE(ca_reader.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));
-  EXPECT_TRUE(ca_reader.Launch());
-  (void)ccs::HelperTools::SleepFor(ONE_SECOND * 2);
+  EXPECT_TRUE(ca_reader.WaitForConnected(5.0));
 
   ccs::types::AnyValue value(static_cast<ccs::types::float32>(0.1));
 

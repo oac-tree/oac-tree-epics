@@ -72,7 +72,7 @@ TEST_F(ChannelAccessClientTest, Launch)
   ASSERT_TRUE(0u < ccs::HelperTools::Parse(_type, "{\"type\":\"string\"}"));
   ASSERT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
     ->AddVariable("SEQ-TEST:BOOL", ccs::types::AnyputVariable, _type));
-  (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->Launch();
+  (void)ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()->WaitForConnected(5.0);
   (void)ccs::HelperTools::SleepFor(ONE_SECOND);
   ccs::types::AnyValue value;
   EXPECT_TRUE(ccs::base::ChannelAccessInterface::GetInstance<ccs::base::ChannelAccessClient>()
@@ -96,10 +96,8 @@ TEST_F(ChannelAccessClientTest, ReadWriteClients)
   ASSERT_TRUE(ca_client_reader.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));
 
   // starting clients
-  ASSERT_TRUE(ca_client.Launch());
-  ASSERT_TRUE(ca_client_reader.Launch());
-
-  ccs::HelperTools::SleepFor(ONE_SECOND * 2);
+  ASSERT_TRUE(ca_client.WaitForConnected(5.0));
+  ASSERT_TRUE(ca_client_reader.WaitForConnected(5.0));
 
   // set first value
   const ccs::types::float32 value1 = 3.5f;

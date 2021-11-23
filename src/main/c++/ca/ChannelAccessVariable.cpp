@@ -159,11 +159,6 @@ bool ChannelAccessVariable::SetupImpl()
           return;
         });
   }
-  if (status)
-  {
-    log_debug("ChannelAccessVariable('%s')::SetupImpl - launching", GetName().c_str());
-    status = client.Launch();
-  }
   return status;
 }
 
