@@ -207,9 +207,9 @@ bool PVServerVariable::SetupImpl(void)
   if (status)
   {
     status = _server->SetCallback(channel.c_str(),
-        [this](const ::ccs::types::AnyValue&)
+        [this](const ::ccs::types::AnyValue& value)
         {
-          Notify();
+          Notify(value);
           return;
         });
   }

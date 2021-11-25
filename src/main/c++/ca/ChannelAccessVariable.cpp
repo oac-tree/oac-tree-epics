@@ -153,9 +153,9 @@ bool ChannelAccessVariable::SetupImpl()
   if (status)
   {
     status = client.SetCallback(channel.c_str(),
-        [this](const ccs::types::char8*, const ccs::types::AnyValue&)
+        [this](const ccs::types::char8*, const ccs::types::AnyValue& value)
         {
-          Notify();
+          Notify(value);
           return;
         });
   }

@@ -110,9 +110,9 @@ bool PVClientVariable::SetupImpl()
   p_impl->InitType(GetAttribute("datatype"));
   p_impl->AddVariable(GetAttribute("channel"));
   p_impl->SetCallback(GetAttribute("channel"),
-                      [this](const ccs::types::AnyValue&)
+                      [this](const ccs::types::AnyValue& value)
                       {
-                        Notify();
+                        Notify(value);
                         return;
                       });
   p_impl->Launch();
