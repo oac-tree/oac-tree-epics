@@ -213,6 +213,7 @@ bool PVServerVariable::SetupImpl(void)
           return;
         });
   }
+  LaunchPVAccessServerInstance();
 
   if (status && HasAttribute("instance"))
   {  // Provide default instance
