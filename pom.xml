@@ -43,7 +43,7 @@
     <parent>
         <groupId>org.iter.codac.units</groupId>
         <artifactId>maven-iter-settings</artifactId>
-        <version>7.0.0</version>
+        <version>7.1.0</version>
     </parent>
 
     <!-- unit owner and developers -->
