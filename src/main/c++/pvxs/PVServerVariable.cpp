@@ -266,6 +266,11 @@ bool PVServerVariable::SetValueImpl(const ccs::types::AnyValue& value)
     status = _server->SetVariable(channel.c_str(), value);
   }
 
+  if (status)
+  {
+    Notify(value);
+  }
+
   return status;
 }
 
