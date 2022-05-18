@@ -21,6 +21,8 @@
 
 #include <Variable.h>
 
+#include <memory>
+
 namespace sup
 {
 namespace sequencer
@@ -46,12 +48,13 @@ public:
   static const std::string Type;
 
 private:
-  bool SetupImpl() override;
   bool GetValueImpl(ccs::types::AnyValue &value) const override;
   bool SetValueImpl(const ccs::types::AnyValue &value) override;
+  bool SetupImpl() override;
+  void ResetImpl() override;
 
   struct PVClientVariableImpl;
-  PVClientVariableImpl *p_impl;
+  std::unique_ptr<PVClientVariableImpl> p_impl;
 };
 
 }  // namespace sequencer

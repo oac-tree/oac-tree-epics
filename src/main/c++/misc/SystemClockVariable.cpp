@@ -49,44 +49,35 @@ namespace sequencer {
  * @todo Assess if different format should be supported, e.g. ISO8601 is the passed value
  * is string, etc.
  */
-
 class SystemClockVariable : public Variable
 {
-
   private:
-
     ::ccs::base::SharedReference<const ::ccs::types::AnyType> _type;
 
     /**
      * @brief See sup::sequencer::Variable.
      */
-
-    virtual bool SetupImpl (void);
     virtual bool GetValueImpl (::ccs::types::AnyValue& value) const;
     virtual bool SetValueImpl (const ::ccs::types::AnyValue& value);
+    virtual bool SetupImpl();
+    virtual void ResetImpl();
 
   protected:
-
   public:
-
     /**
      * @brief Constructor.
      */
-
-    SystemClockVariable (void);
+    SystemClockVariable();
 
     /**
      * @brief Destructor.
      */
-
-    ~SystemClockVariable (void) override;
+    ~SystemClockVariable() override;
 
     /**
      * @brief Class name for VariableRegistry.
      */
-
     static const std::string Type;
-
 };
 
 // Function declaration
@@ -97,28 +88,6 @@ const std::string SystemClockVariable::Type = "SystemClock";
 static bool _sysclockvariable_initialised_flag = RegisterGlobalVariable<SystemClockVariable>();
 
 // Function definition
-
-bool SystemClockVariable::SetupImpl (void)
-{
-
-  if (Variable::HasAttribute("datatype")) // Has 'datatype' attribute
-    {
-      ::ccs::base::SharedReference<::ccs::types::AnyType> type;
-      bool status = (0u < ::ccs::HelperTools::Parse(type, Variable::GetAttribute("datatype").c_str())); 
-
-      if (status)
-        { // Now going to const type
-          _type = type;
-        }
-    }
-  else
-    { // Default to 'uint64' type
-      _type = ::ccs::types::UnsignedInteger64;
-    }
-
-  return static_cast<bool>(_type);
-
-}
 
 bool SystemClockVariable::GetValueImpl (ccs::types::AnyValue& value) const
 {
@@ -166,21 +135,49 @@ bool SystemClockVariable::GetValueImpl (ccs::types::AnyValue& value) const
 
 }
 
-bool SystemClockVariable::SetValueImpl (const ccs::types::AnyValue& value) { return false; } // Unimplemented
+bool SystemClockVariable::SetValueImpl(const ccs::types::AnyValue&)
+{
+  return false;
+}
 
-SystemClockVariable::SystemClockVariable (void) : Variable(SystemClockVariable::Type)
+bool SystemClockVariable::SetupImpl (void)
+{
+
+  if (Variable::HasAttribute("datatype")) // Has 'datatype' attribute
+    {
+      ::ccs::base::SharedReference<::ccs::types::AnyType> type;
+      bool status = (0u < ::ccs::HelperTools::Parse(type, Variable::GetAttribute("datatype").c_str()));
+
+      if (status)
+        { // Now going to const type
+          _type = type;
+        }
+    }
+  else
+    { // Default to 'uint64' type
+      _type = ::ccs::types::UnsignedInteger64;
+    }
+
+  return static_cast<bool>(_type);
+}
+
+void SystemClockVariable::ResetImpl()
+{
+  _type.Discard();
+}
+
+
+SystemClockVariable::SystemClockVariable() : Variable(SystemClockVariable::Type)
 {
   // Register timespec equivalent type to the GlobalTypeDatabase
   ::ccs::types::char8 type [] = "{\"type\":\"sup::FractionalTime/v1.0\",\"attributes\":["
     "{\"seconds\":{\"type\":\"uint32\"}},"
     "{\"nanosec\":{\"type\":\"uint32\"}}"
     "]}";
-
   (void)::ccs::base::GlobalTypeDatabase::Register(type);
-
 }
 
-SystemClockVariable::~SystemClockVariable (void) {}
+SystemClockVariable::~SystemClockVariable() = default;
 
 } // namespace sequencer
 

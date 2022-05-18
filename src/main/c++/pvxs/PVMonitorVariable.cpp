@@ -19,8 +19,6 @@
 * of the distribution package.
 ******************************************************************************/
 
-// Global header files
-
 #include <common/BasicTypes.h> // Misc. type definition
 #include <common/StringTools.h> // Misc. helper functions
 #include <common/TimeTools.h> // Misc. helper functions
@@ -32,16 +30,12 @@
 #include <Variable.h>
 #include <VariableRegistry.h>
 
-// Local header files
+#include <memory>
 
 #include "PVMonitorCache.h"
 
-// Constants
-
 #undef LOG_ALTERN_SRC
 #define LOG_ALTERN_SRC "sup::sequencer"
-
-// Type definition
 
 namespace sup {
 
@@ -52,102 +46,92 @@ namespace sequencer {
  * @detail Workspace variable with asynchronous PVAccess monitoring. Mandatory attribute is the named
  * 'channel' (PV name) to connect to.
  * @note Data access protection between concurrent calls to GetValue and SetValue is provided through the
- * Variable interface. Additional guard is provided between PVMonitorCache::HandleMonitor and
- * PVMonitorCache::GetValue.
+ * Variable interface. Additional guard is provided between monitor_cache->HandleMonitor and
+ * monitor_cache->GetValue.
  * @todo Assess if the implementation should allows for providing an optional 'status' attribute
  * specifying the name of an additional variable to host status information as part of the workspace.
  */
 
-class PVMonitorVariable : public Variable, public PVMonitorCache
+class PVMonitorVariable : public Variable
 {
-
   private:
-
+    std::unique_ptr<PVMonitorCache> monitor_cache;
     /**
      * @brief See sup::sequencer::Variable.
      */
-
-    virtual bool SetupImpl (void);
-    virtual bool GetValueImpl (ccs::types::AnyValue& value) const;
-    virtual bool SetValueImpl (const ccs::types::AnyValue& value);
+    bool GetValueImpl (ccs::types::AnyValue& value) const override;
+    bool SetValueImpl (const ccs::types::AnyValue& value) override;
+    bool SetupImpl() override;
+    void ResetImpl() override;
 
   protected:
-
   public:
-
     /**
      * @brief Constructor.
      */
-
-    PVMonitorVariable (void);
+    PVMonitorVariable();
 
     /**
      * @brief Destructor.
      */
-
-    ~PVMonitorVariable (void) override;
+    ~PVMonitorVariable() override;
 
     /**
      * @brief Class name for VariableRegistry.
      */
-
     static const std::string Type;
-
 };
-
-// Function declaration
-
-// Global variables
 
 const std::string PVMonitorVariable::Type = "PVMonitorVariable";
 static bool _pvmonitor_initialised_flag = RegisterGlobalVariable<PVMonitorVariable>();
 
-// Function definition
+PVMonitorVariable::PVMonitorVariable()
+  : Variable(PVMonitorVariable::Type)
+  , monitor_cache{new PVMonitorCache()}
+{}
+
+PVMonitorVariable::~PVMonitorVariable() = default;
+
+bool PVMonitorVariable::GetValueImpl(ccs::types::AnyValue& value) const
+{
+  bool status = monitor_cache->IsInitialised(); // Has received monitor and at least one valid value
+  if (status)
+  {
+    status = monitor_cache->GetValue(value);
+  }
+  return status;
+}
+
+bool PVMonitorVariable::SetValueImpl (const ccs::types::AnyValue& value) { return false; } // Unsupported
 
 bool PVMonitorVariable::SetupImpl(void)
 {
-  bool status = ((false == PVMonitorCache::IsInitialised()) && HasAttribute("channel"));
+  bool status = ((false == monitor_cache->IsInitialised()) && HasAttribute("channel"));
   auto channel = GetAttribute("channel");
 
   if (status)
   {  // Instantiate implementation
     log_info("PVMonitorVariable('%s')::SetupImpl - Method called with '%s' channel",
              GetName().c_str(), channel.c_str());
-    status = PVMonitorCache::SetChannel(channel.c_str());
+    status = monitor_cache->SetChannel(channel.c_str());
   }
   if (status)
   {
-    SetCallback(channel.c_str(),
+    monitor_cache->SetCallback(channel.c_str(),
                 [this](const ccs::types::AnyValue& value)
                 {
                   Notify(value);
                   return;
                 });
   }
-
   // ToDo - Additional status variable
-
   return status;
 }
 
-bool PVMonitorVariable::GetValueImpl (ccs::types::AnyValue& value) const
+void PVMonitorVariable::ResetImpl()
 {
-
-  bool status = PVMonitorCache::IsInitialised(); // Has received monitor and at least one valid value
-
-  if (status)
-    {
-      status = PVMonitorCache::GetValue(value);
-    }
-
-  return status;
-
+  monitor_cache.reset(new PVMonitorCache());
 }
-
-bool PVMonitorVariable::SetValueImpl (const ccs::types::AnyValue& value) { return false; } // Unsupported
-
-PVMonitorVariable::PVMonitorVariable (void) : Variable(PVMonitorVariable::Type), PVMonitorCache() {}
-PVMonitorVariable::~PVMonitorVariable (void) {}
 
 } // namespace sequencer
 

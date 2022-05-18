@@ -95,8 +95,21 @@ PVClientVariable::PVClientVariable()
 }
 
 PVClientVariable::~PVClientVariable()
+{}
+
+bool PVClientVariable::GetValueImpl(ccs::types::AnyValue& value) const
 {
-  delete p_impl;
+  p_impl->CheckConnection();
+  if (!p_impl->m_client.GetVariable(p_impl->m_channel.c_str(), value))
+  {
+    throw std::runtime_error("Error: can't get variable");
+  }
+  return true;
+}
+
+bool PVClientVariable::SetValueImpl(const ccs::types::AnyValue& value)
+{
+  return p_impl->m_client.SetVariable(p_impl->m_channel.c_str(), value);
 }
 
 bool PVClientVariable::SetupImpl()
@@ -120,19 +133,9 @@ bool PVClientVariable::SetupImpl()
   return true;
 }
 
-bool PVClientVariable::GetValueImpl(ccs::types::AnyValue& value) const
+void PVClientVariable::ResetImpl()
 {
-  p_impl->CheckConnection();
-  if (!p_impl->m_client.GetVariable(p_impl->m_channel.c_str(), value))
-  {
-    throw std::runtime_error("Error: can't get variable");
-  }
-  return true;
-}
-
-bool PVClientVariable::SetValueImpl(const ccs::types::AnyValue& value)
-{
-  return p_impl->m_client.SetVariable(p_impl->m_channel.c_str(), value);
+  p_impl.reset(new PVClientVariableImpl);
 }
 
 }  // namespace sequencer

@@ -77,8 +77,9 @@ TEST_F(PVClientVariableTest, InvalidSetup)
 {
   PVClientVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "PVClientVariableTest:INTEGER"));
+  EXPECT_NO_THROW(variable.AddAttribute("datatype", "invalid-type"));
   // should throw because of type parsing error
-  EXPECT_THROW(variable.AddAttribute("datatype", "invalid-type"), std::runtime_error);
+  EXPECT_THROW(variable.Setup(), std::runtime_error);
 }
 
 TEST_F(PVClientVariableTest, ValidSetup)
@@ -86,6 +87,7 @@ TEST_F(PVClientVariableTest, ValidSetup)
   PVClientVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "PVClientVariableTest:INTEGER"));
   EXPECT_NO_THROW(variable.AddAttribute("datatype", R"RAW({"type":"uint64"})RAW"));
+  EXPECT_NO_THROW(variable.Setup());
 }
 
 TEST_F(PVClientVariableTest, GetNonExistingValue)
@@ -93,6 +95,7 @@ TEST_F(PVClientVariableTest, GetNonExistingValue)
   PVClientVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "PVClientVariableTest:INTEGER"));
   EXPECT_NO_THROW(variable.AddAttribute("datatype", R"RAW({"type":"uint64"})RAW"));
+  EXPECT_NO_THROW(variable.Setup());
 
   ccs::types::AnyValue value;
   // will throw while checking connecting to the variable
@@ -138,6 +141,7 @@ TEST_F(PVClientVariableTest, PVAccessServerClientTest)
   PVClientVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", channel));
   EXPECT_NO_THROW(variable.AddAttribute("datatype", kDataType));
+  EXPECT_NO_THROW(variable.Setup());
 
   // Reading the value from PVClientVariable
   ::ccs::types::AnyValue variable_any_value;
@@ -176,7 +180,7 @@ TEST_F(PVClientVariableTest, ExecuteProcedure)
     <Workspace>
         <PVClientVariable name="pvxs-client-variable"
             channel="PVClientVariableTest:INTEGER"
-            datatype='{"type":"seq::test::Type/v1.0"}'/>            
+            datatype='{"type":"seq::test::Type/v1.0"}'/>
         <Local name="new-pvxs-value"
                type='{"type":"seq::test::Type/v1.0"}'
                value='{"value":12.5}'/>

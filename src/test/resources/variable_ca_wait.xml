@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Plugin>libsequencer-ca.so</Plugin>
+    <Repeat maxCount="-1">
+        <Sequence>
+            <Wait timeout="1.0"/>
+            <Message text="waiting..."/>
+        </Sequence>
+    </Repeat>
+    <Workspace>
+        <ChannelAccessVariable name="boolean"
+            channel='SEQ-TEST:BOOL'
+            period='10000000'
+            datatype='{"type":"bool"}'/>
+        <ChannelAccessVariable name="string"
+            channel='SEQ-TEST:STRING'
+            datatype='{"type":"string"}'/>
+        <ChannelAccessVariable name="uint32-array"
+            channel='SEQ-TEST:UIARRAY'
+            datatype='{"type":"uint32[]","multiplicity":8,"element":{"type":"uint32"}}'/>
+        <ChannelAccessVariable name="float32"
+            channel='SEQ-TEST:FLOAT'
+            datatype='{"type":"float32"}'/>
+    </Workspace>
+</Procedure>

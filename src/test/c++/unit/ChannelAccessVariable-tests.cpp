@@ -82,6 +82,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_success)
   // Setup implicit with AddAttribute .. access as 'string'
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", "{\"type\":\"string\"}"));
+  EXPECT_NO_THROW(variable->Setup());
 
   ccs::types::AnyValue value; // Placeholder
 
@@ -103,6 +104,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_connected)
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLCONNECTEDTYPE));
+  EXPECT_NO_THROW(variable->Setup());
 
   (void)ccs::HelperTools::SleepFor(ONE_SECOND * 2);
   ccs::types::AnyValue value;
@@ -133,6 +135,7 @@ TEST_F(ChannelAccessVariableTest, GetValue_extended)
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("datatype", BOOLEXTENDEDTYPE));
+  EXPECT_NO_THROW(variable->Setup());
 
   (void)ccs::HelperTools::SleepFor(ONE_SECOND * 2);
   ccs::types::AnyValue value;
@@ -171,8 +174,9 @@ TEST_F(ChannelAccessVariableTest, GetValue_error)
   auto variable = sup::sequencer::GlobalVariableRegistry().Create("ChannelAccessVariable");
   ASSERT_TRUE(static_cast<bool>(variable));
 
-  // Missing mandatory attribute .. Setup implicit with AddAttribute
+  // Missing mandatory attribute
   EXPECT_TRUE(variable->AddAttribute("irrelevant", "undefined"));
+  EXPECT_NO_THROW(variable->Setup());
 
   ccs::types::AnyValue value; // Placeholder
 
@@ -191,6 +195,7 @@ TEST_F(ChannelAccessVariableTest, SetValue_success)
   // Setup implicit with AddAttribute .. access as 'float32'
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
   EXPECT_TRUE(variable->AddAttribute("datatype", FLOATTYPE));
+  EXPECT_NO_THROW(variable->Setup());
 
   // Add channel to CA client reader
   EXPECT_TRUE(ca_reader.AddVariable("SEQ-TEST:FLOAT", ccs::types::AnyputVariable, ccs::types::Float32));
@@ -247,6 +252,7 @@ TEST_F(ChannelAccessVariableTest, ProcedureFile)
   auto proc = sup::sequencer::ParseProcedureFile(file);
 
   ASSERT_TRUE(static_cast<bool>(proc));
+  ASSERT_TRUE(proc->Setup());
 
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
   do

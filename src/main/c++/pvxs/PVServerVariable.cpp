@@ -81,37 +81,34 @@ private:
   /**
    * @brief See sup::sequencer::Variable.
    */
-
-  virtual bool SetupImpl(void);
   virtual bool GetValueImpl(ccs::types::AnyValue& value) const;
   virtual bool SetValueImpl(const ccs::types::AnyValue& value);
+  virtual bool SetupImpl();
+  virtual void ResetImpl();
 
 protected:
 public:
   /**
    * @brief Constructor.
    */
-
-  PVServerVariable(void);
+  PVServerVariable();
 
   /**
    * @brief Destructor.
    */
-
-  ~PVServerVariable(void) override;
+  ~PVServerVariable() override;
 
   /**
    * @brief Class name for VariableRegistry.
    */
-
   static const std::string Type;
 };
 
 // Function declaration
 
-static ccs::base::PVAccessServer* GetPVAccessServerInstance(void);
-static bool LaunchPVAccessServerInstance(void);
-static bool TerminatePVAccessServerInstance(void);
+static ccs::base::PVAccessServer* GetPVAccessServerInstance();
+static bool LaunchPVAccessServerInstance();
+static bool TerminatePVAccessServerInstance();
 
 // Global variables
 
@@ -125,7 +122,7 @@ static ccs::base::PVAccessServer* _pvxs_server = nullptr;
 
 // Function definition
 
-static ccs::base::PVAccessServer* GetPVAccessServerInstance(void)
+static ccs::base::PVAccessServer* GetPVAccessServerInstance()
 {
   bool status = (nullptr != _pvxs_server);
 
@@ -141,7 +138,7 @@ static ccs::base::PVAccessServer* GetPVAccessServerInstance(void)
   return _pvxs_server;
 }
 
-static bool LaunchPVAccessServerInstance(void)
+static bool LaunchPVAccessServerInstance()
 {
   bool status = (nullptr != _pvxs_server);
 
@@ -156,7 +153,7 @@ static bool LaunchPVAccessServerInstance(void)
   return status;
 }
 
-static bool TerminatePVAccessServerInstance(void)
+static bool TerminatePVAccessServerInstance()
 {
   bool status = (nullptr != _pvxs_server);
 
@@ -178,7 +175,7 @@ static bool TerminatePVAccessServerInstance(void)
 
 // Function definition
 
-bool PVServerVariable::SetupImpl(void)
+bool PVServerVariable::SetupImpl()
 {
   bool status = (HasAttribute("channel") && HasAttribute("datatype"));
   std::string channel, datatype;
@@ -260,22 +257,28 @@ bool PVServerVariable::SetValueImpl(const ccs::types::AnyValue& value)
         "channel", GetName().c_str(), channel.c_str());
     return false;
   }
-
   if (status)
   {
     status = _server->SetVariable(channel.c_str(), value);
   }
-
   if (status)
   {
     Notify(value);
   }
-
   return status;
 }
 
-PVServerVariable::PVServerVariable(void) : Variable(PVServerVariable::Type) {}
-PVServerVariable::~PVServerVariable(void)
+void PVServerVariable::ResetImpl()
+{
+  (void)TerminatePVAccessServerInstance();
+  _server = nullptr;
+}
+
+PVServerVariable::PVServerVariable()
+  : Variable(PVServerVariable::Type)
+{}
+
+PVServerVariable::~PVServerVariable()
 {
   bool status = (nullptr != _server);
 
