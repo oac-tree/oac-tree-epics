@@ -79,7 +79,7 @@ TEST_F(PVClientVariableTest, InvalidSetup)
   EXPECT_NO_THROW(variable.AddAttribute("channel", "PVClientVariableTest:INTEGER"));
   EXPECT_NO_THROW(variable.AddAttribute("datatype", "invalid-type"));
   // should throw because of type parsing error
-  EXPECT_THROW(variable.Setup(), std::runtime_error);
+  EXPECT_NO_THROW(variable.Setup());
 }
 
 TEST_F(PVClientVariableTest, ValidSetup)
@@ -99,7 +99,7 @@ TEST_F(PVClientVariableTest, GetNonExistingValue)
 
   ccs::types::AnyValue value;
   // will throw while checking connecting to the variable
-  EXPECT_THROW(variable.GetValue(value), std::runtime_error);
+  EXPECT_FALSE(variable.GetValue(value));
 }
 
 //! Server creates a structure with the value.

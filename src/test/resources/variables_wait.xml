@@ -4,10 +4,18 @@
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <Plugin>libsequencer-ca.so</Plugin>
+    <Plugin>libsequencer-pvxs.so</Plugin>
+    <RegisterType jsontype='{"type":"seq::test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <Repeat maxCount="-1">
         <Sequence>
-            <Wait timeout="1.0"/>
+            <ForceSuccess>
+                <Sequence>
+                    <Copy input="pvxs-client-variable" output="local-value"/>
+                    <Output from="local-value"/>
+                </Sequence>
+            </ForceSuccess>
             <Message text="waiting..."/>
+            <Wait timeout="1.0"/>
         </Sequence>
     </Repeat>
     <Workspace>
@@ -15,14 +23,10 @@
             channel='SEQ-TEST:BOOL'
             period='10000000'
             datatype='{"type":"bool"}'/>
-        <ChannelAccessVariable name="string"
-            channel='SEQ-TEST:STRING'
-            datatype='{"type":"string"}'/>
-        <ChannelAccessVariable name="uint32-array"
-            channel='SEQ-TEST:UIARRAY'
-            datatype='{"type":"uint32[]","multiplicity":8,"element":{"type":"uint32"}}'/>
-        <ChannelAccessVariable name="float32"
-            channel='SEQ-TEST:FLOAT'
-            datatype='{"type":"float32"}'/>
+        <PVClientVariable name="pvxs-client-variable"
+            channel="seq::test::variable"
+            datatype='{"type":"seq::test::Type/v1.0"}'/>
+        <Local name="local-value"
+               type='{"type":"seq::test::Type/v1.0"}'/>
     </Workspace>
 </Procedure>
