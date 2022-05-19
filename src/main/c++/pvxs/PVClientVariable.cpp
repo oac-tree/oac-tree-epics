@@ -40,13 +40,13 @@ struct PVClientVariable::PVClientVariableImpl
   ccs::base::SharedReference<ccs::types::AnyType> m_var_type;
   std::string m_channel;
 
-  //! Inits variable type. Will throw is type can't be parsed.
+  //! Inits variable type.
   bool InitType(const std::string& datatype)
   {
     return ccs::HelperTools::Parse(m_var_type, datatype.c_str()) > 0;
   }
 
-  //! Adds variable to the cache. Will throw if it is not possible.
+  //! Adds variable to the cache.
   bool AddVariable(const std::string& channel)
   {
     m_channel = channel;
@@ -105,7 +105,6 @@ bool PVClientVariable::SetupImpl()
   {
     return false;
   }
-
   bool status = p_impl->InitType(GetAttribute("datatype"));
   if (status)
   {
