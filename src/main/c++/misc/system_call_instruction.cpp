@@ -25,14 +25,14 @@
 
 #include <cstdlib>
 
-const std::string COMMAND_ATTRIBUTE_NAME = "command";
-
 namespace sup {
 
 namespace sequencer {
 
 const std::string SystemCallInstruction::Type = "SystemCall";
 static bool _systemcall_initialised_flag = RegisterGlobalInstruction<SystemCallInstruction>();
+
+const std::string COMMAND_ATTRIBUTE_NAME = "command";
 
 SystemCallInstruction::SystemCallInstruction()
   : Instruction(Type)

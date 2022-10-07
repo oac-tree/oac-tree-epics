@@ -31,12 +31,6 @@
 #include <map>
 #include <sstream>
 
-const std::string LOG_SOURCE = "sup::sequencer";
-
-const std::string MESSAGE_ATTRIBUTE_NAME = "message";
-const std::string INPUT_ATTRIBUTE_NAME = "input";
-const std::string SEVERITY_ATTRIBUTE_NAME = "severity";
-
 namespace
 {
 void LogWrapper(const std::string& level, const std::string& message);
@@ -48,6 +42,12 @@ namespace sequencer {
 
 const std::string LogInstruction::Type = "Log";
 static bool _log_initialised_flag = RegisterGlobalInstruction<LogInstruction>();
+
+const std::string LOG_SOURCE = "sup::sequencer";
+
+const std::string MESSAGE_ATTRIBUTE_NAME = "message";
+const std::string INPUT_ATTRIBUTE_NAME = "input";
+const std::string SEVERITY_ATTRIBUTE_NAME = "severity";
 
 LogInstruction::LogInstruction()
   : Instruction(Type)
@@ -109,11 +109,11 @@ void LogWrapper(const std::string& level, const std::string& message)
   auto it = log_function_map.find(level);
   if (it == log_function_map.end())
   {
-    sup::sequencer::log::SimpleInfo(LOG_SOURCE, message);
+    sup::sequencer::log::SimpleInfo(sup::sequencer::LOG_SOURCE, message);
   }
   else
   {
-    it->second(LOG_SOURCE, message);
+    it->second(sup::sequencer::LOG_SOURCE, message);
   }
 }
 }  // unnamed namespace
