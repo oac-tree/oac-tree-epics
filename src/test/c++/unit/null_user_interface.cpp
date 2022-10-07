@@ -19,41 +19,23 @@
 * of the distribution package.
 ******************************************************************************/
 
-// Global header files
-
-#include <UserInterface.h>
-
-// Local header files
-
-#include "NullUserInterface.h"
-
-// Constants
-
-#undef LOG_ALTERN_SRC
-#define LOG_ALTERN_SRC "sup::sequencer"
-
-// Type definition
+#include "null_user_interface.h"
 
 namespace sup {
 
 namespace sequencer {
 
-namespace gtest {
+namespace unit_test_helper {
 
-// Function declaration
+NullUserInterface::NullUserInterface() = default;
 
-// Global variables
+NullUserInterface::~NullUserInterface() = default;
 
-// Function definition
+void NullUserInterface::UpdateInstructionStatusImpl(const Instruction*)
+{}
 
-void NullUserInterface::UpdateInstructionStatusImpl (const Instruction * instruction) {}
-NullUserInterface::NullUserInterface (void) {}
-NullUserInterface::~NullUserInterface (void) {}
-
-} // namespace gtest
+} // namespace unit_test_helper
 
 } // namespace sequencer
 
 } // namespace sup
-
-#undef LOG_ALTERN_SRC
