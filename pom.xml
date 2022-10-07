@@ -24,7 +24,7 @@
     <groupId>org.iter.codac.units</groupId>
     <artifactId>sequencer-plugin-epics</artifactId>
     <packaging>codac</packaging>
-    <version>1.1.0</version>
+    <version>2.0.0</version>
     <name>SUP sequencer EPICS plugin module</name>
     <description>SUP sequencer EPICS plugin module</description>
     <url>http://www.iter.org/</url>
@@ -93,7 +93,7 @@
                         <expand source="-" file="main/VERSION">
                             <![CDATA[${project.version}]]>
                         </expand>
-                    </init>                
+                    </init>
                     <packaging>
                         <package>
                             <!-- Libraries -->
@@ -101,12 +101,12 @@
                                 <include>*.so*</include>
                             </include>
                             <!-- Package dependencies -->
-                            <requires codac="true">cpp-common</requires>
-                            <requires codac="true">cpp-common-epics</requires>
+                            <requires codac="true">sup-dto</requires>
+                            <requires codac="true">sup-epics</requires>
                             <requires codac="true">sequencer</requires>
                             <requires version="current" buildOnly="true">cmake3</requires>
-                            <requires codac="true" buildOnly="true">cpp-common-devel</requires>
-                            <requires codac="true" buildOnly="true">cpp-common-epics-devel</requires>
+                            <requires codac="true" buildOnly="true">sup-dto-devel</requires>
+                            <requires codac="true" buildOnly="true">sup-epics-devel</requires>
                             <requires codac="true" buildOnly="true">sequencer-devel</requires>
                             <!-- RPM scriptlet -->
                             <scriptlet type="posttrans">
