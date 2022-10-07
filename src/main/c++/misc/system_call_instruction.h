@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_LOG_INSTRUCTION_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_LOG_INSTRUCTION_H_
+#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_SYSTEM_CALL_INSTRUCTION_H_
+#define _SUP_SEQUENCER_PLUGIN_EPICS_SYSTEM_CALL_INSTRUCTION_H_
 
 #include <sup/sequencer/instruction.h>
 
@@ -30,23 +30,23 @@ namespace sequencer
 {
 
 /**
- * @brief Outputs a message to the sequencer log.
+ * @brief Obvious.
  */
-class LogInstruction : public Instruction
+class SystemCallInstruction : public Instruction
 {
 public:
-  LogInstruction();
-  ~LogInstruction() override;
+  SystemCallInstruction();
+  ~SystemCallInstruction() override;
 
   static const std::string Type;
 
 private:
   bool SetupImpl(const Procedure& proc);
-  ExecutionStatus ExecuteSingleImpl(UserInterface * ui, Workspace * ws) override;
+  ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
 };
 
 }  // namespace sequencer
 
 }  // namespace sup
 
-#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_LOG_INSTRUCTION_H_
+#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_SYSTEM_CALL_INSTRUCTION_H_
