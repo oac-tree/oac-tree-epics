@@ -27,10 +27,14 @@
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/dto/json_type_parser.h>
 
+#include <cstdio>
 #include <ctime>
+#include <set>
 
 namespace
 {
+bool IsSupportedTimeFormat(const std::string& format);
+sup::dto::AnyValue GetFormattedTime(unsigned long timestamp, const std::string& format);
 std::string GetISO8601Representation(unsigned long timestamp);
 }  // unnamed namespace
 
@@ -41,44 +45,23 @@ namespace sequencer {
 const std::string SystemClockVariable::Type = "SystemClock";
 static bool _sysclockvariable_initialised_flag = RegisterGlobalVariable<SystemClockVariable>();
 
-const std::string DATATYPE_ATTRIBUTE_NAME = "datatype";
+const std::string TIMEFORMAT_ATTRIBUTE_NAME = "format";
+
+const std::string DEFAULT_TIME_FORMAT = "uint64";
+const std::string ISO8601_TIME_FORMAT = "ISO8601";
 
 SystemClockVariable::SystemClockVariable()
   : Variable(SystemClockVariable::Type)
-  , m_time_type{}
-{
-  // Register timespec equivalent type to the GlobalTypeDatabase
-  // ::ccs::types::char8 type [] = "{\"type\":\"sup::FractionalTime/v1.0\",\"attributes\":["
-  //   "{\"seconds\":{\"type\":\"uint32\"}},"
-  //   "{\"nanosec\":{\"type\":\"uint32\"}}"
-  //   "]}";
-  // (void)::ccs::base::GlobalTypeDatabase::Register(type);
-}
+  , m_time_format{}
+{}
 
 SystemClockVariable::~SystemClockVariable() = default;
 
 bool SystemClockVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
-  unsigned long time = utils::GetNanosecsSinceEpoch();
-
-  sup::dto::AnyValue result{m_time_type};
-
-  if (m_time_type == sup::dto::UnsignedInteger64Type)
-  {
-    result = time;
-  }
-  else if (m_time_type == sup::dto::StringType)
-  {
-    result = GetISO8601Representation(time);
-  }
-  // else if (std::string(_type->GetName()) == "sup::FractionalTime/v1.0")
-  // {
-  //   struct { ::ccs::types::uint32 secs; ::ccs::types::uint32 nsec; } _fract = { 0u, 0u};
-  //   _fract.secs = static_cast<::ccs::types::uint32>(_time / 1000000000ul);
-  //   _fract.nsec = static_cast<::ccs::types::uint32>(_time - (1000000000ul * static_cast<::ccs::types::uint64>(_fract.secs)));
-  //   result = _fract;
-  // }
-  else
+  unsigned long timestamp = utils::GetNanosecsSinceEpoch();
+  sup::dto::AnyValue result = GetFormattedTime(timestamp, m_time_format);
+  if (sup::dto::IsEmptyValue(result))
   {
     return false;
   }
@@ -90,27 +73,27 @@ bool SystemClockVariable::SetValueImpl(const sup::dto::AnyValue&)
   return false;
 }
 
-bool SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
+bool SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
 {
-  if (HasAttribute(DATATYPE_ATTRIBUTE_NAME))
+  if (HasAttribute(TIMEFORMAT_ATTRIBUTE_NAME))
   {
-    sup::dto::JSONAnyTypeParser parser;
-    if (!parser.ParseString(GetAttribute(DATATYPE_ATTRIBUTE_NAME)))
+    auto time_format = GetAttribute(TIMEFORMAT_ATTRIBUTE_NAME);
+    if (!IsSupportedTimeFormat(time_format))
     {
       return false;
     }
-    m_time_type = parser.MoveAnyType();
+    m_time_format = time_format;
   }
   else
   {
-    m_time_type = sup::dto::UnsignedInteger64Type;
+    m_time_format = DEFAULT_TIME_FORMAT;
   }
   return true;
 }
 
 void SystemClockVariable::ResetImpl()
 {
-  m_time_type = sup::dto::EmptyType;
+  m_time_format.clear();
 }
 
 } // namespace sequencer
@@ -119,12 +102,39 @@ void SystemClockVariable::ResetImpl()
 
 namespace
 {
+bool IsSupportedTimeFormat(const std::string& format)
+{
+  static std::set<std::string> supported_formats{
+    sup::sequencer::DEFAULT_TIME_FORMAT,
+    sup::sequencer::ISO8601_TIME_FORMAT
+  };
+  auto it = supported_formats.find(format);
+  return it != supported_formats.end();
+}
+
+sup::dto::AnyValue GetFormattedTime(unsigned long timestamp, const std::string& format)
+{
+  if (format == sup::sequencer::DEFAULT_TIME_FORMAT)
+  {
+    return sup::dto::AnyValue{sup::dto::UnsignedInteger64Type, timestamp};
+  }
+  else if (format == sup::sequencer::ISO8601_TIME_FORMAT)
+  {
+    return sup::dto::AnyValue{sup::dto::StringType, GetISO8601Representation(timestamp)};
+  }
+  return {};
+}
+
 std::string GetISO8601Representation(unsigned long timestamp)
 {
-    // std::time_t seconds_after_epoch = timestamp / 1000000000;
-    // char buf[sizeof("2011-10-08T07:07:09Z")];
-    // std::strftime(buf, sizeof(buf), "%FT%TZ", std::gmtime(&seconds_after_epoch));
-    return {};
+  const std::size_t buffer_size = 30u;
+  const int nanosec_offset = 19;
+  char buf[buffer_size];
+  std::time_t seconds_after_epoch = timestamp / 1000000000ul;
+  unsigned long nanosecs = timestamp % 1000000000ul;
+  std::strftime(buf, buffer_size, "%FT%T", std::gmtime(&seconds_after_epoch));
+  std::snprintf(buf + nanosec_offset, buffer_size - nanosec_offset, ".%.9ldZ", nanosecs);
+  return std::string(buf, buffer_size);
 }
 }  // unnamed namespace
 
