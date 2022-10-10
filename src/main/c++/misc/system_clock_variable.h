@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_LOG_INSTRUCTION_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_LOG_INSTRUCTION_H_
+#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_SYSTEM_CLOCK_VARIABLE_H_
+#define _SUP_SEQUENCER_PLUGIN_EPICS_SYSTEM_CLOCK_VARIABLE_H_
 
 #include <sup/sequencer/variable.h>
 
@@ -57,4 +57,4 @@ private:
 
 }  // namespace sup
 
-#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_LOG_INSTRUCTION_H_
+#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_SYSTEM_CLOCK_VARIABLE_H_
