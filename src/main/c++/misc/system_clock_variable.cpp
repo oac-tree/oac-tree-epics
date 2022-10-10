@@ -65,6 +65,11 @@ bool SystemClockVariable::GetValueImpl(sup::dto::AnyValue& value) const
   {
     return false;
   }
+  if (sup::dto::IsEmptyValue(value))
+  {
+    value = std::move(result);
+    return true;
+  }
   return sup::dto::TryConvert(value, result);
 }
 
@@ -127,14 +132,13 @@ sup::dto::AnyValue GetFormattedTime(unsigned long timestamp, const std::string& 
 
 std::string GetISO8601Representation(unsigned long timestamp)
 {
-  const std::size_t buffer_size = 30u;
+  const std::size_t buffer_size = 31u;
   const int nanosec_offset = 19;
   char buf[buffer_size];
   std::time_t seconds_after_epoch = timestamp / 1000000000ul;
   unsigned long nanosecs = timestamp % 1000000000ul;
   std::strftime(buf, buffer_size, "%FT%T", std::gmtime(&seconds_after_epoch));
-  std::snprintf(buf + nanosec_offset, buffer_size - nanosec_offset, ".%.9ldZ", nanosecs);
-  return std::string(buf, buffer_size);
+  std::snprintf(buf + nanosec_offset, buffer_size - nanosec_offset, ".%.9luZ", nanosecs);
+  return std::string(buf);
 }
 }  // unnamed namespace
-

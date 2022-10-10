@@ -3,6 +3,7 @@ add_executable(unit-tests)
 target_sources(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/null_user_interface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessVariable-tests.cpp
@@ -18,7 +19,7 @@ target_sources(unit-tests
 target_include_directories(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
-        ${CMAKE_CURRENT_LIST_DIR}/../../../main/c++/include
+        ${CMAKE_CURRENT_LIST_DIR}/../../../main/c++
         $ENV{CODAC_ROOT}/include
 )
 
