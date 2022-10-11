@@ -6,7 +6,7 @@ target_sources(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessInstruction-tests.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessVariable-tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/channel_access_client_variable_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/RPCClientInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVAccessWriteInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction-tests.cpp
@@ -14,6 +14,7 @@ target_sources(unit-tests
         # ${CMAKE_CURRENT_LIST_DIR}/PVServerVariable-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVClientVariable-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/SystemCallInstruction-tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/unit_test_helper.cpp
 )
 
 target_include_directories(unit-tests
@@ -36,7 +37,7 @@ target_link_libraries(unit-tests
         GTest::GTest
         GTest::Main
         sequencer
-        # sequencer-ca
+        sequencer-ca
         sequencer-misc
         # sequencer-pvxs
         sup-dto

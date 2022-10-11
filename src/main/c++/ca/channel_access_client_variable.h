@@ -89,6 +89,8 @@ public:
   ChannelAccessClientVariable();
   ~ChannelAccessClientVariable() override;
 
+  bool WaitForConnected(double timeout_sec) const;
+
   static const std::string Type;
 
 private:

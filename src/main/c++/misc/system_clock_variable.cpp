@@ -65,11 +65,6 @@ bool SystemClockVariable::GetValueImpl(sup::dto::AnyValue& value) const
   {
     return false;
   }
-  if (sup::dto::IsEmptyValue(value))
-  {
-    value = std::move(result);
-    return true;
-  }
   return sup::dto::TryConvert(value, result);
 }
 
