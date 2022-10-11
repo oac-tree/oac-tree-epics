@@ -60,15 +60,6 @@ ChannelAccessClientVariable::ChannelAccessClientVariable()
 
 ChannelAccessClientVariable::~ChannelAccessClientVariable() = default;
 
-bool ChannelAccessClientVariable::WaitForConnected(double timeout_sec) const
-{
-  if (!m_pv)
-  {
-    return false;
-  }
-  return m_pv->WaitForConnected(timeout_sec);
-}
-
 bool ChannelAccessClientVariable::GetValueImpl(sup::dto::AnyValue &value) const
 {
   if (!m_pv)
@@ -99,6 +90,16 @@ bool ChannelAccessClientVariable::SetValueImpl(const sup::dto::AnyValue &value)
     return m_pv->SetValue(value[VALUE_FIELD_NAME]);
   }
   return m_pv->SetValue(value);
+}
+
+bool ChannelAccessClientVariable::IsAvailableImpl() const
+{
+  if (!m_pv || !m_pv->IsConnected())
+  {
+    return false;
+  }
+  auto ext_value = m_pv->GetExtendedValue();
+  return !sup::dto::IsEmptyValue(ext_value.value);
 }
 
 bool ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)

@@ -25,6 +25,7 @@
 #include <sup/sequencer/generic_utils.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
+#include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
 
@@ -57,47 +58,55 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_success)
 {
   ASSERT_TRUE(init_success);
 
+  Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   // Access boolean as 'string'
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("type", "{\"type\":\"string\"}"));
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
   sup::dto::AnyValue value;
 
-  ASSERT_TRUE(variable->GetValue(value));
-  EXPECT_TRUE(sup::dto::StringType == value.GetType());
+  ASSERT_TRUE(ws.GetValue("var", value));
+  EXPECT_FALSE(sup::dto::IsEmptyValue(value));
+  EXPECT_TRUE(sup::dto::IsScalarValue(value));
+  EXPECT_FALSE(sup::dto::IsStructValue(value));
+  EXPECT_FALSE(sup::dto::IsArrayValue(value));
+  EXPECT_EQ(value.GetType(), sup::dto::StringType);
 }
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
 {
   ASSERT_TRUE(init_success);
 
+  Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("type", BOOLCONNECTEDTYPE));
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
   sup::dto::AnyValue value;
-  ASSERT_TRUE(variable->GetValue(value, "value"));
-  EXPECT_TRUE(sup::dto::BooleanType == value.GetType());
+  ASSERT_TRUE(ws.GetValue("var.value", value));
+  EXPECT_EQ(value.GetType(), sup::dto::BooleanType);
 
   sup::dto::AnyValue connected;
-  ASSERT_TRUE(variable->GetValue(connected, "connected"));
-  EXPECT_TRUE(sup::dto::BooleanType == connected.GetType());
+  ASSERT_TRUE(ws.GetValue("var.connected", connected));
+  EXPECT_EQ(connected.GetType(), sup::dto::BooleanType);
   EXPECT_TRUE(connected.As<bool>());
 
   StopIOC();
-  std::this_thread::sleep_for(std::chrono::seconds(1));
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0, false));
 
-  ASSERT_TRUE(variable->GetValue(connected, "connected"));
-  EXPECT_TRUE(sup::dto::BooleanType == connected.GetType());
+  ASSERT_TRUE(ws.GetValue("var.connected", connected));
+  EXPECT_EQ(connected.GetType(), sup::dto::BooleanType);
   EXPECT_FALSE(connected.As<bool>());
 }
 
@@ -105,35 +114,38 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_extended)
 {
   ASSERT_TRUE(init_success);
 
+  Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("type", BOOLEXTENDEDTYPE));
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-  std::this_thread::sleep_for(std::chrono::seconds(2));
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
   sup::dto::AnyValue value;
-  ASSERT_TRUE(variable->GetValue(value, "value"));
-  EXPECT_TRUE(sup::dto::BooleanType == value.GetType());
+
+  ASSERT_TRUE(ws.GetValue("var.value", value));
+  EXPECT_EQ(value.GetType(), sup::dto::BooleanType);
 
   sup::dto::AnyValue connected;
-  ASSERT_TRUE(variable->GetValue(connected, "connected"));
-  EXPECT_TRUE(sup::dto::BooleanType == connected.GetType());
+  ASSERT_TRUE(ws.GetValue("var.connected", connected));
+  EXPECT_EQ(connected.GetType(), sup::dto::BooleanType);
   EXPECT_TRUE(connected.As<bool>());
 
   sup::dto::AnyValue timestamp;
-  ASSERT_TRUE(variable->GetValue(timestamp, "timestamp"));
-  EXPECT_TRUE(sup::dto::UnsignedInteger64Type == timestamp.GetType());
+  ASSERT_TRUE(ws.GetValue("var.timestamp", timestamp));
+  EXPECT_EQ(timestamp.GetType(), sup::dto::UnsignedInteger64Type);
   EXPECT_TRUE(timestamp.As<sup::dto::uint64>() > 0);
 
   sup::dto::AnyValue status;
-  ASSERT_TRUE(variable->GetValue(status, "status"));
-  EXPECT_TRUE(sup::dto::SignedInteger16Type == status.GetType());
+  ASSERT_TRUE(ws.GetValue("var.status", status));
+  EXPECT_EQ(status.GetType(), sup::dto::SignedInteger16Type);
 
   sup::dto::AnyValue severity;
-  ASSERT_TRUE(variable->GetValue(severity, "severity"));
-  EXPECT_TRUE(sup::dto::SignedInteger16Type == severity.GetType());
+  ASSERT_TRUE(ws.GetValue("var.severity", severity));
+  EXPECT_EQ(severity.GetType(), sup::dto::SignedInteger16Type);
   EXPECT_EQ(severity.As<sup::dto::int16>(), 0);
 }
 
@@ -248,7 +260,6 @@ ChannelAccessClientVariableTest::ChannelAccessClientVariableTest()
     init_success = unit_test_helper::SystemCall(
         "/usr/bin/screen -d -m -S cavariabletestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
   }
-  std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
 ChannelAccessClientVariableTest::~ChannelAccessClientVariableTest()

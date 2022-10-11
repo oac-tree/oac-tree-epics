@@ -89,13 +89,12 @@ public:
   ChannelAccessClientVariable();
   ~ChannelAccessClientVariable() override;
 
-  bool WaitForConnected(double timeout_sec) const;
-
   static const std::string Type;
 
 private:
   bool GetValueImpl(sup::dto::AnyValue& value) const override;
   bool SetValueImpl(const sup::dto::AnyValue& value) override;
+  bool IsAvailableImpl() const override;
   bool SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
   void ResetImpl() override;
   std::unique_ptr<epics::ChannelAccessPV> m_pv;
