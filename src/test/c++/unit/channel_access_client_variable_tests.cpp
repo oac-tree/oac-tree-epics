@@ -27,6 +27,8 @@
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
 
+#include <sup/epics/channel_access_client.h>
+
 #include <gtest/gtest.h>
 
 #include <cstdlib>
@@ -166,86 +168,59 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_error)
   EXPECT_TRUE(sup::dto::IsEmptyValue(value));
 }
 
-// TEST_F(ChannelAccessClientVariableTest, SetValue_success)
-// {
-//   ASSERT_TRUE(init_success);
-//   ccs::base::ChannelAccessClient ca_reader;
+TEST_F(ChannelAccessClientVariableTest, SetValue_success)
+{
+  ASSERT_TRUE(init_success);
+  Workspace ws;
+  sup::epics::ChannelAccessClient ca_client;
 
-//   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
-//   ASSERT_TRUE(static_cast<bool>(variable));
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
 
-//   // Setup implicit with AddAttribute .. access as 'float32'
-//   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
-//   EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
-//   EXPECT_NO_THROW(variable->Setup());
+  // Setup implicit with AddAttribute .. access as 'float32'
+  EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
+  EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-//   // Add channel to CA client reader
-//   EXPECT_TRUE(ca_reader.AddVariable("SEQ-TEST:FLOAT", sup::dto::AnyputVariable, sup::dto::Float32));
-//   EXPECT_TRUE(ca_reader.WaitForConnected(5.0));
 
-//   sup::dto::AnyValue value(static_cast<sup::dto::float32>(0.1));
+  // Add channel to CA client reader
+  EXPECT_TRUE(ca_client.AddVariable("SEQ-TEST:FLOAT", sup::dto::Float32Type));
+  EXPECT_TRUE(ca_client.WaitForConnected("SEQ-TEST:FLOAT", 5.0));
 
-//   EXPECT_TRUE(variable->SetValue(value));
-//   (void)ccs::HelperTools::SleepFor(ONE_SECOND / 2);
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 
-//   // Read from variable
-//   EXPECT_TRUE(variable->GetValue(value));
-//   sup::dto::float32 val = value;
-//   EXPECT_FLOAT_EQ(val, 0.1f);
+  sup::dto::AnyValue value{0.1f};
 
-//   // Read from CA client
-//   EXPECT_TRUE(ca_reader.GetAnyValue("SEQ-TEST:FLOAT", value));
-//   val = value;
-//   EXPECT_FLOAT_EQ(val, 0.1f);
+  EXPECT_TRUE(ws.SetValue("var", value));
 
-//   value = static_cast<sup::dto::float32>(3.5);
-//   EXPECT_TRUE(variable->SetValue(value));
+  // Read from variable
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+    sup::dto::AnyValue tmp;
+    return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 0.1f;
+  }));
 
-//   std::this_thread::sleep_for(std::chrono::milliseconds(500));
+  // Read from CA client
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
+    sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
+    return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 0.1f;
+  }));
 
-//   // Read from CA client
-//   EXPECT_TRUE(ca_reader.GetAnyValue("SEQ-TEST:FLOAT", value));
-//   val = value;
-//   EXPECT_FLOAT_EQ(val, 3.5f);
+  value = 3.5f;
+  EXPECT_TRUE(ws.SetValue("var", value));
 
-//   // Read from variable
-//   EXPECT_TRUE(variable->GetValue(value));
-//   val = value;
-//   EXPECT_FLOAT_EQ(val, 3.5f);
+  // Read from CA client
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
+    sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
+    return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 3.5f;
+  }));
 
-//   EXPECT_TRUE(ca_reader.Reset());
-// }
-
-// TEST_F(ChannelAccessClientVariableTest, ProcedureFile)
-// {
-//   ASSERT_TRUE(init_success);
-//   std::string file; // Placeholder
-
-//   if (::ccs::HelperTools::Exist("../resources/variable_ca.xml"))
-//   {
-//     file = std::string("../resources/variable_ca.xml");
-//   }
-//   else
-//   {
-//     file = std::string("./target/test/resources/variable_ca.xml");
-//   }
-
-//   gtest::NullUserInterface ui;
-//   auto proc = ParseProcedureFile(file);
-
-//   ASSERT_TRUE(static_cast<bool>(proc));
-//   ASSERT_TRUE(proc->Setup());
-
-//   ExecutionStatus exec = ExecutionStatus::FAILURE;
-//   do
-//   {
-//     std::this_thread::sleep_for(std::chrono::milliseconds(100));
-//     proc->ExecuteSingle(&ui);
-//     exec = proc->GetStatus();
-//   } while ((ExecutionStatus::SUCCESS != exec) &&
-//            (ExecutionStatus::FAILURE != exec));
-//   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
-// }
+  // Read from variable
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+    sup::dto::AnyValue tmp;
+    return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 3.5f;
+  }));
+}
 
 ChannelAccessClientVariableTest::ChannelAccessClientVariableTest()
   : init_success{false}

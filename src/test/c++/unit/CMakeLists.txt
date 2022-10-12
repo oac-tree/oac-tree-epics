@@ -40,5 +40,6 @@ target_link_libraries(unit-tests
         sequencer-ca
         sequencer-misc
         # sequencer-pvxs
+        sup-epics
         sup-dto
 )

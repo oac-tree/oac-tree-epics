@@ -22,6 +22,7 @@
 #ifndef _SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
 #define _SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
 
+#include <functional>
 #include <string>
 
 namespace sup {
@@ -31,6 +32,8 @@ namespace sequencer {
 namespace unit_test_helper {
 
 bool SystemCall(const std::string& command);
+
+bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate);
 
 } // namespace unit_test_helper
 

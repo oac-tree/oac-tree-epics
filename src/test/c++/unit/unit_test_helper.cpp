@@ -21,7 +21,10 @@
 
 #include "unit_test_helper.h"
 
+#include <chrono>
+#include <cmath>
 #include <cstdlib>
+#include <thread>
 
 namespace sup {
 
@@ -33,6 +36,17 @@ bool SystemCall(const std::string& command)
 {
   auto exit_status = std::system(command.c_str());
   return exit_status == 0 ? true : false;
+}
+
+bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate)
+{
+  long timeout_ns = std::lround(timeout_sec * 1e9);
+  auto time_end = std::chrono::system_clock::now() + std::chrono::nanoseconds(timeout_ns);
+  while(!predicate() && std::chrono::system_clock::now() < time_end)
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+  }
+  return predicate();
 }
 
 } // namespace unit_test_helper
