@@ -43,6 +43,19 @@ sup::dto::AnyType ChannelType(const sup::dto::AnyType& anytype)
   return {};
 }
 
+sup::dto::AnyValue ExtractChannelValue(const sup::dto::AnyValue& value)
+{
+  if (!sup::dto::IsStructValue(value))
+  {
+    return value;
+  }
+  if (value.HasField(VALUE_FIELD_NAME))
+  {
+    return value[VALUE_FIELD_NAME];
+  }
+  return {};
+}
+
 sup::dto::AnyValue ConvertToTypedAnyValue(
   const sup::epics::ChannelAccessPV::ExtendedValue& ext_value, const sup::dto::AnyType& anytype)
 {

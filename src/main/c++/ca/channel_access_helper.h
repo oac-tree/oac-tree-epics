@@ -42,6 +42,8 @@ const std::string SEVERITY_FIELD_NAME = "severity";
 
 sup::dto::AnyType ChannelType(const sup::dto::AnyType& anytype);
 
+sup::dto::AnyValue ExtractChannelValue(const sup::dto::AnyValue& value);
+
 sup::dto::AnyValue ConvertToTypedAnyValue(
   const sup::epics::ChannelAccessPV::ExtendedValue& ext_value, const sup::dto::AnyType& anytype);
 
