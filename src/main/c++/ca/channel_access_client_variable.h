@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_VARIABLE_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_VARIABLE_H_
+#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_CLIENT_VARIABLE_H_
+#define _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_CLIENT_VARIABLE_H_
 
 #include <sup/sequencer/variable.h>
 
@@ -105,4 +105,4 @@ private:
 
 }  // namespace sup
 
-#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_VARIABLE_H_
+#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_CLIENT_VARIABLE_H_
