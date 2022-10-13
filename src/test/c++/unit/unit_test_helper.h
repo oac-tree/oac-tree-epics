@@ -35,6 +35,10 @@ bool SystemCall(const std::string& command);
 
 bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate);
 
+bool StartIOC(const std::string& filename, const std::string& screen_id);
+
+bool StopIOC(const std::string& screen_id);
+
 } // namespace unit_test_helper
 
 } // namespace sequencer

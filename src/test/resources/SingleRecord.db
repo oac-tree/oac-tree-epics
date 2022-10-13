@@ -1,0 +1,10 @@
+record (bo,"SEQ-TEST:BOOL2")
+{
+    field(DESC,"Some EPICSv3 record")
+    field(ONAM,"TRUE")
+    field(OSV,"NO_ALARM")
+    field(ZNAM,"FALSE")
+    field(ZSV,"NO_ALARM")
+    field(VAL,"0")
+    field(PINI, "YES")
+}

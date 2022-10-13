@@ -103,7 +103,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface*, 
   }
   sup::epics::ChannelAccessPV pv(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
                                  channel_access_helper::ChannelType(value.GetType()));
-  if (!pv.WaitForConnected(m_timeout_sec))
+  if (!pv.WaitForValidValue(m_timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }

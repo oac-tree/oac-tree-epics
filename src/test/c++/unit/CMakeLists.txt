@@ -2,6 +2,7 @@ add_executable(unit-tests)
 
 target_sources(unit-tests
     PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/global_ioc_environment.cpp
         ${CMAKE_CURRENT_LIST_DIR}/null_user_interface.cpp
         ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient-tests.cpp

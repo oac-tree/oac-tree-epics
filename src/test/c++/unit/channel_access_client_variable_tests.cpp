@@ -22,7 +22,6 @@
 #include "null_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <sup/sequencer/generic_utils.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
@@ -31,7 +30,6 @@
 
 #include <gtest/gtest.h>
 
-#include <cstdlib>
 #include <thread>
 
 static const std::string BOOLCONNECTEDTYPE =
@@ -50,16 +48,10 @@ class ChannelAccessClientVariableTest : public ::testing::Test
 protected:
   ChannelAccessClientVariableTest();
   virtual ~ChannelAccessClientVariableTest();
-
-  void StopIOC();
-
-  bool init_success;
 };
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_success)
 {
-  ASSERT_TRUE(init_success);
-
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
@@ -83,8 +75,6 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_success)
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
 {
-  ASSERT_TRUE(init_success);
-
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
@@ -103,8 +93,32 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
   ASSERT_TRUE(ws.GetValue("var.connected", connected));
   EXPECT_EQ(connected.GetType(), sup::dto::BooleanType);
   EXPECT_TRUE(connected.As<bool>());
+}
 
-  StopIOC();
+TEST_F(ChannelAccessClientVariableTest, GetValue_disconnect)
+{
+  EXPECT_TRUE(unit_test_helper::StartIOC("SingleRecord.db", "cavariabledisconnecttestIOC"));
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+
+  ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL2") &&
+              variable->AddAttribute("type", BOOLCONNECTEDTYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
+
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
+  sup::dto::AnyValue value;
+  ASSERT_TRUE(ws.GetValue("var.value", value));
+  EXPECT_EQ(value.GetType(), sup::dto::BooleanType);
+
+  sup::dto::AnyValue connected;
+  ASSERT_TRUE(ws.GetValue("var.connected", connected));
+  EXPECT_EQ(connected.GetType(), sup::dto::BooleanType);
+  EXPECT_TRUE(connected.As<bool>());
+
+  // Stop the softIoc
+  EXPECT_TRUE(unit_test_helper::StopIOC("cavariabledisconnecttestIOC"));
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0, false));
 
   ASSERT_TRUE(ws.GetValue("var.connected", connected));
@@ -114,8 +128,6 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_extended)
 {
-  ASSERT_TRUE(init_success);
-
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
@@ -153,8 +165,6 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_extended)
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_error)
 {
-  ASSERT_TRUE(init_success);
-
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
@@ -170,7 +180,6 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_error)
 
 TEST_F(ChannelAccessClientVariableTest, SetValue_success)
 {
-  ASSERT_TRUE(init_success);
   Workspace ws;
   sup::epics::ChannelAccessClient ca_client;
 
@@ -222,31 +231,6 @@ TEST_F(ChannelAccessClientVariableTest, SetValue_success)
   }));
 }
 
-ChannelAccessClientVariableTest::ChannelAccessClientVariableTest()
-  : init_success{false}
-{
-  if (utils::FileExists("../resources/ChannelAccessClient.db"))
-  {
-    init_success = unit_test_helper::SystemCall(
-        "/usr/bin/screen -d -m -S cavariabletestIOC /usr/bin/softIoc -d ../resources/ChannelAccessClient.db &> /dev/null");
-  }
-  else
-  {
-    init_success = unit_test_helper::SystemCall(
-        "/usr/bin/screen -d -m -S cavariabletestIOC /usr/bin/softIoc -d ./target/test/resources/ChannelAccessClient.db &> /dev/null");
-  }
-}
+ChannelAccessClientVariableTest::ChannelAccessClientVariableTest() = default;
 
-ChannelAccessClientVariableTest::~ChannelAccessClientVariableTest()
-{
-  StopIOC();
-}
-
-void ChannelAccessClientVariableTest::StopIOC()
-{
-  if (init_success)
-  {
-    unit_test_helper::SystemCall("/usr/bin/screen -S cavariabletestIOC -X quit &> /dev/null");
-    init_success = false;
-  }
-}
+ChannelAccessClientVariableTest::~ChannelAccessClientVariableTest() = default;

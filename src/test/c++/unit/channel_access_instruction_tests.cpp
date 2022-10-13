@@ -20,14 +20,13 @@
  ******************************************************************************/
 
 #include "null_user_interface.h"
+#include "unit_test_helper.h"
 
-#include <sup/sequencer/generic_utils.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/sequence_parser.h>
-
-#include <cstdlib>
+#include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
 
@@ -112,9 +111,6 @@ class ChannelAccessInstructionTest : public ::testing::Test
 protected:
   ChannelAccessInstructionTest();
   virtual ~ChannelAccessInstructionTest();
-
-  static void SetUpTestCase();
-  static void TearDownTestCase();
 };
 
 TEST_F(ChannelAccessInstructionTest, MissingAttribute)
@@ -139,6 +135,7 @@ TEST_F(ChannelAccessInstructionTest, WriteToNonExistingChannel)
   auto write_instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(write_instruction));
   EXPECT_TRUE(write_instruction->AddAttribute("channel", "undefined"));
+  EXPECT_TRUE(write_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_TRUE(write_instruction->AddAttribute("type", "{\"type\": \"string\"}"));
   EXPECT_TRUE(write_instruction->AddAttribute("value", "\"undefined\""));
   EXPECT_TRUE(write_instruction->Setup(proc));
@@ -146,7 +143,7 @@ TEST_F(ChannelAccessInstructionTest, WriteToNonExistingChannel)
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
-TEST_F(ChannelAccessInstructionTest, DISABLED_ReadBoolean)
+TEST_F(ChannelAccessInstructionTest, ReadBoolean)
 {
   unit_test_helper::NullUserInterface ui;
   auto proc = ParseProcedureString(READBOOLPROCEDURE);
@@ -163,18 +160,22 @@ TEST_F(ChannelAccessInstructionTest, DISABLED_ReadBoolean)
 
   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 
-  // Test variable
+  auto ws = proc->GetWorkspace();
 
-  // ccs::types::AnyValue val_bool;
-  // EXPECT_TRUE(::ccs::HelperTools::ReadFromFile(&val_bool, "/tmp/file-variable-boolean.dat"));
+  // test boolean variable
+  sup::dto::AnyValue bool_var;
+  EXPECT_TRUE(ws->GetValue("boolean", bool_var));
+  EXPECT_TRUE(bool_var == true);
 
-  // EXPECT_TRUE(static_cast<bool>(val_bool));
+  // test boolean variable
+  sup::dto::AnyValue uint32_var;
+  EXPECT_TRUE(ws->GetValue("uint32", uint32_var));
+  EXPECT_TRUE(uint32_var == 1u);
 
-  //  ccs::types::AnyValue val_uint32;
-  // EXPECT_TRUE(::ccs::HelperTools::ReadFromFile(&val_uint32, "/tmp/file-variable-uint32.dat"));
-
-  // EXPECT_EQ(static_cast<ccs::types::uint32>(val_uint32), 1u);
-
+  // test boolean variable
+  sup::dto::AnyValue string_var;
+  EXPECT_TRUE(ws->GetValue("string", string_var));
+  EXPECT_TRUE(string_var == "TRUE");
 }
 
 // TEST_F(ChannelAccessInstructionTest, Write_boolean)
@@ -388,24 +389,3 @@ TEST_F(ChannelAccessInstructionTest, DISABLED_ReadBoolean)
 ChannelAccessInstructionTest::ChannelAccessInstructionTest() = default;
 
 ChannelAccessInstructionTest::~ChannelAccessInstructionTest() = default;
-
-void ChannelAccessInstructionTest::SetUpTestCase()
-{
-  if (utils::FileExists("../resources/ChannelAccessClient.db"))
-  {
-    std::system(
-        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d "
-        "../resources/ChannelAccessClient.db &> /dev/null");
-  }
-  else
-  {
-    std::system(
-        "/usr/bin/screen -d -m -S cainstructiontestIOC /usr/bin/softIoc -d "
-        "./target/test/resources/ChannelAccessClient.db &> /dev/null");
-  }
-}
-
-void ChannelAccessInstructionTest::TearDownTestCase()
-{
-  std::system("/usr/bin/screen -S cainstructiontestIOC -X quit &> /dev/null");
-}
