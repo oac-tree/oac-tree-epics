@@ -2,20 +2,19 @@ add_executable(unit-tests)
 
 target_sources(unit-tests
     PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/global_ioc_environment.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/null_user_interface.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable_tests.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/ChannelAccessClient-tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/channel_access_client_variable_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/channel_access_instruction_tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/global_ioc_environment.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/null_user_interface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/system_call_instruction_tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable_tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/unit_test_helper.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/RPCClientInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVAccessWriteInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVServerVariable-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVClientVariable-tests.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/system_call_instruction_tests.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/unit_test_helper.cpp
 )
 
 target_include_directories(unit-tests
