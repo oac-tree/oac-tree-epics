@@ -26,6 +26,8 @@
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/sequence_parser.h>
+#include <sup/sequencer/variable.h>
+#include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
@@ -65,44 +67,20 @@ static const std::string REPEATPROCEDURE = R"RAW(<?xml version="1.0" encoding="U
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <Repeat maxCount="3">
         <Sequence>
-            <Wait name="wait" timeout="0.1"/>
+            <Copy input="time" output="tmp"/>
             <ChannelAccessWrite name="put-client"
                 channel="SEQ-TEST:STRING"
-                varName="time"/>
+                varName="tmp"/>
             <ChannelAccessRead name="get-client"
                 channel="SEQ-TEST:STRING"
-                varName="string"/>
-            <Log input="time"/>
-            <Log input="string"/>
+                varName="readback"/>
+            <Equals lhs="tmp" rhs="readback"/>
         </Sequence>
     </Repeat>
     <Workspace>
-        <SystemClock name="time" datatype='{"type":"string"}'/>
-        <Local name="string" type='{"type":"string"}' value='"undefined"'/>
-    </Workspace>
-</Procedure>)RAW";
-
-static const std::string PARALLELPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
-           name="Trivial procedure for testing purposes"
-           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <Repeat maxCount="3">
-        <ParallelSequence>
-            <Wait name="wait" timeout="0.1"/>
-            <ChannelAccessWrite name="put-client"
-                channel="SEQ-TEST:STRING"
-                varName="time"/>
-            <ChannelAccessRead name="get-client"
-                channel="SEQ-TEST:STRING"
-                varName="string"/>
-            <Log input="time"/>
-            <Log input="string"/>
-        </ParallelSequence>
-    </Repeat>
-    <Workspace>
-        <SystemClock name="time" datatype='{"type":"string"}'/>
-        <Local name="string" type='{"type":"string"}' value='"undefined"'/>
+        <SystemClock name="time" format="ISO8601"/>
+        <Local name="tmp" type='{"type":"string"}'/>
+        <Local name="readback" type='{"type":"string"}'/>
     </Workspace>
 </Procedure>)RAW";
 
@@ -178,213 +156,129 @@ TEST_F(ChannelAccessInstructionTest, ReadBoolean)
   EXPECT_TRUE(string_var == "TRUE");
 }
 
-// TEST_F(ChannelAccessInstructionTest, Write_boolean)
-// {
-//   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
-//   ASSERT_TRUE(static_cast<bool>(instruction));
+TEST_F(ChannelAccessInstructionTest, Write_boolean)
+{
+  auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-//   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-//   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}"));
-//   EXPECT_TRUE(instruction->AddAttribute("instance", "1"));
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
+  EXPECT_TRUE(instruction->AddAttribute("type", "{\"type\": \"uint32\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("value", "1"));
 
-//   // Setup to verify/process attributes
-//   Procedure proc; // Dummy
-//   EXPECT_TRUE(instruction->Setup(proc));
+  unit_test_helper::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, nullptr);
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
-//   gtest::NullUserInterface ui;
-//   instruction->ExecuteSingle(&ui, NULL_PTR_CAST(Workspace*));
-//   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
+  // Test variable
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL"));
+  EXPECT_TRUE(variable->AddAttribute("type", "{\"type\":\"bool\"}"));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-//   // Test variable
+  // Read from variable
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+    sup::dto::AnyValue tmp;
+    return ws.GetValue("var", tmp) && tmp.As<bool>();
+  }));
+}
 
-//   // At this point, the instruction has diconnected form the channel and thread detached from the context
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccessClientContext::Attach());
+TEST_F(ChannelAccessInstructionTest, Write_float32)
+{
+  auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-//   chid channel;
-//   (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:BOOL", channel);
-//   (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10);
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:FLOAT"));
+  EXPECT_TRUE(instruction->AddAttribute("type", "{\"type\": \"string\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("value", "\"0.5\""));
 
-//   ccs::types::AnyValue value(false);
+  unit_test_helper::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, nullptr);
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
-//   EXPECT_TRUE(ccs::HelperTools::ChannelAccess::ReadVariable(
-//     channel, ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance()));
+  // Test variable
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
+  EXPECT_TRUE(variable->AddAttribute("type", "{\"type\":\"float32\"}"));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-//   log_info("TEST(ChannelAccessInstruction, Execute_boolean) - Test variable ..");
-//   EXPECT_TRUE(static_cast<bool>(value));
+  // Read from variable
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+    sup::dto::AnyValue tmp;
+    return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 0.5f;
+  }));
+}
 
-//   (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
-//   (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
-// }
+TEST_F(ChannelAccessInstructionTest, Write_array)
+{
+  auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-// TEST_F(ChannelAccessInstructionTest, Write_float32)
-// {
-//   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
-//   ASSERT_TRUE(static_cast<bool>(instruction));
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
+  EXPECT_TRUE(instruction->AddAttribute("type", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}"));
+  EXPECT_TRUE(instruction->AddAttribute("value", "[1, 2, 3, 4, 5, 6, 7, 8]"));
 
-//   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:FLOAT"));
-//   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"string\"}"));
-//   EXPECT_TRUE(instruction->AddAttribute("instance", "\"0.5\""));
+  unit_test_helper::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, nullptr);
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
-//   // Setup to verify/process attributes
-//   Procedure proc; // Dummy
-//   ASSERT_TRUE(instruction->Setup(proc));
+  // Test variable
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
+  EXPECT_TRUE(variable->AddAttribute("type", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}"));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-//   gtest::NullUserInterface ui;
-//   instruction->ExecuteSingle(&ui, NULL_PTR_CAST(Workspace*));
-//   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
+  // Read from variable
+  sup::dto::AnyValue readback_val;
+  ASSERT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws, &readback_val]{
+    return ws.GetValue("var", readback_val) && sup::dto::IsArrayValue(readback_val);
+  }));
+  EXPECT_TRUE(readback_val[3] == 4);
+}
 
-//   // Test variable
+TEST_F(ChannelAccessInstructionTest, Write_NoSuchChannel)
+{
+  auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
+  ASSERT_TRUE(static_cast<bool>(instruction));
 
-//   // At this point, the instruction has diconnected form the channel and thread detached from the context
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccessClientContext::Attach());
+  EXPECT_TRUE(instruction->AddAttribute("channel", "UNDEFINED"));
+  EXPECT_TRUE(instruction->AddAttribute("type", "{\"type\": \"uint32\"}"));
+  EXPECT_TRUE(instruction->AddAttribute("value", "1"));
+  EXPECT_TRUE(instruction->AddAttribute("timeout", "1"));
 
-//   chid channel;
-//   (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:FLOAT", channel);
-//   (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10);
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
+  Procedure proc;
+  EXPECT_TRUE(instruction->Setup(proc));
 
-//   ccs::types::AnyValue value (static_cast<ccs::types::float32>(0.0));
+  unit_test_helper::NullUserInterface ui;
+  instruction->ExecuteSingle(&ui, nullptr);
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
+}
 
-//   EXPECT_TRUE(ccs::HelperTools::ChannelAccess::ReadVariable(channel,
-//     ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), value.GetInstance()));
+TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
+{
+  unit_test_helper::NullUserInterface ui;
+  auto proc = ParseProcedureString(REPEATPROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(proc));
+  ASSERT_TRUE(proc->Setup());
 
-//   log_info("TEST(ChannelAccessInstruction, Execute_float32) - Test variable ..");
-//   EXPECT_EQ(static_cast<ccs::types::float32>(value), static_cast<ccs::types::float32>(0.5));
+  ExecutionStatus exec = ExecutionStatus::FAILURE;
+  do
+  {
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  } while ((ExecutionStatus::SUCCESS != exec) &&
+           (ExecutionStatus::FAILURE != exec));
 
-//   (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
-//   (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
-// }
-
-// TEST_F(ChannelAccessInstructionTest, Write_array)
-// {
-//   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
-//   ASSERT_TRUE(static_cast<bool>(instruction));
-
-//   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
-//   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}"));
-//   EXPECT_TRUE(instruction->AddAttribute("instance", "[1 2 3 4 5 6 7 8]"));
-
-//   // Setup to verify/process attributes
-//   Procedure proc; // Dummy
-//   ASSERT_TRUE(instruction->Setup(proc));
-
-//   gtest::NullUserInterface ui;
-//   instruction->ExecuteSingle(&ui, NULL_PTR_CAST(Workspace*));
-//   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
-
-//   // Test variable
-
-//   // At this point, the instruction has diconnected form the channel and thread detached from the context
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccessClientContext::Attach());
-
-//   chid channel;
-//   (void)ccs::HelperTools::ChannelAccess::ConnectVariable("SEQ-TEST:UIARRAY", channel);
-//   (void)ccs::HelperTools::SleepFor(ONE_SECOND / 10);
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::IsConnected(channel));
-
-//   ccs::types::AnyValue value ("{\"type\": \"uint32[8]\",\"multiplicity\":8,\"element\":{\"type\": \"uint32\"}}");
-
-//   ASSERT_TRUE(ccs::HelperTools::ChannelAccess::ReadVariable(channel,
-//     ccs::HelperTools::AnyTypeToCAScalar(value.GetType()), 8u, value.GetInstance()));
-
-//   log_info("TEST(ChannelAccessInstruction, Execute_array) - Test variable ..");
-//   EXPECT_EQ(ccs::HelperTools::GetAttributeValue<ccs::types::uint32>(&value, "[3]"), 4u);
-
-//   (void)ccs::HelperTools::ChannelAccess::DetachVariable(channel);
-//   (void)ccs::HelperTools::ChannelAccessClientContext::Detach();
-// }
-
-// TEST(ChannelAccessInstruction, Write_NoSuchChannel)
-// {
-//   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
-//   ASSERT_TRUE(static_cast<bool>(instruction));
-
-//   EXPECT_TRUE(instruction->AddAttribute("channel", "UNDEFINED"));
-//   EXPECT_TRUE(instruction->AddAttribute("datatype", "{\"type\": \"uint32\"}"));
-//   EXPECT_TRUE(instruction->AddAttribute("instance", "1"));
-
-//   // Setup to verify/process attributes
-//   Procedure proc; // Dummy
-//   ASSERT_TRUE(instruction->Setup(proc));
-
-//   gtest::NullUserInterface ui;
-//   instruction->ExecuteSingle(&ui, NULL_PTR_CAST(Workspace*));
-//   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE); // Expect failure
-// }
-
-// TEST_F(ChannelAccessInstructionTest, ProcedureFile)
-// {
-//   std::string file; // Placeholder
-//   if (::ccs::HelperTools::Exist("../resources/sequence_ca.xml"))
-//   {
-//     file = std::string("../resources/sequence_ca.xml");
-//   }
-//   else
-//   {
-//     file = std::string("./target/test/resources/sequence_ca.xml");
-//   }
-
-//   gtest::NullUserInterface ui;
-//   auto proc = ParseProcedureFile(file);
-
-//   ASSERT_TRUE(static_cast<bool>(proc));
-//   ASSERT_TRUE(proc->Setup());
-//   ExecutionStatus exec = ExecutionStatus::FAILURE;
-
-//   do
-//   {
-//     (void)ccs::HelperTools::SleepFor(ONE_SECOND / 100); // Let system breathe
-//     proc->ExecuteSingle(&ui);
-//     exec = proc->GetStatus();
-//   } while ((ExecutionStatus::SUCCESS != exec) &&
-//            (ExecutionStatus::FAILURE != exec));
-
-//   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
-// }
-
-// TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
-// {
-//   gtest::NullUserInterface ui;
-//   auto proc = ParseProcedureString(REPEATPROCEDURE);
-
-//   ASSERT_TRUE(static_cast<bool>(proc));
-//   ASSERT_TRUE(proc->Setup());
-
-//   ExecutionStatus exec = ExecutionStatus::FAILURE;
-
-//   do
-//   {
-//     (void)ccs::HelperTools::SleepFor(ONE_SECOND / 100); // Let system breathe
-//     proc->ExecuteSingle(&ui);
-//     exec = proc->GetStatus();
-//   } while ((ExecutionStatus::SUCCESS != exec) &&
-//            (ExecutionStatus::FAILURE != exec));
-
-//   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
-// }
-
-// // Issue during the tear-down process
-// TEST_F(ChannelAccessInstructionTest, Procedure_parallel)
-// {
-//   gtest::NullUserInterface ui; // Should have same or larger scope as procedure
-//   auto proc = ParseProcedureString(PARALLELPROCEDURE);
-
-//   ASSERT_TRUE(static_cast<bool>(proc));
-//   ASSERT_TRUE(proc->Setup());
-
-//   ExecutionStatus exec = ExecutionStatus::FAILURE;
-
-//   do
-//   {
-//     (void)ccs::HelperTools::SleepFor(ONE_SECOND / 100); // Let system breathe
-//     proc->ExecuteSingle(&ui);
-//     exec = proc->GetStatus();
-//   } while ((ExecutionStatus::SUCCESS != exec) &&
-//            (ExecutionStatus::FAILURE != exec));
-
-//   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
-// }
+  EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
+}
 
 ChannelAccessInstructionTest::ChannelAccessInstructionTest() = default;
 

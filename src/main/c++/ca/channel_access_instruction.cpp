@@ -101,8 +101,13 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface*, 
   {
     return ExecutionStatus::FAILURE;
   }
-  sup::epics::ChannelAccessPV pv(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
-                                 channel_access_helper::ChannelType(value.GetType()));
+  auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
+  auto channel_type = channel_access_helper::ChannelType(value.GetType());
+  if (channel_name.empty() || sup::dto::IsEmptyType(channel_type))
+  {
+    return ExecutionStatus::FAILURE;
+  }
+  sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   if (!pv.WaitForValidValue(m_timeout_sec))
   {
     return ExecutionStatus::FAILURE;
@@ -169,10 +174,16 @@ void ChannelAccessWriteInstruction::ResetHook()
   m_timeout_sec = DEFAULT_TIMEOUT_SEC;
 }
 
-ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl (UserInterface* ui, Workspace* ws)
+ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
 {
   auto value = channel_access_helper::ExtractChannelValue(GetNewValue(ws));
-  sup::epics::ChannelAccessPV pv(GetAttribute(CHANNEL_ATTRIBUTE_NAME), value.GetType());
+  auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
+  auto channel_type = value.GetType();
+  if (channel_name.empty() || sup::dto::IsEmptyType(channel_type))
+  {
+    return ExecutionStatus::FAILURE;
+  }
+  sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   if (!pv.WaitForConnected(m_timeout_sec))
   {
     return ExecutionStatus::FAILURE;
