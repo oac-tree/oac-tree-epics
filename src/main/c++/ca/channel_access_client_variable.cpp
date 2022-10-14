@@ -95,7 +95,7 @@ bool ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
     return false;
   }
   sup::dto::JSONAnyTypeParser parser;
-  if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME)))
+  if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
   {
     return false;
   }

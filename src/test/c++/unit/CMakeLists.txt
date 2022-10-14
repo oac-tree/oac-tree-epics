@@ -7,6 +7,7 @@ target_sources(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/global_ioc_environment.cpp
         ${CMAKE_CURRENT_LIST_DIR}/log_instruction_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/null_user_interface.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/pv_access_client_variable_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/system_call_instruction_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/unit_test_helper.cpp
@@ -15,7 +16,6 @@ target_sources(unit-tests
         # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable-tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVServerVariable-tests.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/PVClientVariable-tests.cpp
 )
 
 target_include_directories(unit-tests
@@ -40,7 +40,7 @@ target_link_libraries(unit-tests
         sequencer
         sequencer-ca
         sequencer-misc
-        # sequencer-pvxs
+        sequencer-pvxs
         sup-epics
         sup-dto
 )

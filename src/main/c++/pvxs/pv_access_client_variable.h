@@ -19,42 +19,47 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include <Variable.h>
+#include <sup/sequencer/variable.h>
 
 #include <memory>
 
 namespace sup
 {
+namespace epics
+{
+class PvAccessClientPV;
+}  // namespace epics
+
 namespace sequencer
 {
 /**
  * @brief Workspace variable associated with remote pvAccess server.
- * The variable is configured with mandatory 'channel' (PV name) and 'datatype' attributes.
+ * The variable is configured with mandatory 'channel' (PV name) and 'type' attributes.
  * @code
      <Workspace>
-       <PVClientVariable name="pvxs-variable"
+       <PvAccessClient name="pvxs-variable"
          channel="seq::pvxs::variable"
-         datatype='{"type":"seq::pvxs::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'/>
+         type='{"type":"seq::pvxs::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'/>
      </Workspace>
    @endcode
  */
-
-class PVClientVariable : public Variable
+class PvAccessClientVariable : public Variable
 {
 public:
-  PVClientVariable();
-  ~PVClientVariable();
+  PvAccessClientVariable();
+  ~PvAccessClientVariable();
 
   static const std::string Type;
 
 private:
-  bool GetValueImpl(ccs::types::AnyValue &value) const override;
-  bool SetValueImpl(const ccs::types::AnyValue &value) override;
-  bool SetupImpl() override;
+  bool GetValueImpl(sup::dto::AnyValue &value) const override;
+  bool SetValueImpl(const sup::dto::AnyValue &value) override;
+  bool IsAvailableImpl() const override;
+  bool SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
   void ResetImpl() override;
 
-  struct PVClientVariableImpl;
-  std::unique_ptr<PVClientVariableImpl> p_impl;
+  std::unique_ptr<epics::PvAccessClientPV> m_pv;
+  sup::dto::AnyType m_type;
 };
 
 }  // namespace sequencer

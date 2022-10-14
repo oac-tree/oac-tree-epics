@@ -208,7 +208,8 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(Workspace* ws) con
   }
   auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser type_parser;
-  if (!type_parser.ParseString(type_str))
+  auto registry = (ws == nullptr) ? nullptr : ws->GetTypeRegistry();
+  if (!type_parser.ParseString(type_str, registry))
   {
     return {};
   }

@@ -47,7 +47,7 @@ class ChannelAccessClientVariableTest : public ::testing::Test
 {
 protected:
   ChannelAccessClientVariableTest();
-  virtual ~ChannelAccessClientVariableTest();
+  ~ChannelAccessClientVariableTest();
 };
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_success)
