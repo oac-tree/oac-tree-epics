@@ -49,9 +49,6 @@ static const std::string READBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding=
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
             varName="string"/>
-        <Log input="boolean"/>
-        <Log input="uint32"/>
-        <Log input="string"/>
     </Sequence>
     <Workspace>
         <Local name="boolean" type='{"type":"bool"}'/>
