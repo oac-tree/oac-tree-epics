@@ -48,16 +48,16 @@ ChannelAccessClientVariable::~ChannelAccessClientVariable() = default;
 
 bool ChannelAccessClientVariable::GetValueImpl(sup::dto::AnyValue &value) const
 {
-  if (!m_pv)
+  if (!m_pv || !m_type)
   {
     return false;
   }
-  if (!m_type.HasField(channel_access_helper::CONNECTED_FIELD_NAME) && !m_pv->IsConnected())
+  if (!m_type->HasField(channel_access_helper::CONNECTED_FIELD_NAME) && !m_pv->IsConnected())
   {
     return false;
   }
   auto ext_value = m_pv->GetExtendedValue();
-  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
+  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, *m_type);
   return sup::dto::TryConvert(value, result);
 }
 
@@ -99,22 +99,22 @@ bool ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
   {
     return false;
   }
-  m_type = parser.MoveAnyType();
+  m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   auto callback = [this](const epics::ChannelAccessPV::ExtendedValue& ext_value)
                   {
-                    auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
+                    auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, *m_type);
                     Notify(value);
                     return;
                   };
   m_pv.reset(new epics::ChannelAccessPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
-                                        channel_access_helper::ChannelType(m_type), callback));
+                                        channel_access_helper::ChannelType(*m_type), callback));
   return true;
 }
 
 void ChannelAccessClientVariable::ResetImpl()
 {
   m_pv.reset();
-  m_type = sup::dto::EmptyType;
+  m_type.reset();
 }
 
 } // namespace sequencer

@@ -40,7 +40,7 @@ namespace sequencer
  * @brief Workspace variable interface to EPICS Channel Access Process Variable (PV).
  * @details The class interfaces to ccs::base::ChannelAccessClient to manage asynchronous
  * handling of EPICS CA connections, notification and update. The variable is configured
- * with mandatory 'channel' (PV name) and 'datatype' attributes. The 'datatype' attribute
+ * with mandatory 'channel' (PV name) and 'type' attributes. The 'type' attribute
  * constraints the client-side type to use for get/put requests; e.g. enumeration-type
  * IOC records such as mbbi/mbbo can be accessed as integer or string.
  * The implementation provides as well a way to change the CA client thread period from
@@ -50,20 +50,20 @@ namespace sequencer
      <Workspace>
        <ChannelAccessVariable name="boolean"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
-         datatype='{"type":"bool"}'
+         type='{"type":"bool"}'
          period="10000000"/>
        <ChannelAccessVariable name="boolean-as-string"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
-         datatype='{"type":"string"}'/>
+         type='{"type":"string"}'/>
        <ChannelAccessVariable name="boolean-as-integer"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
-         datatype='{"type":"uint32"}'/>
+         type='{"type":"uint32"}'/>
        <ChannelAccessVariable name="integer"
          channel="EPICS::CA::CHANNEL::INTEGER"
-         datatype='{"type":"uint32"}'/>
+         type='{"type":"uint32"}'/>
        <ChannelAccessVariable name="array"
          channel="EPICS::CA::CHANNEL::ARRAY"
-         datatype='{"type":"uint32[]","multiplicity":8,"element":{"type":"uint32"}}'/>
+         type='{"type":"uint32[]","multiplicity":8,"element":{"type":"uint32"}}'/>
      </Workspace>
    @endcode
  *
@@ -98,7 +98,7 @@ private:
   bool SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
   void ResetImpl() override;
   std::unique_ptr<epics::ChannelAccessPV> m_pv;
-  sup::dto::AnyType m_type;
+  std::unique_ptr<sup::dto::AnyType> m_type;
 };
 
 }  // namespace sequencer

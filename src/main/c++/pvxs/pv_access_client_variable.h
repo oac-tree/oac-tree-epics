@@ -19,6 +19,9 @@
  * of the distribution package.
  ******************************************************************************/
 
+#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+#define _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+
 #include <sup/sequencer/variable.h>
 
 #include <memory>
@@ -59,9 +62,11 @@ private:
   void ResetImpl() override;
 
   std::unique_ptr<epics::PvAccessClientPV> m_pv;
-  sup::dto::AnyType m_type;
+  std::unique_ptr<sup::dto::AnyType> m_type;
 };
 
 }  // namespace sequencer
 
 }  // namespace sup
+
+#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_

@@ -21,12 +21,13 @@
 
 #include "pv_access_client_variable.h"
 
+#include "pv_access_helper.h"
+
 #include <sup/sequencer/variable_registry.h>
 
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/dto/json_type_parser.h>
 #include <sup/epics/pv_access_client_pv.h>
-#include <sup/epics/pv_access_context_utils.h>
 
 namespace sup
 {
@@ -49,35 +50,35 @@ PvAccessClientVariable::~PvAccessClientVariable() = default;
 
 bool PvAccessClientVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
-  if (!m_pv || !m_pv->IsConnected())
+  if (!m_pv || !m_pv->IsConnected() || !m_type)
   {
     return false;
   }
-  auto cached_val = m_pv->GetValue();
-  return sup::dto::TryConvert(value, cached_val);
+  auto converted_val = pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type);
+  return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryConvert(value, converted_val);
 }
 
 bool PvAccessClientVariable::SetValueImpl(const sup::dto::AnyValue& value)
 {
-  if (!m_pv || !m_pv->IsConnected())
+  if (!m_pv || !m_pv->IsConnected() || !m_type)
   {
     return false;
   }
-  sup::dto::AnyValue copy(m_type);
+  sup::dto::AnyValue copy(*m_type);
   if (!sup::dto::TryConvert(copy, value))
   {
     return false;
   }
-  return m_pv->SetValue(copy);
+  return m_pv->SetValue(pv_access_helper::PackIntoStructIfScalar(copy));
 }
 
 bool PvAccessClientVariable::IsAvailableImpl() const
 {
-  if (!m_pv || !m_pv->IsConnected())
+  if (!m_pv || !m_pv->IsConnected() || !m_type)
   {
     return false;
   }
-  auto value = m_pv->GetValue();
+  auto value = pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -92,21 +93,21 @@ bool PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   {
     return false;
   }
-  m_type = parser.MoveAnyType();
-  auto callback = [this](const sup::dto::AnyValue& value)
+  m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
+  auto callback = [this](const epics::PvAccessClientPV::ExtendedValue& ext_value)
                   {
+                    auto value = pv_access_helper::ConvertToTypedAnyValue(ext_value.value, *m_type);
                     Notify(value);
                     return;
                   };
-  m_pv.reset(new epics::PvAccessClientPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
-                                         epics::CreateClientContextFromEnv(), callback));
+  m_pv.reset(new epics::PvAccessClientPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME), callback));
   return true;
 }
 
 void PvAccessClientVariable::ResetImpl()
 {
   m_pv.reset();
-  m_type = sup::dto::EmptyType;
+  m_type.reset();
 }
 
 }  // namespace sequencer

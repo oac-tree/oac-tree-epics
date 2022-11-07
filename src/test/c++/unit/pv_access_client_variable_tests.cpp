@@ -30,7 +30,6 @@
 
 #include <sup/dto/json_type_parser.h>
 #include <sup/epics/pv_access_server.h>
-#include <sup/epics/pv_access_context_utils.h>
 
 #include <gtest/gtest.h>
 
@@ -77,7 +76,6 @@ TEST_F(PvAccessClientVariableTest, InvalidSetup)
   PvAccessClientVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessClientVariableTest:INTEGER"));
   EXPECT_NO_THROW(variable.AddAttribute("type", "invalid-type"));
-  // should throw because of type parsing error
   EXPECT_NO_THROW(variable.Setup());
 }
 
@@ -103,114 +101,100 @@ TEST_F(PvAccessClientVariableTest, GetNonExistingValue)
 //! Server creates a structure with the value.
 //! Check that we can get and set the value from PvAccessClientVariable.
 
-// TEST_F(PvAccessClientVariableTest, PVAccessServerClientTest)
-// {
-//   const std::string kDataType =
-//       R"({"type":"testtype","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]})";
-//   const char* channel = "PvAccessClientVariableTest:INTEGER";
-//   sup::dto::JSONAnyTypeParser type_parser;
-//   EXPECT_TRUE(type_parser.ParseString(kDataType));
-//   auto pv_type = type_parser.MoveAnyType();
-//   sup::dto::AnyValue pv_val{pv_type};
+TEST_F(PvAccessClientVariableTest, PvAccessServerClientTest)
+{
+  const std::string kDataType =
+      R"({"type":"testtype","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]})";
+  const char* channel = "PvAccessClientVariableTest:FloatStruct";
+  sup::dto::JSONAnyTypeParser type_parser;
+  EXPECT_TRUE(type_parser.ParseString(kDataType));
+  auto pv_type = type_parser.MoveAnyType();
+  sup::dto::AnyValue pv_val{pv_type};
 
-//   sup::epics::PVAccessServer server(sup::epics::CreateIsolatedServer());
+  sup::epics::PvAccessServer server;
 
-//   // creating the variable
-//   server.AddVariable(channel, pv_val);
-//   server.Start();
+  // creating the variable
+  server.AddVariable(channel, pv_val);
+  server.Start();
 
-//   // setting the value via PVAccessServer::GetVariable
-//   pv_val["value"] = 42.1f;
-//   EXPECT_TRUE(server.SetValue(channel, pv_val));  // without this call EXPECT below are failing
+  // setting the value through the server
+  pv_val["value"] = 42.1f;
+  EXPECT_TRUE(server.SetValue(channel, pv_val));  // without this call EXPECT below are failing
 
-//   // Creating sequencer's PvAccessClientVariable
-//   Workspace ws;
-//   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
-//   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
-//   EXPECT_NO_THROW(variable->AddAttribute("type", kDataType));
-//   EXPECT_TRUE(ws.AddVariable("var", variable.release()));
-//   EXPECT_NO_THROW(ws.Setup());
+  // Creating sequencer's PvAccessClientVariable
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("PvAccessClient");
+  EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
+  EXPECT_NO_THROW(variable->AddAttribute("type", kDataType));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-//   // Reading the value from PvAccessClientVariable
-//   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
-//   sup::dto::AnyValue var_val;
-//   EXPECT_TRUE(ws.GetValue("var", var_val));
-//   EXPECT_TRUE(var_val.HasField("value"));
-//   EXPECT_EQ(var_val["value"], 42.1f);
+  // Reading the value from PvAccessClientVariable
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
+  sup::dto::AnyValue var_val;
+  EXPECT_TRUE(ws.GetValue("var", var_val));
+  ASSERT_TRUE(var_val.HasField("value"));
+  EXPECT_EQ(var_val["value"], 42.1f);
 
-//   // setting the value
-//   auto new_value = 142.0f;
-//   EXPECT_TRUE(ws.SetValue("var.value", new_value));
+  // setting the value
+  auto new_value = 142.0f;
+  EXPECT_TRUE(ws.SetValue("var.value", new_value));
 
-//   // reading from the server
-//   EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
-//     auto server_val = server.GetValue(channel);
-//     return server_val.HasField("value") && server_val["value"] == new_value;
-//   }));
-// }
+  // reading from the server
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
+    auto server_val = server.GetValue(channel);
+    return server_val.HasField("value") && server_val["value"] == new_value;
+  }));
+}
 
-//! Structure with value is created on server.
-//! Procedure creates PvAccessClientVariable and set new value to it.
-//! We expect that the value will be propagated to the server side.
+//! Server creates a structure with a value.
+//! Check that we can get and set the value from PvAccessClientVariable with scalar type.
 
-// TEST_F(PvAccessClientVariableTest, ExecuteProcedure)
-// {
-//   // preparing procedure
-//   const std::string body{R"(
-//     <Plugin>libsequencer-pvxs.so</Plugin>
-//     <RegisterType jsontype='{"type":"seq::test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
-//     <Sequence>
-//         <Copy input="new-pvxs-value" output="pvxs-client-variable"/>
-//         <Wait timeout="1.0"/>
-//     </Sequence>
-//     <Workspace>
-//         <PvAccessClientVariable name="pvxs-client-variable"
-//             channel="PvAccessClientVariableTest:INTEGER"
-//             datatype='{"type":"seq::test::Type/v1.0"}'/>
-//         <Local name="new-pvxs-value"
-//                type='{"type":"seq::test::Type/v1.0"}'
-//                value='{"value":12.5}'/>
-//     </Workspace>
-// )"};
-//   // preparing server
-//   const std::string kDataType =
-//       R"({"type":"seq::test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]})";
-//   const char* channel = "PvAccessClientVariableTest:INTEGER";
-//   ::ccs::base::PVAccessServer server;
+TEST_F(PvAccessClientVariableTest, PvAccessScalarClientTest)
+{
+  const std::string kDataType =
+      R"({"type":"testtype","attributes":[{"value":{"type":"float32"}}]})";
+  const char* channel = "PvAccessClientVariableTest:ScalarFloat";
+  sup::dto::JSONAnyTypeParser type_parser;
+  EXPECT_TRUE(type_parser.ParseString(kDataType));
+  auto pv_type = type_parser.MoveAnyType();
+  sup::dto::AnyValue pv_val{pv_type};
 
-//   // creating the variable
-//   server.AddVariable(channel, sup::dto::AnyputVariable, kDataType.c_str());
-//   server.Launch();
-//   ccs::HelperTools::SleepFor(0.1 * kSecond);
+  sup::epics::PvAccessServer server;
 
-//   // setting the value via PVAccessServer::GetVariable
-//   sup::dto::float32 value = 42.1;
-//   EXPECT_TRUE(SetAttributeValue(server.GetVariable(channel), "value", value));
-//   EXPECT_TRUE(server.UpdateVariable(channel));  // without this call EXPECT below are failing
-//   ccs::HelperTools::SleepFor(0.1 * kSecond);
+  // creating the variable
+  server.AddVariable(channel, pv_val);
+  server.Start();
 
-//   // running the procedure
-//   auto proc = sup::sequencer::ParseProcedureString(CreateProcedureString(body));
-//   ASSERT_TRUE(proc.get() != nullptr);
-//   ASSERT_TRUE(proc->Setup());
+  // setting the value through the server
+  pv_val["value"] = 42.1f;
+  EXPECT_TRUE(server.SetValue(channel, pv_val));  // without this call EXPECT below are failing
 
-//   // executing procedure till success
-//   NullUserInterface ui;
-//   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-//   do
-//   {
-//     (void)ccs::HelperTools::SleepFor(0.1 * kSecond);  // Let system breathe
-//     proc->ExecuteSingle(&ui);
-//     exec = proc->GetStatus();
-//   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec)
-//            && (sup::sequencer::ExecutionStatus::FAILURE != exec));
-//   EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
+  // Creating sequencer's PvAccessClientVariable
+  Workspace ws;
+  const std::string kFloatType = R"({"type":"float32"})";
+  auto variable = GlobalVariableRegistry().Create("PvAccessClient");
+  EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
+  EXPECT_NO_THROW(variable->AddAttribute("type", kFloatType));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
 
-//   // reading from the server
-//   sup::dto::float32 server_value = 0;
-//   ASSERT_TRUE(GetAttributeValue(server.GetVariable(channel), "value", server_value));
-//   EXPECT_EQ(server_value, 12.5);  // like in new-pvx-value LocalVariable
-// }
+  // Reading the value from PvAccessClientVariable
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
+  sup::dto::AnyValue var_val;
+  EXPECT_TRUE(ws.GetValue("var", var_val));
+  EXPECT_EQ(var_val.As<float>(), 42.1f);
+
+  // setting the value
+  auto new_value = 142.0f;
+  EXPECT_TRUE(ws.SetValue("var", new_value));
+
+  // reading from the server
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
+    auto server_val = server.GetValue(channel);
+    return server_val.HasField("value") && server_val["value"] == new_value;
+  }));
+}
 
 PvAccessClientVariableTest::PvAccessClientVariableTest() = default;
 PvAccessClientVariableTest::~PvAccessClientVariableTest() = default;
