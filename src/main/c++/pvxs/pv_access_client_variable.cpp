@@ -42,8 +42,8 @@ const std::string TYPE_ATTRIBUTE_NAME = "type";
 
 PvAccessClientVariable::PvAccessClientVariable()
   : Variable(PvAccessClientVariable::Type)
-  , m_pv{}
   , m_type{}
+  , m_pv{}
 {}
 
 PvAccessClientVariable::~PvAccessClientVariable() = default;
