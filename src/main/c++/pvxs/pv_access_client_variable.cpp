@@ -94,12 +94,14 @@ bool PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     return false;
   }
   m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
-  auto callback = [this](const epics::PvAccessClientPV::ExtendedValue& ext_value)
-                  {
-                    auto value = pv_access_helper::ConvertToTypedAnyValue(ext_value.value, *m_type);
-                    Notify(value);
-                    return;
-                  };
+  // Avoid dependence on destruction order of m_pv and m_type.
+  sup::dto::AnyType type_copy{*m_type};
+  auto callback = [this, type_copy](const epics::PvAccessClientPV::ExtendedValue& ext_value)
+  {
+    auto value = pv_access_helper::ConvertToTypedAnyValue(ext_value.value, type_copy);
+    Notify(value);
+    return;
+  };
   m_pv.reset(new epics::PvAccessClientPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME), callback));
   return true;
 }

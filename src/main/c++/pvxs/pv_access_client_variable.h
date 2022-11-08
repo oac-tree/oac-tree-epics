@@ -61,7 +61,6 @@ private:
   bool SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
   void ResetImpl() override;
 
-  //! Order matters! The client requires the type variable in its callback.
   std::unique_ptr<sup::dto::AnyType> m_type;
   std::unique_ptr<epics::PvAccessClientPV> m_pv;
 };
