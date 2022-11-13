@@ -12,20 +12,14 @@ target_sources(sequencer-misc
         ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable.cpp
 )
 
-target_include_directories(sequencer-misc
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-        $ENV{CODAC_ROOT}/include
-)
+target_include_directories(sequencer-misc PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_directories(sequencer-misc
-    PUBLIC $ENV{CODAC_ROOT}/lib
-)
-
-target_link_libraries(sequencer-misc
-    PUBLIC
-        sequencer
-        sup-dto
-)
+if(SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
+  target_include_directories(sequencer-misc PRIVATE $ENV{CODAC_ROOT}/include)
+  target_link_directories(sequencer-misc PUBLIC $ENV{CODAC_ROOT}/lib)
+  target_link_libraries(sequencer-misc PUBLIC sequencer sup-epics sup-dto)
+else()
+  target_link_libraries(sequencer-misc PUBLIC sequencer::sequencer)
+endif()
 
 install(TARGETS sequencer-misc DESTINATION lib)

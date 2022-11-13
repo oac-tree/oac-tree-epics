@@ -37,10 +37,7 @@ target_link_libraries(unit-tests
     PUBLIC
         GTest::GTest
         GTest::Main
-        sequencer
         sequencer-ca
         sequencer-misc
         sequencer-pvxs
-        sup-epics
-        sup-dto
 )

@@ -17,6 +17,8 @@ endif()
 
 if (NOT SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
   find_package(sup-dto REQUIRED)
+  find_package(sequencer REQUIRED)
+  find_package(sup-epics REQUIRED)
 endif()
 
 # -----------------------------------------------------------------------------

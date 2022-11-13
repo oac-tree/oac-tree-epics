@@ -17,21 +17,14 @@ target_sources(sequencer-pvxs
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_helper.cpp
 )
 
-target_include_directories(sequencer-pvxs
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}
-        $ENV{CODAC_ROOT}/include
-)
+target_include_directories(sequencer-pvxs PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_directories(sequencer-pvxs
-    PUBLIC $ENV{CODAC_ROOT}/lib
-)
-
-target_link_libraries(sequencer-pvxs
-    PUBLIC
-        sequencer
-        sup-epics
-        sup-dto
-)
+if(SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
+  target_include_directories(sequencer-pvxs PRIVATE $ENV{CODAC_ROOT}/include)
+  target_link_directories(sequencer-pvxs PUBLIC $ENV{CODAC_ROOT}/lib)
+  target_link_libraries(sequencer-pvxs PUBLIC sequencer sup-epics sup-dto)
+else()
+  target_link_libraries(sequencer-pvxs PUBLIC sequencer::sequencer sup-epics::sup-epics)
+endif()
 
 install(TARGETS sequencer-pvxs DESTINATION lib)
