@@ -1,7 +1,15 @@
+# -----------------------------------------------------------------------------
+# Modules
+# -----------------------------------------------------------------------------
+
+include(CTest)
+include(GNUInstallDirs)
 
 # -----------------------------------------------------------------------------
 # Find if we are on CODAC infrastructure
 # -----------------------------------------------------------------------------
+
+get_filename_component(SUP_SEQUENCER_PLUGIN_EPICS_PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 
 if (DEFINED ENV{CODAC_ROOT})
   message(STATUS "CODAC environment detected at $ENV{CODAC_ROOT}")
@@ -9,6 +17,23 @@ if (DEFINED ENV{CODAC_ROOT})
 else()
   message(STATUS "No CODAC environment detected")
   set(SUP_SEQUENCER_PLUGIN_EPICS_CODAC OFF)
+endif()
+
+# -----------------------------------------------------------------------------
+# Variables
+# -----------------------------------------------------------------------------
+
+set(SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
+set(SUP_SEQUENCER_PLUGIN_EPICS_BUILDVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+
+# -----------------------------------------------------------------------------
+# Directories
+# -----------------------------------------------------------------------------
+
+if (DEFINED ENV{CODAC_ROOT})
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SUP_SEQUENCER_PLUGIN_EPICS_PROJECT_DIR}/target/bin)
+else()
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 endif()
 
 # -----------------------------------------------------------------------------

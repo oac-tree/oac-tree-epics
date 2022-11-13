@@ -1,8 +1,9 @@
 add_library(sequencer-misc SHARED)
 
 set_target_properties(sequencer-misc PROPERTIES
-    VERSION ${LIBVERSION}
-    SOVERSION ${LIBSOVERSION}
+    EXPORT_NAME sequencer-misc
+    SOVERSION ${SEQUENCER_PLUGIN_EPICS_SOVERSION}
+    VERSION ${SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
 )
 
 target_sources(sequencer-misc
@@ -22,4 +23,4 @@ else()
   target_link_libraries(sequencer-misc PUBLIC sequencer::sequencer)
 endif()
 
-install(TARGETS sequencer-misc DESTINATION lib)
+install(TARGETS sequencer-misc DESTINATION ${CMAKE_INSTALL_LIBDIR})

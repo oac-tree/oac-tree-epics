@@ -97,7 +97,7 @@
                     <packaging>
                         <package>
                             <!-- Libraries -->
-                            <include type="file" source="lib" target="${pluginpath}">
+                            <include type="file" source="lib64" target="${pluginpath}">
                                 <include>*.so*</include>
                             </include>
                             <!-- Package dependencies -->

@@ -1,8 +1,9 @@
 add_library(sequencer-pvxs SHARED)
 
 set_target_properties(sequencer-pvxs PROPERTIES
-    VERSION ${LIBVERSION}
-    SOVERSION ${LIBSOVERSION}
+    EXPORT_NAME sequencer-pvxs
+    SOVERSION ${SEQUENCER_PLUGIN_EPICS_SOVERSION}
+    VERSION ${SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
 )
 
 target_sources(sequencer-pvxs
@@ -27,4 +28,4 @@ else()
   target_link_libraries(sequencer-pvxs PUBLIC sequencer::sequencer sup-epics::sup-epics)
 endif()
 
-install(TARGETS sequencer-pvxs DESTINATION lib)
+install(TARGETS sequencer-pvxs DESTINATION ${CMAKE_INSTALL_LIBDIR})

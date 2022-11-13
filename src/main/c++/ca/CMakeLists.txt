@@ -1,8 +1,9 @@
 add_library(sequencer-ca SHARED)
 
 set_target_properties(sequencer-ca PROPERTIES
-    VERSION ${LIBVERSION}
-    SOVERSION ${LIBSOVERSION}
+    EXPORT_NAME sequencer-ca
+    SOVERSION ${SEQUENCER_PLUGIN_EPICS_SOVERSION}
+    VERSION ${SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
 )
 
 target_sources(sequencer-ca
@@ -22,4 +23,4 @@ else()
   target_link_libraries(sequencer-ca PUBLIC sequencer::sequencer sup-epics::sup-epics)
 endif()
 
-install(TARGETS sequencer-ca DESTINATION lib)
+install(TARGETS sequencer-ca DESTINATION ${CMAKE_INSTALL_LIBDIR})
