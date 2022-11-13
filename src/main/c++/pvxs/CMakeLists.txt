@@ -2,8 +2,8 @@ add_library(sequencer-pvxs SHARED)
 
 set_target_properties(sequencer-pvxs PROPERTIES
     EXPORT_NAME sequencer-pvxs
-    SOVERSION ${SEQUENCER_PLUGIN_EPICS_SOVERSION}
-    VERSION ${SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
+    SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
+    VERSION ${SUP_SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
 )
 
 target_sources(sequencer-pvxs
