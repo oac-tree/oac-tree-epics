@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include "null_user_interface.h"
+#include "softioc_utils.h"
 #include "unit_test_helper.h"
 
 #include <sup/sequencer/instruction.h>
@@ -124,7 +125,8 @@ TEST_F(ChannelAccessInstructionTest, ReadBoolean)
   auto proc = ParseProcedureString(READBOOLPROCEDURE);
   ASSERT_TRUE(static_cast<bool>(proc));
   ASSERT_TRUE(proc->Setup());
-  EXPECT_TRUE(std::system("/usr/bin/caput SEQ-TEST:BOOL TRUE") == 0);
+  std::string command = softioc_utils::GetEPICSBinaryPath() + "caput SEQ-TEST:BOOL TRUE";
+  EXPECT_TRUE(std::system(command.c_str()) == 0);
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
