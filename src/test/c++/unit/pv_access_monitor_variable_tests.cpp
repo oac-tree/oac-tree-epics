@@ -6,9 +6,9 @@
  *
  * Description   : Unit test code
  *
- * Author        : Gennady Pospelov (IO)
+ * Author        : Walter Van Herck (IO)
  *
- * Copyright (c) : 2010-2020 ITER Organization,
+ * Copyright (c) : 2010-2022 ITER Organization,
  *                 CS 90 046
  *                 13067 St. Paul-lez-Durance Cedex
  *                 France
@@ -22,7 +22,7 @@
 #include "null_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <pvxs/pv_access_client_variable.h>
+#include <pvxs/pv_access_monitor_variable.h>
 
 #include <sup/sequencer/sequence_parser.h>
 #include <sup/sequencer/variable_registry.h>
@@ -37,56 +37,34 @@
 
 using namespace sup::sequencer;
 
-class PvAccessClientVariableTest : public ::testing::Test
+class PvAccessMonitorVariableTest : public ::testing::Test
 {
 protected:
-  PvAccessClientVariableTest();
-  ~PvAccessClientVariableTest();
+  PvAccessMonitorVariableTest();
+  ~PvAccessMonitorVariableTest();
 };
 
-TEST_F(PvAccessClientVariableTest, VariableRegistration)
+TEST_F(PvAccessMonitorVariableTest, VariableRegistration)
 {
   auto registry = sup::sequencer::GlobalVariableRegistry();
   auto names = registry.RegisteredVariableNames();
-  ASSERT_TRUE(std::find(names.begin(), names.end(), PvAccessClientVariable::Type) != names.end());
-  ASSERT_TRUE(dynamic_cast<PvAccessClientVariable*>(registry.Create(PvAccessClientVariable::Type).get()));
+  ASSERT_TRUE(std::find(names.begin(), names.end(), PvAccessMonitorVariable::Type) != names.end());
+  ASSERT_TRUE(dynamic_cast<PvAccessMonitorVariable*>(registry.Create(PvAccessMonitorVariable::Type).get()));
 }
 
-TEST_F(PvAccessClientVariableTest, InvalidSetup)
+TEST_F(PvAccessMonitorVariableTest, InvalidSetup)
 {
-  PvAccessClientVariable variable;
-  EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessClientVariableTest:INTEGER"));
+  PvAccessMonitorVariable variable;
+  EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessMonitorVariableTest:INTEGER"));
   EXPECT_NO_THROW(variable.AddAttribute("type", "invalid-type"));
   EXPECT_NO_THROW(variable.Setup());
 }
 
-TEST_F(PvAccessClientVariableTest, ValidSetup)
-{
-  PvAccessClientVariable variable;
-  EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessClientVariableTest:INTEGER"));
-  EXPECT_NO_THROW(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
-  EXPECT_NO_THROW(variable.Setup());
-}
-
-TEST_F(PvAccessClientVariableTest, GetNonExistingValue)
-{
-  PvAccessClientVariable variable;
-  EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessClientVariableTest:INTEGER"));
-  EXPECT_NO_THROW(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
-  EXPECT_NO_THROW(variable.Setup());
-
-  sup::dto::AnyValue value;
-  EXPECT_FALSE(variable.GetValue(value));
-}
-
-//! Server creates a structure with the value.
-//! Check that we can get and set the value from PvAccessClientVariable.
-
-TEST_F(PvAccessClientVariableTest, PvAccessServerClientTest)
+TEST_F(PvAccessMonitorVariableTest, GetValue_error)
 {
   const std::string kDataType =
       R"({"type":"testtype","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]})";
-  const char* channel = "PvAccessClientVariableTest:FloatStruct";
+  const char* channel = "PvAccessMonitorVariableTest:FloatStruct";
   sup::dto::JSONAnyTypeParser type_parser;
   EXPECT_TRUE(type_parser.ParseString(kDataType));
   auto pv_type = type_parser.MoveAnyType();
@@ -102,40 +80,33 @@ TEST_F(PvAccessClientVariableTest, PvAccessServerClientTest)
   pv_val["value"] = 42.1f;
   EXPECT_TRUE(server.SetValue(channel, pv_val));
 
-  // Creating sequencer's PvAccessClientVariable
+  // Creating sequencer's PvAccessMonitorVariable
   Workspace ws;
-  auto variable = GlobalVariableRegistry().Create("PvAccessClient");
+  auto variable = GlobalVariableRegistry().Create("PvAccessMonitor");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
-  EXPECT_NO_THROW(variable->AddAttribute("type", kDataType));
   EXPECT_TRUE(ws.AddVariable("var", variable.release()));
   EXPECT_NO_THROW(ws.Setup());
 
-  // Reading the value from PvAccessClientVariable
+  // Reading the value from PvAccessMonitorVariable
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
   sup::dto::AnyValue var_val;
   EXPECT_TRUE(ws.GetValue("var", var_val));
   ASSERT_TRUE(var_val.HasField("value"));
   EXPECT_EQ(var_val["value"], 42.1f);
 
-  // setting the value
+  // setting the value fails since it is read-only
   auto new_value = 142.0f;
-  EXPECT_TRUE(ws.SetValue("var.value", new_value));
-
-  // reading from the server
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
-    auto server_val = server.GetValue(channel);
-    return server_val.HasField("value") && server_val["value"] == new_value;
-  }));
+  EXPECT_FALSE(ws.SetValue("var.value", new_value));
 }
 
 //! Server creates a structure with a value.
-//! Check that we can get and set the value from PvAccessClientVariable with scalar type.
+//! Check that we can get the value from PvAccessMonitorVariable with scalar type.
 
-TEST_F(PvAccessClientVariableTest, PvAccessScalarClientTest)
+TEST_F(PvAccessMonitorVariableTest, PvAccessScalarClientTest)
 {
   const std::string kDataType =
       R"({"type":"testtype","attributes":[{"value":{"type":"float32"}}]})";
-  const char* channel = "PvAccessClientVariableTest:ScalarFloat";
+  const char* channel = "PvAccessMonitorVariableTest:ScalarFloat";
   sup::dto::JSONAnyTypeParser type_parser;
   EXPECT_TRUE(type_parser.ParseString(kDataType));
   auto pv_type = type_parser.MoveAnyType();
@@ -151,16 +122,16 @@ TEST_F(PvAccessClientVariableTest, PvAccessScalarClientTest)
   pv_val["value"] = 42.1f;
   EXPECT_TRUE(server.SetValue(channel, pv_val));
 
-  // Creating sequencer's PvAccessClientVariable
+  // Creating sequencer's PvAccessMonitorVariable
   Workspace ws;
   const std::string kFloatType = R"({"type":"float32"})";
-  auto variable = GlobalVariableRegistry().Create("PvAccessClient");
+  auto variable = GlobalVariableRegistry().Create("PvAccessMonitor");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
   EXPECT_NO_THROW(variable->AddAttribute("type", kFloatType));
   EXPECT_TRUE(ws.AddVariable("var", variable.release()));
   EXPECT_NO_THROW(ws.Setup());
 
-  // Reading the value from PvAccessClientVariable
+  // Reading the value from PvAccessMonitorVariable
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
   sup::dto::AnyValue var_val;
   EXPECT_TRUE(ws.GetValue("var", var_val));
@@ -168,14 +139,8 @@ TEST_F(PvAccessClientVariableTest, PvAccessScalarClientTest)
 
   // setting the value
   auto new_value = 142.0f;
-  EXPECT_TRUE(ws.SetValue("var", new_value));
-
-  // reading from the server
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
-    auto server_val = server.GetValue(channel);
-    return server_val.HasField("value") && server_val["value"] == new_value;
-  }));
+  EXPECT_FALSE(ws.SetValue("var", new_value));
 }
 
-PvAccessClientVariableTest::PvAccessClientVariableTest() = default;
-PvAccessClientVariableTest::~PvAccessClientVariableTest() = default;
+PvAccessMonitorVariableTest::PvAccessMonitorVariableTest() = default;
+PvAccessMonitorVariableTest::~PvAccessMonitorVariableTest() = default;
