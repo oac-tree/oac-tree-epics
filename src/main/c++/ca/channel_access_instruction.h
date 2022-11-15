@@ -33,11 +33,6 @@ namespace dto
 class AnyValue;
 }  // namespace dto
 
-namespace epics
-{
-class ChannelAccessPV;
-}  // namespace epics
-
 namespace sequencer
 {
 
@@ -50,13 +45,13 @@ namespace sequencer
  *
  * @code
      <Sequence>
-       <ChannelAccessReadInstruction name="get-client"
+       <ChannelAccessRead name="get-client"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
          varName="boolean"/>
-       <ChannelAccessReadInstruction name="get-client"
+       <ChannelAccessRead name="get-client"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
          varName="uint32"/>
-       <ChannelAccessReadInstruction name="get-client"
+       <ChannelAccessRead name="get-client"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
          varName="string"/>
      </Sequence>
