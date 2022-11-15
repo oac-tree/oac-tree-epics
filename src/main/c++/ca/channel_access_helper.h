@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_HELPER_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_HELPER_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_HELPER_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_HELPER_H_
 
 #include <sup/dto/anyvalue.h>
 #include <sup/epics/channel_access_pv.h>
@@ -53,4 +53,4 @@ sup::dto::AnyValue ConvertToTypedAnyValue(
 
 }  // namespace sup
 
-#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_HELPER_H_
+#endif  // SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_HELPER_H_

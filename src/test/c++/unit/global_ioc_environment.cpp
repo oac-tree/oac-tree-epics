@@ -20,29 +20,38 @@
 ******************************************************************************/
 
 #include "unit_test_helper.h"
+#include "softioc_runner.h"
+#include "softioc_utils.h"
 
 #include <gtest/gtest.h>
 
 class IOCEnvironment : public ::testing::Environment
 {
 public:
+  IOCEnvironment();
   ~IOCEnvironment();
 
   void SetUp() override;
   void TearDown() override;
+
+  sup::sequencer::softioc_utils::SoftIocRunner m_softioc_runner;
 };
 
 ::testing::Environment* const ioc_environment =
   ::testing::AddGlobalTestEnvironment(new IOCEnvironment);
 
+IOCEnvironment::IOCEnvironment()
+  : m_softioc_runner{"seq-plugin-channel-access-tests"}
+{}
+
 IOCEnvironment::~IOCEnvironment() = default;
 
 void IOCEnvironment::SetUp()
 {
-  sup::sequencer::unit_test_helper::StartIOC("ChannelAccessClient.db", "seq_plugin_testIOC");
+  m_softioc_runner.Start(sup::sequencer::softioc_utils::GetEpicsDBContentString());
 }
 
 void IOCEnvironment::TearDown()
 {
-  sup::sequencer::unit_test_helper::StopIOC("seq_plugin_testIOC");
+  m_softioc_runner.Stop();
 }

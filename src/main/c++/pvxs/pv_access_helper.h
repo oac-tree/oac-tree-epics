@@ -19,8 +19,8 @@
  * of the distribution package.
  ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_HELPER_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_HELPER_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_HELPER_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_HELPER_H_
 
 #include <sup/dto/anyvalue.h>
 
@@ -44,4 +44,4 @@ sup::dto::AnyValue PackIntoStructIfScalar(const sup::dto::AnyValue& value);
 
 }  // namespace sup
 
-#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_HELPER_H_
+#endif  // SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_HELPER_H_

@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include "null_user_interface.h"
+#include "softioc_runner.h"
 #include "unit_test_helper.h"
 
 #include <sup/sequencer/variable.h>
@@ -41,6 +42,19 @@ static const std::string BOOLEXTENDEDTYPE =
 static const std::string FLOATTYPE =
   R"RAW({"type":"float32"})RAW";
 
+static const std::string SINGLE_RECORD_DB_CONTENT = R"RAW(
+record (bo,"SEQ-TEST:BOOL2")
+{
+    field(DESC,"Some EPICSv3 record")
+    field(ONAM,"TRUE")
+    field(OSV,"NO_ALARM")
+    field(ZNAM,"FALSE")
+    field(ZSV,"NO_ALARM")
+    field(VAL,"0")
+    field(PINI, "YES")
+}
+)RAW";
+
 using namespace sup::sequencer;
 
 class ChannelAccessClientVariableTest : public ::testing::Test
@@ -48,6 +62,8 @@ class ChannelAccessClientVariableTest : public ::testing::Test
 protected:
   ChannelAccessClientVariableTest();
   ~ChannelAccessClientVariableTest();
+
+  softioc_utils::SoftIocRunner m_softioc_runner;
 };
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_success)
@@ -97,7 +113,8 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
 
 TEST_F(ChannelAccessClientVariableTest, GetValue_disconnect)
 {
-  EXPECT_TRUE(unit_test_helper::StartIOC("SingleRecord.db", "cavariabledisconnecttestIOC"));
+  m_softioc_runner.Start(SINGLE_RECORD_DB_CONTENT);
+  ASSERT_TRUE(m_softioc_runner.IsActive());
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
@@ -118,7 +135,8 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_disconnect)
   EXPECT_TRUE(connected.As<bool>());
 
   // Stop the softIoc
-  EXPECT_TRUE(unit_test_helper::StopIOC("cavariabledisconnecttestIOC"));
+  m_softioc_runner.Stop();
+  ASSERT_FALSE(m_softioc_runner.IsActive());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0, false));
 
   ASSERT_TRUE(ws.GetValue("var.connected", connected));
@@ -231,6 +249,8 @@ TEST_F(ChannelAccessClientVariableTest, SetValue_success)
   }));
 }
 
-ChannelAccessClientVariableTest::ChannelAccessClientVariableTest() = default;
+ChannelAccessClientVariableTest::ChannelAccessClientVariableTest()
+  : m_softioc_runner{"seq-disconnect-softioc"}
+{}
 
 ChannelAccessClientVariableTest::~ChannelAccessClientVariableTest() = default;

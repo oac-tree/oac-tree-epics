@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
 
 #include <functional>
 #include <string>
@@ -31,13 +31,7 @@ namespace sequencer {
 
 namespace unit_test_helper {
 
-bool SystemCall(const std::string& command);
-
 bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate);
-
-bool StartIOC(const std::string& filename, const std::string& screen_id);
-
-bool StopIOC(const std::string& screen_id);
 
 } // namespace unit_test_helper
 
@@ -45,5 +39,5 @@ bool StopIOC(const std::string& screen_id);
 
 } // namespace sup
 
-#endif // _SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
+#endif // SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
 

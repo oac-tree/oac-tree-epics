@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
 
 #include <sup/sequencer/user_interface.h>
 
@@ -45,5 +45,5 @@ public:
 
 } // namespace sup
 
-#endif // _SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
+#endif // SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
 

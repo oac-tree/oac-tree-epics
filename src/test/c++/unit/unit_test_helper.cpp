@@ -34,12 +34,6 @@ namespace sequencer {
 
 namespace unit_test_helper {
 
-bool SystemCall(const std::string& command)
-{
-  auto exit_status = std::system(command.c_str());
-  return exit_status == 0 ? true : false;
-}
-
 bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate)
 {
   long timeout_ns = std::lround(timeout_sec * 1e9);
@@ -49,28 +43,6 @@ bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate)
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
   return predicate();
-}
-
-bool StartIOC(const std::string& filename, const std::string& screen_id)
-{
-  std::string command;
-  if (utils::FileExists("../resources/" + filename))
-  {
-    command = "/usr/bin/screen -d -m -S " + screen_id +
-              " /usr/bin/softIoc -d ../resources/" + filename;
-  }
-  else
-  {
-    command = "/usr/bin/screen -d -m -S " + screen_id +
-              " /usr/bin/softIoc -d ./target/test/resources/" + filename;
-  }
-  return SystemCall(command);
-}
-
-bool StopIOC(const std::string& screen_id)
-{
-  std::string command = "/usr/bin/screen -S " + screen_id + " -X quit &> /dev/null";
-  return SystemCall(command);
 }
 
 } // namespace unit_test_helper

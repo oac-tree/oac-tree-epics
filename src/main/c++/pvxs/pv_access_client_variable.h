@@ -19,8 +19,8 @@
  * of the distribution package.
  ******************************************************************************/
 
-#ifndef _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
-#define _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
 
 #include <sup/sequencer/variable.h>
 
@@ -69,4 +69,4 @@ private:
 
 }  // namespace sup
 
-#endif  // _SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+#endif  // SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
