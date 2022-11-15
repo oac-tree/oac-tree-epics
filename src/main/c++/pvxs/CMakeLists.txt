@@ -10,12 +10,11 @@ target_sources(sequencer-pvxs
     PRIVATE
         # ${CMAKE_CURRENT_LIST_DIR}/RPCClientInstruction.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVAccessWriteInstruction.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorCache.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorVariable.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVMonitorInstruction.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/PVServerVariable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_client_variable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_helper.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/pv_access_monitor_variable.cpp
 )
 
 target_include_directories(sequencer-pvxs PRIVATE ${CMAKE_CURRENT_LIST_DIR})
