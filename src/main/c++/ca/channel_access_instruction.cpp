@@ -176,6 +176,7 @@ void ChannelAccessWriteInstruction::ResetHook()
 
 ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
 {
+  (void)ui;
   auto value = channel_access_helper::ExtractChannelValue(GetNewValue(ws));
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   auto channel_type = value.GetType();

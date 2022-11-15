@@ -42,11 +42,14 @@ SystemCallInstruction::~SystemCallInstruction() = default;
 
 bool SystemCallInstruction::SetupImpl(const Procedure& proc)
 {
+  (void)proc;
   return HasAttribute(COMMAND_ATTRIBUTE_NAME);
 }
 
-ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface*, Workspace*)
+ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
 {
+  (void)ui;
+  (void)ws;
   auto command = GetAttribute(COMMAND_ATTRIBUTE_NAME);
   auto exit_status = std::system(command.c_str());
   return exit_status == 0 ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE;

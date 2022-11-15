@@ -57,6 +57,7 @@ LogInstruction::~LogInstruction() = default;
 
 bool LogInstruction::SetupImpl(const Procedure& proc)
 {
+  (void)proc;
   return HasAttribute(MESSAGE_ATTRIBUTE_NAME) || HasAttribute(INPUT_ATTRIBUTE_NAME);
 }
 

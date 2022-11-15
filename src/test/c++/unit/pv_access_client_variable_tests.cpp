@@ -35,25 +35,6 @@
 
 #include <algorithm>
 
-namespace
-{
-const size_t kSecond = 1e9;
-
-std::string CreateProcedureString(const std::string& body)
-{
-  static const std::string header{
-      R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
-           name="Trivial procedure for testing purposes"
-           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">)RAW"};
-
-  static const std::string footer{R"RAW(</Procedure>)RAW"};
-
-  return header + body + footer;
-}
-}  // namespace
-
 using namespace sup::sequencer;
 
 class PvAccessClientVariableTest : public ::testing::Test
