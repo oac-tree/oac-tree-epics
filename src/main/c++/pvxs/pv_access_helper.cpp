@@ -36,15 +36,18 @@ namespace pv_access_helper
 sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
                                           const sup::dto::AnyType& anytype)
 {
-  if (value.GetType() == anytype)
-  {
-    return value;
-  }
+  sup::dto::AnyValue result{anytype};
   if (sup::dto::IsScalarType(anytype) &&
       value.MemberNames() == EXPECTED_FIELD_NAMES_SCALAR_STRUCT)
   {
-    sup::dto::AnyValue result{anytype};
     if (sup::dto::TryConvert(result, value[VALUE_FIELD_NAME]))
+    {
+      return result;
+    }
+  }
+  else
+  {
+    if (sup::dto::TryConvert(result, value))
     {
       return result;
     }
