@@ -50,55 +50,69 @@ PvAccessClientVariable::~PvAccessClientVariable() = default;
 
 bool PvAccessClientVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
-  if (!m_pv || !m_pv->IsConnected() || !m_type)
+  if (!m_pv || !m_pv->IsConnected())
   {
     return false;
   }
-  auto converted_val = pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type);
+  auto converted_val = m_type ? pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type)
+                              : m_pv->GetValue();
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryConvert(value, converted_val);
 }
 
 bool PvAccessClientVariable::SetValueImpl(const sup::dto::AnyValue& value)
 {
-  if (!m_pv || !m_pv->IsConnected() || !m_type)
+  if (!m_pv || !m_pv->IsConnected())
   {
     return false;
   }
-  sup::dto::AnyValue copy(*m_type);
-  if (!sup::dto::TryConvert(copy, value))
+  sup::dto::AnyValue copy;
+  if (!m_type)
   {
-    return false;
+    copy = value;
+  }
+  else
+  {
+    copy = sup::dto::AnyValue(*m_type);
+    if (!sup::dto::TryConvert(copy, value))
+    {
+      return false;
+    }
   }
   return m_pv->SetValue(pv_access_helper::PackIntoStructIfScalar(copy));
 }
 
 bool PvAccessClientVariable::IsAvailableImpl() const
 {
-  if (!m_pv || !m_pv->IsConnected() || !m_type)
+  if (!m_pv || !m_pv->IsConnected())
   {
     return false;
   }
-  auto value = pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type);
+  auto value = m_type ? pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type)
+                      : m_pv->GetValue();
   return !sup::dto::IsEmptyValue(value);
 }
 
 bool PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME) || !HasAttribute(TYPE_ATTRIBUTE_NAME))
+  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
     return false;
   }
-  sup::dto::JSONAnyTypeParser parser;
-  if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
+  if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
-    return false;
+    sup::dto::JSONAnyTypeParser parser;
+    if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
+    {
+      return false;
+    }
+    m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   }
-  m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   // Avoid dependence on destruction order of m_pv and m_type.
-  sup::dto::AnyType type_copy{*m_type};
+  sup::dto::AnyType type_copy = m_type ? *m_type : sup::dto::EmptyType;
   auto callback = [this, type_copy](const epics::PvAccessClientPV::ExtendedValue& ext_value)
   {
-    auto value = pv_access_helper::ConvertToTypedAnyValue(ext_value.value, type_copy);
+    auto value = sup::dto::IsEmptyType(type_copy) ? ext_value.value
+                    : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, type_copy);
     Notify(value);
     return;
   };
