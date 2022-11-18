@@ -100,12 +100,17 @@ bool PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   }
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
-    sup::dto::JSONAnyTypeParser parser;
-    if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
+    // TODO: temporary hack for GUI! Remove this!
+    auto type_attr = GetAttribute(TYPE_ATTRIBUTE_NAME);
+    if (!type_attr.empty())
     {
-      return false;
+      sup::dto::JSONAnyTypeParser parser;
+      if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
+      {
+        return false;
+      }
+      m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
     }
-    m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   }
   // Avoid dependence on destruction order of m_pv and m_type.
   sup::dto::AnyType type_copy = m_type ? *m_type : sup::dto::EmptyType;
