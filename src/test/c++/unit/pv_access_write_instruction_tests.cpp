@@ -67,9 +67,10 @@ static const std::string PVACCESSMISSINGCHANNELPROCEDURE = R"RAW(<?xml version="
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <RegisterType jsontype='{"type":"seq::missing-channel-test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <Sequence>
-        <PVAccessWriteInstruction name="write to pv"
+        <PvAccessWrite name="write to pv"
             channel="seq::test::missing-channel"
-            variable="pvxs-value"/>
+            varName="pvxs-value"
+            timeout="0.3"/>
     </Sequence>
     <Workspace>
         <Local name="pvxs-value"
@@ -124,53 +125,54 @@ TEST_F(PvAccessWriteInstructionTest, write_success)
   }));
 }
 
-// TEST_F(PvAccessWriteInstructionTest, missing_attributes)
-// {
-//   proc.AddVariable("SOME_VARIABLE",
-//     sup::sequencer::GlobalVariableRegistry().Create("Local").release());
-//   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PVAccessWriteInstruction");
-//   ASSERT_TRUE(static_cast<bool>(instruction));
-//   EXPECT_FALSE(instruction->Setup(proc));
+TEST_F(PvAccessWriteInstructionTest, missing_attributes)
+{
+  sup::sequencer::Procedure proc{};
+  proc.AddVariable("SOME_VARIABLE",
+    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PvAccessWrite");
+  ASSERT_TRUE(static_cast<bool>(instruction));
+  EXPECT_FALSE(instruction->Setup(proc));
 
-//   EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
-//   EXPECT_FALSE(instruction->Setup(proc));
-//   EXPECT_TRUE(instruction->AddAttribute("variable", "SOME_VARIABLE"));
-//   EXPECT_TRUE(instruction->Setup(proc));
-// }
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
+  EXPECT_FALSE(instruction->Setup(proc));
+  EXPECT_TRUE(instruction->AddAttribute("varName", "SOME_VARIABLE"));
+  EXPECT_TRUE(instruction->Setup(proc));
+}
 
-// TEST_F(PvAccessWriteInstructionTest, missing_variable)
-// {
-//   auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PVAccessWriteInstruction");
-//   ASSERT_TRUE(static_cast<bool>(instruction));
-//   EXPECT_FALSE(instruction->Setup(proc));
+TEST_F(PvAccessWriteInstructionTest, missing_variable)
+{
+  sup::sequencer::Procedure proc{};
+  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PvAccessWrite");
+  ASSERT_TRUE(static_cast<bool>(instruction));
+  EXPECT_FALSE(instruction->Setup(proc));
 
-//   EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
-//   EXPECT_FALSE(instruction->Setup(proc));
-//   EXPECT_TRUE(instruction->AddAttribute("variable", "SOME_VARIABLE"));
-//   EXPECT_FALSE(instruction->Setup(proc));
-//   proc.AddVariable("SOME_VARIABLE",
-//     sup::sequencer::GlobalVariableRegistry().Create("Local").release());
-//   EXPECT_TRUE(instruction->Setup(proc));
-// }
+  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
+  EXPECT_FALSE(instruction->Setup(proc));
+  EXPECT_TRUE(instruction->AddAttribute("varName", "SOME_VARIABLE"));
+  EXPECT_FALSE(instruction->Setup(proc));
+  proc.AddVariable("SOME_VARIABLE",
+    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
+  EXPECT_TRUE(instruction->Setup(proc));
+}
 
-// TEST_F(PvAccessWriteInstructionTest, missing_channel)
-// {
-//   auto procedure = sup::sequencer::ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
-//   ASSERT_TRUE(static_cast<bool>(procedure));
-//   ASSERT_TRUE(procedure->Setup());
+TEST_F(PvAccessWriteInstructionTest, missing_channel)
+{
+  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(procedure));
+  ASSERT_TRUE(procedure->Setup());
 
-//   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
-//   do
-//   {
-//     (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-//     procedure->ExecuteSingle(&ui);
-//     exec = procedure->GetStatus();
-//   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-//            (sup::sequencer::ExecutionStatus::FAILURE != exec));
+  do
+  {
+    procedure->ExecuteSingle(&ui);
+    exec = procedure->GetStatus();
+  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+           (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
-//   EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::FAILURE);
-// }
+  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::FAILURE);
+}
 
 PvAccessWriteInstructionTest::PvAccessWriteInstructionTest()
   : ui{}
