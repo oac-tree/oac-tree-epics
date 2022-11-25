@@ -10,6 +10,7 @@ target_sources(sequencer-pvxs
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_client_variable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_helper.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/pv_access_read_instruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_server_variable.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_write_instruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/rpc_client_instruction.cpp

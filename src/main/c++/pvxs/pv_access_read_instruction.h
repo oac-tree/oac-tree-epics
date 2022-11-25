@@ -19,8 +19,8 @@
  * of the distribution package.
  ******************************************************************************/
 
-#ifndef SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_WRITE_INSTRUCTION_H_
-#define SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_WRITE_INSTRUCTION_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_READ_INSTRUCTION_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_READ_INSTRUCTION_H_
 
 #include <sup/sequencer/instruction.h>
 
@@ -36,19 +36,18 @@ class AnyValue;
 namespace sequencer
 {
 /**
- * @brief PvAccessWriteInstruction class.
- * @details Blocking instruction which establishes a PvAccess connection and updates the
- * channel with the value of a workspace variable. Mandatory attribute is 'channel' (PV name).
- * The value to be written can either be specified by referring to a variable in the
- * workspace ('varName' attribute) or by explicitly giving the type and value ('type' and
- * 'value' attributes). The optional 'timeout' attribute causes the instruction
+ * @brief PvAccessReadInstruction class.
+ * @details Blocking instruction which establishes a PvAccess connection and reads the
+ * channel's value to a workspace variable. Mandatory attributes are 'channel' (PV name) and
+ * 'output' (variable name to write to).
+ * The optional 'timeout' attribute causes the instruction
  * to wait for connection with the specified timeout first and fails if connection was still not
  * established.
  * @code
      <Sequence>
-       <PvAccessWrite name="write-pv"
+       <PvAccessRead name="read-pv"
          channel="EPICS::PVA::CHANNEL::BOOLEAN"
-         varName="boolean"/>
+         output="boolean"/>
      </Sequence>
      <Workspace>
        <Local name="boolean"
@@ -57,11 +56,11 @@ namespace sequencer
      </Workspace>
    @endcode
  */
-class PvAccessWriteInstruction : public Instruction
+class PvAccessReadInstruction : public Instruction
 {
 public:
-  PvAccessWriteInstruction();
-  ~PvAccessWriteInstruction();
+  PvAccessReadInstruction();
+  ~PvAccessReadInstruction();
 
   static const std::string Type;
 
@@ -69,12 +68,10 @@ private:
   bool SetupImpl(const Procedure& proc) override;
 
   ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
-
-  sup::dto::AnyValue GetNewValue(Workspace* ws) const;
 };
 
 }  // namespace sequencer
 
 }  // namespace sup
 
-#endif  // SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_WRITE_INSTRUCTION_H_
+#endif  // SUP_SEQUENCER_PLUGIN_EPICS_PV_ACCESS_READ_INSTRUCTION_H_

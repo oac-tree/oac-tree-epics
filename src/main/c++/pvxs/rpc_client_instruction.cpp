@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include "rpc_client_instruction.h"
+#include "pv_access_helper.h"
 
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
@@ -97,7 +98,9 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
   (void)ui;
 
   auto request = GetRequest(ws);
-  auto timeout = GetTimeoutSec();
+  auto timeout_str = HasAttribute(TIMEOUT_ATTRIBUTE_NAME) ? GetAttribute(TIMEOUT_ATTRIBUTE_NAME)
+                                                          : "-1.0";
+  auto timeout = pv_access_helper::ParseTimeoutString(timeout_str);
   auto client_config = sup::epics::GetDefaultRPCClientConfig(GetAttribute(SERVICE_ATTRIBUTE_NAME));
   if (timeout >= 0.0)
   {
@@ -141,20 +144,6 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(Workspace* ws)
     return {};
   }
   return value_parser.MoveAnyValue();
-}
-
-double RPCClientInstruction::GetTimeoutSec()
-{
-  if (!HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
-  {
-    return -1;
-  }
-  sup::dto::JSONAnyValueParser parser;
-  if (!parser.TypedParseString(sup::dto::Float64Type, GetAttribute(TIMEOUT_ATTRIBUTE_NAME)))
-  {
-    return -1;
-  }
-  return parser.MoveAnyValue().As<sup::dto::float64>();
 }
 
 } // namespace sequencer

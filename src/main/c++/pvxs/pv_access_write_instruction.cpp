@@ -52,7 +52,6 @@ static bool _pv_access_write_instruction_initialised_flag =
 
 PvAccessWriteInstruction::PvAccessWriteInstruction()
   : Instruction(PvAccessWriteInstruction::Type)
-  , m_timeout_sec{-1.0}
 {}
 
 PvAccessWriteInstruction::~PvAccessWriteInstruction() = default;
@@ -77,26 +76,7 @@ bool PvAccessWriteInstruction::SetupImpl(const Procedure& proc)
       return false;
     }
   }
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
-  {
-    sup::dto::JSONAnyValueParser parser;
-    if (!parser.TypedParseString(sup::dto::Float64Type, GetAttribute(TIMEOUT_ATTRIBUTE_NAME)))
-    {
-      return false;
-    }
-    auto timeout_val = parser.MoveAnyValue().As<sup::dto::float64>();
-    if (timeout_val < 0)
-    {
-      return false;
-    }
-    m_timeout_sec = timeout_val;
-  }
   return true;
-}
-
-void PvAccessWriteInstruction::ResetHook()
-{
-  m_timeout_sec = -1.0;
 }
 
 ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
@@ -105,7 +85,10 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, W
   auto value = pv_access_helper::PackIntoStructIfScalar(GetNewValue(ws));
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   sup::epics::PvAccessClientPV pv(channel_name);
-  if (m_timeout_sec >= 0.0 && !pv.WaitForConnected(m_timeout_sec))
+  auto timeout_str = HasAttribute(TIMEOUT_ATTRIBUTE_NAME) ? GetAttribute(TIMEOUT_ATTRIBUTE_NAME)
+                                                          : "-1.0";
+  auto timeout = pv_access_helper::ParseTimeoutString(timeout_str);
+  if (timeout >= 0.0 && !pv.WaitForConnected(timeout))
   {
     return ExecutionStatus::FAILURE;
   }

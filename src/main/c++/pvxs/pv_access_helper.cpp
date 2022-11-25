@@ -22,6 +22,7 @@
 #include "pv_access_helper.h"
 
 #include <sup/dto/anyvalue_helper.h>
+#include <sup/dto/json_value_parser.h>
 
 static const std::vector<std::string> EXPECTED_FIELD_NAMES_SCALAR_STRUCT(
   {sup::sequencer::pv_access_helper::VALUE_FIELD_NAME});
@@ -65,6 +66,16 @@ sup::dto::AnyValue PackIntoStructIfScalar(const sup::dto::AnyValue& value)
     { VALUE_FIELD_NAME, value }
   }};
   return result;
+}
+
+double ParseTimeoutString(const std::string& timeout_str)
+{
+  sup::dto::JSONAnyValueParser parser;
+  if (!parser.TypedParseString(sup::dto::Float64Type, timeout_str))
+  {
+    return -1;
+  }
+  return parser.MoveAnyValue().As<sup::dto::float64>();
 }
 
 }  // namespace pv_access_helper
