@@ -26,9 +26,17 @@
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/workspace.h>
 
+#include <sup/dto/json_type_parser.h>
+#include <sup/dto/json_value_parser.h>
 #include <sup/epics/pv_access_rpc_client.h>
+#include <sup/rpc/protocol_rpc.h>
 
 #include <algorithm>
+
+namespace
+{
+bool IsSuccessfulReply(sup::dto::AnyValue reply);
+}  // unnamed namespace
 
 namespace sup {
 
@@ -45,8 +53,6 @@ const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 
 static bool _rpcclient_instruction_initialised_flag =
   RegisterGlobalInstruction<RPCClientInstruction>();
-
-
 
 RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
@@ -86,17 +92,18 @@ bool RPCClientInstruction::SetupImpl(const Procedure& proc)
   return true;
 }
 
-void RPCClientInstruction::ResetHook()
-{}
-
 ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
 {
   (void)ui;
 
   auto request = GetRequest(ws);
-
-  sup::epics::PvAccessRPCClient rpc_client(
-    sup::epics::GetDefaultRPCClientConfig(GetAttribute(SERVICE_ATTRIBUTE_NAME)));
+  auto timeout = GetTimeoutSec();
+  auto client_config = sup::epics::GetDefaultRPCClientConfig(GetAttribute(SERVICE_ATTRIBUTE_NAME));
+  if (timeout >= 0.0)
+  {
+    client_config.timeout = timeout;
+  }
+  sup::epics::PvAccessRPCClient rpc_client(client_config);
 
   auto reply = rpc_client(request);
   if (HasAttribute(OUTPUT_ATTRIBUTE_NAME))
@@ -106,15 +113,63 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
       return ExecutionStatus::FAILURE;
     }
   }
-  return ExecutionStatus::SUCCESS;
+  return IsSuccessfulReply(reply) ? ExecutionStatus::SUCCESS
+                                  : ExecutionStatus::FAILURE;
 }
 
 sup::dto::AnyValue RPCClientInstruction::GetRequest(Workspace* ws)
 {
-  (void)ws;
-  return {};
+  if (HasAttribute(REQUEST_ATTRIBUTE_NAME))
+  {
+    sup::dto::AnyValue request;
+    if (!ws->GetValue(GetAttribute(REQUEST_ATTRIBUTE_NAME), request))
+    {
+      return {};
+    }
+    return request;
+  }
+  sup::dto::JSONAnyTypeParser type_parser;
+  if (!type_parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME),
+                               ws->GetTypeRegistry()))
+  {
+    return {};
+  }
+  auto anytype = type_parser.MoveAnyType();
+  sup::dto::JSONAnyValueParser value_parser;
+  if (!value_parser.TypedParseString(anytype, GetAttribute(VALUE_ATTRIBUTE_NAME)))
+  {
+    return {};
+  }
+  return value_parser.MoveAnyValue();
+}
+
+double RPCClientInstruction::GetTimeoutSec()
+{
+  if (!HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
+  {
+    return -1;
+  }
+  sup::dto::JSONAnyValueParser parser;
+  if (!parser.TypedParseString(sup::dto::Float64Type, GetAttribute(TIMEOUT_ATTRIBUTE_NAME)))
+  {
+    return -1;
+  }
+  return parser.MoveAnyValue().As<sup::dto::float64>();
 }
 
 } // namespace sequencer
 
 } // namespace sup
+
+namespace
+{
+bool IsSuccessfulReply(sup::dto::AnyValue reply)
+{
+  if (!sup::rpc::utils::CheckReplyFormat(reply))
+  {
+    return false;
+  }
+  return reply[sup::rpc::constants::REPLY_RESULT].As<sup::dto::uint32>() ==
+         sup::rpc::Success.GetValue();
+}
+}  // unnamed namespace

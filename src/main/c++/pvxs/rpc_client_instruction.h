@@ -59,23 +59,13 @@ public:
   static const std::string Type;
 
 private:
-  double m_timeout_sec;
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
   bool SetupImpl(const Procedure& proc) override;
 
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
-  void ResetHook() override;
-
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
   ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
 
   sup::dto::AnyValue GetRequest(Workspace* ws);
+
+  double GetTimeoutSec();
 };
 
 }  // namespace sequencer
