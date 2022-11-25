@@ -37,6 +37,26 @@
 
 static const std::string TEST_SERVICE_NAME = "RPCClientTest::service";
 
+static const std::string RPC_CLIENT_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Sequence>
+        <RPCClient name="rpc-client"
+                   service="RPCClientTest::service"
+                   requestVar="request"
+                   output="reply"/>
+    </Sequence>
+    <Workspace>
+        <Local name="request"
+               type='{"type":"sup::RPCRequest/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"query":{"type":"bool"}}]}'
+               value='{"timestamp":0,"query":true}'/>
+        <Local name="reply"/>
+    </Workspace>
+</Procedure>)RAW";
+
+
 using namespace sup::sequencer;
 
 class RPCTestHandler : public sup::dto::AnyFunctor
@@ -47,7 +67,7 @@ public:
 
   sup::dto::AnyValue operator()(const sup::dto::AnyValue& input) override
   {
-    return sup::rpc::utils::CreateRPCReply(sup::rpc::Success, "", input);
+    return sup::rpc::utils::CreateRPCReply(sup::rpc::Success, "", input["query"]);
   }
 };
 
@@ -86,6 +106,7 @@ TEST_F(RPCClientTest, Execute_undefined)
   EXPECT_TRUE(instruction->AddAttribute("service", "undefined"));
   EXPECT_TRUE(instruction->AddAttribute("type", "{\"type\": \"string\"}"));
   EXPECT_TRUE(instruction->AddAttribute("value", "\"undefined\""));
+  EXPECT_TRUE(instruction->AddAttribute("timeout", "0.5"));
   sup::sequencer::Procedure proc;
   ASSERT_TRUE(instruction->Setup(proc));
   Workspace ws;
@@ -93,78 +114,30 @@ TEST_F(RPCClientTest, Execute_undefined)
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
-// TEST_F(RPCClientTest, Execute_success) // Must be associated to a variable in the workspace
-// {
+TEST_F(RPCClientTest, Execute_success) // Must be associated to a variable in the workspace
+{
+  auto proc = sup::sequencer::ParseProcedureString(RPC_CLIENT_PROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(proc));
+  EXPECT_TRUE(proc->Setup());
 
-//   sup::sequencer::gtest::NullUserInterface ui;
-//   auto proc = sup::sequencer::ParseProcedureString(
-//     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-//     "<Procedure xmlns=\"http://codac.iter.org/sup/sequencer\" version=\"1.0\"\n"
-//     "           name=\"Trivial procedure for testing purposes\"\n"
-//     "           xmlns:xs=\"http://www.w3.org/2001/XMLSchema-instance\"\n"
-//     "           xs:schemaLocation=\"http://codac.iter.org/sup/sequencer sequencer.xsd\">\n"
-//     "    <Sequence>\n"
-//     "        <RPCClientInstruction name=\"rpc-client\"\n"
-//     "            service=\"sequencer::test::rpc\"\n"
-//     "            request=\"request\" reply=\"reply\"/>\n"
-//     "        <LogTrace input=\"request\"/>\n"
-//     "        <LogTrace input=\"reply\"/>\n"
-//     "    </Sequence>\n"
-//     "    <Workspace>\n"
-//     "        <Local name=\"request\" type='{\"type\":\"Request_t\",\"attributes\":[{\"value\":{\"type\":\"uint32\"}},{\"status\":{\"type\":\"bool\"}}]}' value='{\"value\":1234u,\"status\":true}'/>\n"
-//     "        <FileVariable name=\"reply\" file=\"/tmp/file-variable-struct.dat\"/>\n"
-//     "    </Workspace>\n"
-//     "</Procedure>");
+  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
 
-//   bool status = static_cast<bool>(proc);
+  do
+  {
+    proc->ExecuteSingle(&ui);
+    exec = proc->GetStatus();
+  }
+  while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
+         (sup::sequencer::ExecutionStatus::FAILURE != exec));
 
-//   if (status)
-//     { // Setup procedure
-//       status = proc->Setup();
-//     }
+  EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 
-//   if (status)
-//     {
-//       status = Initialise();
-//     }
-
-//   if (status)
-//     {
-//       sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-//       do
-//         {
-//           (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-//           proc->ExecuteSingle(&ui);
-//           exec = proc->GetStatus();
-//         }
-//       while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-//              (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-//       status = (sup::sequencer::ExecutionStatus::SUCCESS == exec);
-//     }
-
-//   // Test variable
-
-//   if (status)
-//     {
-//       ccs::types::AnyValue value;
-//       status = ::ccs::HelperTools::ReadFromFile(&value, "/tmp/file-variable-struct.dat");
-
-//       if (status)
-// 	{
-// 	  status = (::ccs::HelperTools::HasAttribute(&value, "value") && (1234u == ::ccs::HelperTools::GetAttributeValue<ccs::types::uint32>(&value, "value")));
-// 	}
-//     }
-
-//   // Remove temp. files
-//   (void)::ccs::HelperTools::ExecuteSystemCall("/usr/bin/rm -rf /tmp/file-variable-struct.dat");
-
-//   (void)Terminate();
-
-//   ASSERT_EQ(true, status);
-
-// }
+  sup::dto::AnyValue reply;
+  proc->GetVariableValue("reply", reply);
+  ASSERT_TRUE(sup::rpc::utils::CheckReplyFormat(reply));
+  EXPECT_EQ(reply["result"].As<sup::dto::uint32>(), sup::rpc::Success.GetValue());
+  EXPECT_TRUE(reply["reply"].As<sup::dto::boolean>());
+}
 
 RPCClientTest::RPCClientTest() = default;
 RPCClientTest::~RPCClientTest() = default;
