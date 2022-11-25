@@ -41,7 +41,7 @@
 #undef LOG_ALTERN_SRC
 #define LOG_ALTERN_SRC "unit-test"
 
-static const std::string PVACCESSWRITEPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+static const std::string PVACCESSSERVERPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
@@ -104,7 +104,7 @@ protected:
 
 TEST_F(PVAccessWriteInstructionTest, write_success)
 {
-  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSWRITEPROCEDURE);
+  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSSERVERPROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
 

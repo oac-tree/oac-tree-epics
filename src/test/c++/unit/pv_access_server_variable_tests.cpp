@@ -33,36 +33,6 @@
 
 #include <gtest/gtest.h>
 
-static const std::string PVACCESSWRITEPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
-           name="Trivial procedure for testing purposes"
-           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <Repeat maxCount="3">
-        <Sequence>
-            <Wait name="wait"
-                timeout="0.2"/>
-            <Copy input="curr-time" output="pvxs-variable.timestamp"/>
-            <Copy input="curr-time" output="pvxs-other.timestamp"/>
-            <LogTrace name="variable"
-                input="pvxs-variable"/>
-            <LogTrace name="other"
-                input="pvxs-other"/>
-        </Sequence>
-    </Repeat>
-    <Workspace>
-        <SystemClock name="curr-time"/>
-        <PVServerVariable name="pvxs-variable"
-            channel="seq::test::variable"
-            datatype='{"type":"seq::test::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'
-            instance='{"timestamp":0,"value":0.1}'/>
-        <PVServerVariable name="pvxs-other"
-            channel="seq::test::another"
-            datatype='{"type":"seq::test::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'
-            instance='{"timestamp":0,"value":1.0}'/>
-    </Workspace>
-</Procedure>)RAW";
-
 using namespace sup::sequencer;
 
 class PvAccessServerVariableTest : public ::testing::Test
@@ -150,26 +120,6 @@ TEST_F(PvAccessServerVariableTest, PvAccessServerClientTest)
            server_val["value"] == new_value;
   }));
 }
-
-// TEST(PVServerVariable, ProcedureVariable)
-// {
-//   sup::sequencer::gtest::NullUserInterface ui;
-//   auto proc = sup::sequencer::ParseProcedureString(PVACCESSWRITEPROCEDURE);
-//   ASSERT_TRUE(static_cast<bool>(proc));
-//   ASSERT_TRUE(proc->Setup());
-
-//   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-//   do
-//   {
-//     (void)ccs::HelperTools::SleepFor(100000000ul); // Let system breathe
-//     proc->ExecuteSingle(&ui);
-//     exec = proc->GetStatus();
-//   } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-//            (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-//   EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
-// }
 
 PvAccessServerVariableTest::PvAccessServerVariableTest() = default;
 PvAccessServerVariableTest::~PvAccessServerVariableTest() = default;
