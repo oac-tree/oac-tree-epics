@@ -7,12 +7,16 @@
     <Plugin>libsequencer-misc.so</Plugin>
     <Sequence>
         <PvAccessRead name="monitor"
-            channel="CTRL-SYSM-COM-TRUNK-TSYNC"
-            timeout="5.0"
-            varName="to-write"/>
-        <Log severity="info" input="to-write"/>
+                      channel="seq::test::variable"
+                      timeout="5.0"
+                      output="to-write"/>
+        <Output from="to-write"/>
     </Sequence>
     <Workspace>
+        <PvAccessServer name="pvxs-server"
+                        channel="seq::test::variable"
+                        type='{"type":"seq::test::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"uint32"}}]}'
+                        value='{"timestamp":42,"value":77}'/>
         <Local name="to-write"/>
     </Workspace>
 </Procedure>
