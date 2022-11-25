@@ -3,11 +3,13 @@
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <RPCClientInstruction name="client"
+    <Plugin>libsequencer-pvxs.so</Plugin>
+    <RPCClient name="client"
         service="rpc@service"
-        datatype='{"type":"rpcStruct","attributes":[{"value":{"type":"uint64","size":8}}]}'
-        instance='{"value":0}'
-        reply="reply"/>
+        type='{"type":"rpcStruct","attributes":[{"value":{"type":"uint64"}}]}'
+        value='{"value":0}'
+        reply="reply"
+        timeout="3.0"/>
     <Workspace>
         <Local name="reply"/>
     </Workspace>

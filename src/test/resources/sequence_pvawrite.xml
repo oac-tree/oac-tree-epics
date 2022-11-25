@@ -8,17 +8,16 @@
     <Sequence>
         <Copy input="old-pvxs-value" output="pvxs-variable"/>
         <Equals lhs="pvxs-variable" rhs="old-pvxs-value"/>
-        <Wait timeout="2.0"/>
-        <PVAccessWriteInstruction name="write to pv"
-            channel="seq::test::variable"
-            variable="new-pvxs-value"/>
-        <Wait timeout="2.0"/>
+        <PvAccessWrite name="write to pv"
+                       channel="seq::test::variable"
+                       varName="new-pvxs-value"
+                       timeout="5.0" />
         <Equals lhs="pvxs-variable" rhs="new-pvxs-value"/>
     </Sequence>
     <Workspace>
-        <PVServerVariable name="pvxs-variable"
-            channel="seq::test::variable"
-            datatype='{"type":"seq::test::Type/v1.0"}'/>
+        <PvAccessServer name="pvxs-variable"
+                        channel="seq::test::variable"
+                        type='{"type":"seq::test::Type/v1.0"}'/>
         <Local name="old-pvxs-value"
                type='{"type":"seq::test::Type/v1.0"}'
                value='{"value":1.0}'/>

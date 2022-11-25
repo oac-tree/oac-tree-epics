@@ -8,20 +8,19 @@
     <Sequence>
         <Copy input="old-pvxs-value" output="pvxs-server-variable"/>
         <Equals lhs="pvxs-server-variable" rhs="old-pvxs-value"/>
-        <Wait timeout="0.1"/>
+        <Wait timeout="0.5"/>
         <Equals lhs="pvxs-client-variable" rhs="old-pvxs-value"/>
-        <Wait timeout="2.0"/>
         <Copy input="new-pvxs-value" output="pvxs-client-variable"/>
-        <Wait timeout="2.0"/>
+        <Wait timeout="1.0"/>
         <Equals lhs="pvxs-server-variable" rhs="new-pvxs-value"/>
     </Sequence>
     <Workspace>
-        <PVServerVariable name="pvxs-server-variable"
-            channel="seq::test::variable"
-            datatype='{"type":"seq::test::Type/v1.0"}'/>
-        <PVClientVariable name="pvxs-client-variable"
-            channel="seq::test::variable"
-            datatype='{"type":"seq::test::Type/v1.0"}'/>            
+        <PvAccessServer name="pvxs-server-variable"
+                        channel="seq::test::variable"
+                        type='{"type":"seq::test::Type/v1.0"}'/>
+        <PvAccessClient name="pvxs-client-variable"
+                        channel="seq::test::variable"
+                        type='{"type":"seq::test::Type/v1.0"}'/>
         <Local name="old-pvxs-value"
                type='{"type":"seq::test::Type/v1.0"}'
                value='{"value":1.0}'/>

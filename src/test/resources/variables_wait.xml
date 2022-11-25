@@ -19,13 +19,12 @@
         </Sequence>
     </Repeat>
     <Workspace>
-        <ChannelAccessVariable name="boolean"
-            channel='SEQ-TEST:BOOL'
-            period='10000000'
-            datatype='{"type":"bool"}'/>
-        <PVClientVariable name="pvxs-client-variable"
-            channel="seq::test::variable"
-            datatype='{"type":"seq::test::Type/v1.0"}'/>
+        <ChannelAccessClient name="boolean"
+                             channel='SEQ-TEST:BOOL'
+                             type='{"type":"bool"}'/>
+        <PvAccessClient name="pvxs-client-variable"
+                        channel="seq::test::variable"
+                        type='{"type":"seq::test::Type/v1.0"}'/>
         <Local name="local-value"
                type='{"type":"seq::test::Type/v1.0"}'/>
     </Workspace>
