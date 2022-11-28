@@ -23,23 +23,21 @@ target_include_directories(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
         ${CMAKE_CURRENT_LIST_DIR}/../../../main/c++
-        $ENV{CODAC_ROOT}/include
 )
 
 target_link_directories(unit-tests
     PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}/../../../../target/lib
-        $ENV{CODAC_ROOT}/lib
 )
 
 find_package(GTest REQUIRED)
 
-target_link_libraries(unit-tests
-    PUBLIC
-        GTest::GTest
-        GTest::Main
-        sequencer-ca
-        sequencer-misc
-        sequencer-pvxs
-        sup-rpc
-)
+if(SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
+  target_include_directories(unit-tests PRIVATE $ENV{CODAC_ROOT}/include)
+  target_link_directories(unit-tests PUBLIC $ENV{CODAC_ROOT}/lib)
+  target_link_libraries(unit-tests PUBLIC  GTest::GTest GTest::Main sequencer-ca sequencer-misc sequencer-pvxs sup-rpc)
+else()
+  target_link_libraries(unit-tests PUBLIC GTest::GTest GTest::Main sequencer-ca sequencer-misc sequencer-pvxs sup-dto::sup-rpc)
+endif()
+
+gtest_discover_tests(unit-tests)
