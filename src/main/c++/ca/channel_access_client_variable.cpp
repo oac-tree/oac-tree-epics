@@ -22,6 +22,7 @@
 #include "channel_access_client_variable.h"
 #include "channel_access_helper.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable_registry.h>
 
 #include <sup/dto/anyvalue_helper.h>
@@ -88,16 +89,30 @@ bool ChannelAccessClientVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(ext_value.value);
 }
 
-bool ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
+void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME) || !HasAttribute(TYPE_ATTRIBUTE_NAME))
+  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    return false;
+    std::string error_message =
+      "sup::sequencer::ChannelAccessClientVariable::SetupImpl(): missing mandatory attribute [" +
+       CHANNEL_ATTRIBUTE_NAME + "]";
+    throw VariableSetupException(error_message);
+  }
+  if (!HasAttribute(TYPE_ATTRIBUTE_NAME))
+  {
+    std::string error_message =
+      "sup::sequencer::ChannelAccessClientVariable::SetupImpl(): missing mandatory attribute [" +
+       TYPE_ATTRIBUTE_NAME + "]";
+    throw VariableSetupException(error_message);
   }
   sup::dto::JSONAnyTypeParser parser;
-  if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
+  auto type_attr_val = GetAttribute(TYPE_ATTRIBUTE_NAME);
+  if (!parser.ParseString(type_attr_val, &registry))
   {
-    return false;
+    std::string error_message =
+      "sup::sequencer::ChannelAccessClientVariable::SetupImpl(): could not parse attribute [" +
+       TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
+    throw VariableSetupException(error_message);
   }
   m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   auto callback = [this](const epics::ChannelAccessPV::ExtendedValue& ext_value)
@@ -106,9 +121,16 @@ bool ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
                     Notify(value);
                     return;
                   };
+  auto channel_type = channel_access_helper::ChannelType(*m_type);
+  if (sup::dto::IsEmptyType(channel_type))
+  {
+    std::string error_message =
+      "sup::sequencer::ChannelAccessClientVariable::SetupImpl(): parsed channel type [" +
+       type_attr_val + "] is not supported";
+    throw VariableSetupException(error_message);
+  }
   m_pv.reset(new epics::ChannelAccessPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
-                                        channel_access_helper::ChannelType(*m_type), callback));
-  return true;
+                                        channel_type, callback));
 }
 
 void ChannelAccessClientVariable::ResetImpl()
