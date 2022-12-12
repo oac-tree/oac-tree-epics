@@ -21,6 +21,7 @@
 
 #include "system_clock_variable.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/generic_utils.h>
 #include <sup/sequencer/variable_registry.h>
 
@@ -73,14 +74,17 @@ bool SystemClockVariable::SetValueImpl(const sup::dto::AnyValue&)
   return false;
 }
 
-bool SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
+void SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
 {
   if (HasAttribute(TIMEFORMAT_ATTRIBUTE_NAME))
   {
     auto time_format = GetAttribute(TIMEFORMAT_ATTRIBUTE_NAME);
     if (!IsSupportedTimeFormat(time_format))
     {
-      return false;
+      std::string error_message =
+        "sup::sequencer::SystemClockVariable::SetupImpl(): attribute [" +
+        TIMEFORMAT_ATTRIBUTE_NAME + "] contains unsupported time format [" + time_format + "]";
+      throw VariableSetupException(error_message);
     }
     m_time_format = time_format;
   }
@@ -88,7 +92,6 @@ bool SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
   {
     m_time_format = DEFAULT_TIME_FORMAT;
   }
-  return true;
 }
 
 void SystemClockVariable::ResetImpl()

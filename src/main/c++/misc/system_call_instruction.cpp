@@ -21,6 +21,7 @@
 
 #include "system_call_instruction.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
 
 #include <cstdlib>
@@ -40,10 +41,15 @@ SystemCallInstruction::SystemCallInstruction()
 
 SystemCallInstruction::~SystemCallInstruction() = default;
 
-bool SystemCallInstruction::SetupImpl(const Procedure& proc)
+void SystemCallInstruction::SetupImpl(const Procedure&)
 {
-  (void)proc;
-  return HasAttribute(COMMAND_ATTRIBUTE_NAME);
+  if (!HasAttribute(COMMAND_ATTRIBUTE_NAME))
+  {
+    std::string error_message =
+      "sup::sequencer::SystemCallInstruction::SetupImpl(): missing mandatory attribute [" +
+       COMMAND_ATTRIBUTE_NAME + "]";
+    throw InstructionSetupException(error_message);
+  }
 }
 
 ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)

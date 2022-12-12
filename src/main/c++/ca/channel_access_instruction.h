@@ -80,22 +80,13 @@ public:
 
 private:
   double m_timeout_sec;
-  /**
-   * @brief See sup::sequencer::Instruction.
-   * @details Verify and handle attributes.
-   */
-  bool SetupImpl(const Procedure& proc) override;
 
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
+  void SetupImpl(const Procedure& proc) override;
+
+
   void ResetHook() override;
 
-  /**
-   * @brief See sup::sequencer::Instruction.
-   * @details Connects to the specified 'channel' and reads the value into the
-   * workspace variable with name 'varName'.
-   */
+
   ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
 };
 
@@ -149,22 +140,13 @@ public:
 private:
   double m_timeout_sec;
 
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
-  bool SetupImpl(const Procedure& proc) override;
+  void SetupImpl(const Procedure& proc) override;
 
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
   void ResetHook() override;
 
-  /**
-   * @brief See sup::sequencer::Instruction.
-   */
   ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
 
-  sup::dto::AnyValue GetNewValue(Workspace* ws) const;
+  sup::dto::AnyValue GetNewValue(UserInterface* ui, Workspace* ws) const;
 };
 
 }  // namespace sequencer

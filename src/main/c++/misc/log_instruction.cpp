@@ -21,8 +21,10 @@
 
 #include "log_instruction.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/log.h>
+#include <sup/sequencer/log_severity.h>
+#include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/workspace.h>
 
 #include <sup/dto/anyvalue_helper.h>
@@ -33,7 +35,7 @@
 
 namespace
 {
-void LogWrapper(const std::string& level, const std::string& message);
+int SeverityFromString(const std::string& level);
 }  // unnamed namespace
 
 namespace sup {
@@ -55,19 +57,32 @@ LogInstruction::LogInstruction()
 
 LogInstruction::~LogInstruction() = default;
 
-bool LogInstruction::SetupImpl(const Procedure& proc)
+void LogInstruction::SetupImpl(const Procedure&)
 {
-  (void)proc;
-  return HasAttribute(MESSAGE_ATTRIBUTE_NAME) || HasAttribute(INPUT_ATTRIBUTE_NAME);
+  if (!HasAttribute(MESSAGE_ATTRIBUTE_NAME) && !HasAttribute(INPUT_ATTRIBUTE_NAME))
+  {
+    std::string error_message =
+      "sup::sequencer::LogInstruction::SetupImpl(): instruction requires at least one of the "
+      "attributes [" + MESSAGE_ATTRIBUTE_NAME + ", " + INPUT_ATTRIBUTE_NAME + "]";
+    throw InstructionSetupException(error_message);
+  }
 }
 
-ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface*, Workspace* ws)
+ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
 {
-  std::string severity_str;
-  // if this string is empty or does not correspond to a known severity level, 'info' level is used.
+  int severity = log::SUP_SEQ_LOG_INFO;  // Default severity if not explicitly specified
   if (HasAttribute(SEVERITY_ATTRIBUTE_NAME))
   {
-    severity_str = GetAttribute(SEVERITY_ATTRIBUTE_NAME);
+    auto severity_str = GetAttribute(SEVERITY_ATTRIBUTE_NAME);
+    severity = SeverityFromString(severity_str);
+    if (severity < 0)
+    {
+      std::string error_message =
+        "sup::sequencer::LogInstruction::ExecuteSingleImpl(): could not parse severity [" +
+        severity_str + "] as valid severity level";
+      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      return ExecutionStatus::FAILURE;
+    }
   }
   std::ostringstream oss;
   if (HasAttribute(MESSAGE_ATTRIBUTE_NAME))
@@ -76,14 +91,28 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface*, Workspace* ws)
   }
   if (HasAttribute(INPUT_ATTRIBUTE_NAME))
   {
+    auto input_field_name = GetAttribute(INPUT_ATTRIBUTE_NAME);
+    auto input_var_name = SplitFieldName(input_field_name).first;
+    if (!ws->HasVariable(input_var_name))
+    {
+      std::string error_message =
+        "sup::sequencer::LogInstruction::ExecuteSingleImpl(): workspace does not contain input "
+        "variable with name [" + input_var_name + "]";
+      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      return ExecutionStatus::FAILURE;
+    }
     sup::dto::AnyValue value;
     if (!ws->GetValue(GetAttribute(INPUT_ATTRIBUTE_NAME), value))
     {
+      std::string warning_message =
+        "sup::sequencer::LogInstruction::ExecuteSingleImpl(): could not read variable "
+        "field with name [" + input_var_name + "] from workspace";
+      ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
       return ExecutionStatus::FAILURE;
     }
     oss << sup::dto::ValuesToJSONString(value);
   }
-  LogWrapper(severity_str, oss.str());
+  ui->Log(severity, oss.str());
   return ExecutionStatus::SUCCESS;
 }
 
@@ -93,28 +122,25 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface*, Workspace* ws)
 
 namespace
 {
-void LogWrapper(const std::string& level, const std::string& message)
+int SeverityFromString(const std::string& level)
 {
-  static const std::map<std::string, std::function<void(const std::string&, const std::string&)>>
-    log_function_map = {
-      {"emergency", sup::sequencer::log::SimpleEmergency},
-      {"alert", sup::sequencer::log::SimpleAlert},
-      {"critical", sup::sequencer::log::SimpleCritical},
-      {"error", sup::sequencer::log::SimpleError},
-      {"warning", sup::sequencer::log::SimpleWarning},
-      {"notice", sup::sequencer::log::SimpleNotice},
-      {"info", sup::sequencer::log::SimpleInfo},
-      {"debug", sup::sequencer::log::SimpleDebug},
-      {"trace", sup::sequencer::log::SimpleTrace},
+  static const std::map<std::string, int> string_severity_map = {
+      {"emergency", sup::sequencer::log::SUP_SEQ_LOG_EMERG},
+      {"alert", sup::sequencer::log::SUP_SEQ_LOG_ALERT},
+      {"critical", sup::sequencer::log::SUP_SEQ_LOG_CRIT},
+      {"error", sup::sequencer::log::SUP_SEQ_LOG_ERR},
+      {"warning", sup::sequencer::log::SUP_SEQ_LOG_WARNING},
+      {"notice", sup::sequencer::log::SUP_SEQ_LOG_NOTICE},
+      {"info", sup::sequencer::log::SUP_SEQ_LOG_INFO},
+      {"debug", sup::sequencer::log::SUP_SEQ_LOG_DEBUG},
+      {"trace", sup::sequencer::log::SUP_SEQ_LOG_TRACE},
     };
-  auto it = log_function_map.find(level);
-  if (it == log_function_map.end())
+  auto it = string_severity_map.find(level);
+  if (it == string_severity_map.end())
   {
-    sup::sequencer::log::SimpleInfo(sup::sequencer::LOG_SOURCE, message);
+    return -1;
   }
-  else
-  {
-    it->second(sup::sequencer::LOG_SOURCE, message);
-  }
+  return it->second;
 }
+
 }  // unnamed namespace
