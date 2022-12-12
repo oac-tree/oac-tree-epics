@@ -19,8 +19,8 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_INSTRUCTION_H_
-#define SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_INSTRUCTION_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_WRITE_INSTRUCTION_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_WRITE_INSTRUCTION_H_
 
 #include <sup/sequencer/instruction.h>
 
@@ -35,77 +35,20 @@ class AnyValue;
 
 namespace sequencer
 {
-
-/**
- * @brief Instruction interfacing to an EPICS Channel Access Process Variable (PV).
- * @details The class provides a blocking read to EPICS CA. The instruction fails
- * in case the configured 'channel' can not be accessed. Upon successful read, the
- * specified workspace variable is updated. The type of the workspace variable
- * defines how the client-side tries and read the remote channel.
- *
- * @code
-     <Sequence>
-       <ChannelAccessRead name="get-client"
-         channel="EPICS::CA::CHANNEL::BOOLEAN"
-         varName="boolean"/>
-       <ChannelAccessRead name="get-client"
-         channel="EPICS::CA::CHANNEL::BOOLEAN"
-         varName="uint32"/>
-       <ChannelAccessRead name="get-client"
-         channel="EPICS::CA::CHANNEL::BOOLEAN"
-         varName="string"/>
-     </Sequence>
-     <Workspace>
-       <Local name="boolean"
-         type='{"type":"bool"}'
-         value="false"/>
-       <Local name="uint32"
-         type='{"type":"uint32"}'
-         value="0"/>
-       <Local name="string"
-         type='{"type":"string"}'
-         value='"undefined"'/>
-     </Workspace>
-   @endcode
- *
- * @note EPICS CA support is provided through this class and also as asynchronous variables.
- */
-class ChannelAccessReadInstruction : public Instruction
-{
-public:
-  ChannelAccessReadInstruction();
-  ~ChannelAccessReadInstruction();
-
-  static const std::string Type;
-
-private:
-  double m_timeout_sec;
-
-  void SetupImpl(const Procedure& proc) override;
-
-
-  void ResetHook() override;
-
-
-  ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
-};
-
 /**
  * @brief Instruction interfacing to an EPICS Channel Access Process Variable (PV).
  * @details The class provides a blocking write to EPICS CA. The instruction fails
- * in case the configured 'channel' can not be accessed. The instruction provides
- * two ways EPICS CA channels are updated:
+ * in case the configured 'channel' can not be accessed withing a timeout, which has a
+ * default value of 2 seconds. The instruction provides two ways EPICS CA channels are updated:
  *
  *   Using 'type' and 'value' specification through attributes, or
  *   By reference to a workspace variable ('varName' attribute) holding the value to be written.
  *
- * The EPICS CA connection is verified after an optional 'timeout' period specified in
- * ns resolution which is defaulted to 100ms.
  * @code
      <Sequence>
        <ChannelAccessWriteInstruction name="put-client"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
-         timeout="100000000"
+         timeout="1.0"
          varName="boolean"/>
        <ChannelAccessFetchInstruction name="put-as-integer"
          channel="EPICS::CA::CHANNEL::BOOLEAN"
@@ -124,10 +67,6 @@ private:
    @endcode
  *
  * @note EPICS CA support is provided through this class and also as asynchronous variables.
- * Procedures mixing asynchronous handling and synchronous instructions have not been tested.
- * @note A single EPICS CA context is created for the sequencer procedure and shared among
- * all instruction instances. An explicit context attach/detach is performed by each call to
- * Instruction::ExecuteSingleImpl in order to allow for multi-threaded operation.
  */
 class ChannelAccessWriteInstruction : public Instruction
 {
@@ -153,4 +92,4 @@ private:
 
 }  // namespace sup
 
-#endif  // SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_INSTRUCTION_H_
+#endif  // SUP_SEQUENCER_PLUGIN_EPICS_CHANNEL_ACCESS_WRITE_INSTRUCTION_H_

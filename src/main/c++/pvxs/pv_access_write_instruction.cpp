@@ -55,6 +55,7 @@ static bool _pv_access_write_instruction_initialised_flag =
 
 PvAccessWriteInstruction::PvAccessWriteInstruction()
   : Instruction(PvAccessWriteInstruction::Type)
+  , m_timeout_sec{pv_access_helper::DEFAULT_TIMEOUT_SEC}
 {}
 
 PvAccessWriteInstruction::~PvAccessWriteInstruction() = default;
@@ -75,6 +76,24 @@ void PvAccessWriteInstruction::SetupImpl(const Procedure&)
       "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
+  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
+  {
+    auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
+    auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
+    if (timeout_val < 0)
+    {
+      std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+        "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
+        "] to positive or zero floating point value";
+      throw InstructionSetupException(error_message);
+    }
+    m_timeout_sec = timeout_val;
+  }
+}
+
+void PvAccessWriteInstruction::ResetHook()
+{
+  m_timeout_sec = pv_access_helper::DEFAULT_TIMEOUT_SEC;
 }
 
 ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
@@ -96,10 +115,7 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, W
     return ExecutionStatus::FAILURE;
   }
   sup::epics::PvAccessClientPV pv(channel_name);
-  auto timeout_str = HasAttribute(TIMEOUT_ATTRIBUTE_NAME) ? GetAttribute(TIMEOUT_ATTRIBUTE_NAME)
-                                                          : "-1.0";
-  auto timeout = pv_access_helper::ParseTimeoutString(timeout_str);
-  if (timeout >= 0.0 && !pv.WaitForConnected(timeout))
+  if (!pv.WaitForConnected(m_timeout_sec))
   {
     std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
       "channel with name [" + channel_name + "] timed out";

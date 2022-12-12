@@ -33,6 +33,7 @@ namespace sequencer
 {
 namespace channel_access_helper
 {
+const double DEFAULT_TIMEOUT_SEC = 2.0;
 
 const std::string VALUE_FIELD_NAME = "value";
 const std::string CONNECTED_FIELD_NAME = "connected";
@@ -46,6 +47,8 @@ sup::dto::AnyValue ExtractChannelValue(const sup::dto::AnyValue& value);
 
 sup::dto::AnyValue ConvertToTypedAnyValue(
   const sup::epics::ChannelAccessPV::ExtendedValue& ext_value, const sup::dto::AnyType& anytype);
+
+double ParseTimeoutString(const std::string& timeout_str);
 
 }  // namespace channel_access_helper
 

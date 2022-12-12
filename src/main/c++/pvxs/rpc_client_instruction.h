@@ -35,13 +35,17 @@ namespace sequencer
 {
 /**
  * @brief RPC client instruction.
- * @details The instruction provides Remote Procedure Call (RPC) support to a named 'service', sending
- * a request from a named workspace 'request' variable or using 'type' and 'value' attributes.
+ * @details The instruction provides Remote Procedure Call (RPC) support to a named 'service',
+ * sending a request from a named workspace 'request' variable or using 'type' and 'value'
+ * attributes. The RPC call is made with a timeout that is given by the 'timeout' attribute or
+ * the default value for the underlying RPC implementation.
  * The reply is written back to the workspace if specified.
  *
  * @code
-     <RPCClient name="rpc-client" service="rpc@plant-system"
-                request="request" reply="reply"/>
+     <RPCClient name="rpc-client"
+                service="rpc@plant-system"
+                request="request" reply="reply"
+                timeout="4.0"/>
      <Workspace>
        <Local name="request"
          type='{"type":"Request_t","attributes":[{"qualifier":{"type":"string"}},{"value":{"type":"uint32"}},{"enable":{"type":"bool"}}]}'
@@ -59,13 +63,15 @@ public:
   static const std::string Type;
 
 private:
+  double m_timeout;
+
   void SetupImpl(const Procedure& proc) override;
+
+  void ResetHook() override;
 
   ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
 
   sup::dto::AnyValue GetRequest(UserInterface* ui, Workspace* ws);
-
-  double GetTimeoutSec();
 };
 
 }  // namespace sequencer

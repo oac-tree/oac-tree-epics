@@ -60,6 +60,7 @@ static bool _rpcclient_instruction_initialised_flag =
 
 RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
+  , m_timeout{-1.0}
 {}
 
 RPCClientInstruction::~RPCClientInstruction() = default;
@@ -80,6 +81,24 @@ void RPCClientInstruction::SetupImpl(const Procedure&)
       "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
+  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
+  {
+    auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
+    auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
+    if (timeout_val < 0)
+    {
+      std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+        "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
+        "] to positive or zero floating point value";
+      throw InstructionSetupException(error_message);
+    }
+    m_timeout = timeout_val;
+  }
+}
+
+void RPCClientInstruction::ResetHook()
+{
+  m_timeout = -1.0;
 }
 
 ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
@@ -89,13 +108,10 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
   {
     return ExecutionStatus::FAILURE;
   }
-  auto timeout_str = HasAttribute(TIMEOUT_ATTRIBUTE_NAME) ? GetAttribute(TIMEOUT_ATTRIBUTE_NAME)
-                                                          : "-1.0";
-  auto timeout = pv_access_helper::ParseTimeoutString(timeout_str);
   auto client_config = sup::epics::GetDefaultRPCClientConfig(GetAttribute(SERVICE_ATTRIBUTE_NAME));
-  if (timeout >= 0.0)
+  if (m_timeout >= 0.0)
   {
-    client_config.timeout = timeout;
+    client_config.timeout = m_timeout;
   }
   sup::epics::PvAccessRPCClient rpc_client(client_config);
 

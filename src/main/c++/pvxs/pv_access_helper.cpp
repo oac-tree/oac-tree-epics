@@ -73,7 +73,7 @@ double ParseTimeoutString(const std::string& timeout_str)
   sup::dto::JSONAnyValueParser parser;
   if (!parser.TypedParseString(sup::dto::Float64Type, timeout_str))
   {
-    return -1;
+    return -1.0;
   }
   return parser.MoveAnyValue().As<sup::dto::float64>();
 }

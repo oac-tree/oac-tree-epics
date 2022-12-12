@@ -31,6 +31,8 @@ namespace sequencer
 namespace pv_access_helper
 {
 
+const double DEFAULT_TIMEOUT_SEC = 2.0;
+
 const std::string VALUE_FIELD_NAME = "value";
 
 sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
