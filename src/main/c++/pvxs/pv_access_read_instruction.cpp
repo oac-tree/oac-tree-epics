@@ -23,8 +23,10 @@
 
 #include "pv_access_helper.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/procedure.h>
+#include <sup/sequencer/log_severity.h>
+#include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/workspace.h>
 
 #include <sup/dto/anyvalue.h>
@@ -53,28 +55,37 @@ PvAccessReadInstruction::PvAccessReadInstruction()
 
 PvAccessReadInstruction::~PvAccessReadInstruction() = default;
 
-bool PvAccessReadInstruction::SetupImpl(const Procedure& proc)
+void PvAccessReadInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    return false;
+    std::string error_message =
+      "sup::sequencer::PvAccessReadInstruction::SetupImpl(): missing mandatory attribute [" +
+       CHANNEL_ATTRIBUTE_NAME + "]";
+    throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(OUTPUT_ATTRIBUTE_NAME))
   {
-    return false;
+    std::string error_message =
+      "sup::sequencer::PvAccessReadInstruction::SetupImpl(): missing mandatory attribute [" +
+       OUTPUT_ATTRIBUTE_NAME + "]";
+    throw InstructionSetupException(error_message);
   }
-  auto var_names = proc.VariableNames();
-  if (std::find(var_names.begin(), var_names.end(), GetAttribute(OUTPUT_ATTRIBUTE_NAME))
-      == var_names.end())
-  {
-    return false;
-  }
-  return true;
 }
 
 ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
 {
-  (void)ui;
+  auto output_field_name = GetAttribute(OUTPUT_ATTRIBUTE_NAME);
+  auto output_var_name = SplitFieldName(output_field_name).first;
+  if (!ws->HasVariable(output_var_name))
+  {
+    std::string error_message =
+      "sup::sequencer::PvAccessReadInstruction::ExecuteSingleImpl(): workspace does not "
+      "contain output variable with name [" + output_var_name + "]";
+    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    return ExecutionStatus::FAILURE;
+  }
+
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   sup::epics::PvAccessClientPV pv(channel_name);
   auto timeout_str = HasAttribute(TIMEOUT_ATTRIBUTE_NAME) ? GetAttribute(TIMEOUT_ATTRIBUTE_NAME)

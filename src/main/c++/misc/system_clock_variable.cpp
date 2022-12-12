@@ -82,7 +82,7 @@ void SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
     if (!IsSupportedTimeFormat(time_format))
     {
       std::string error_message =
-        "sup::sequencer::SystemClockVariable::SetupImpl(): attribute [" +
+        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: attribute [" +
         TIMEFORMAT_ATTRIBUTE_NAME + "] contains unsupported time format [" + time_format + "]";
       throw VariableSetupException(error_message);
     }

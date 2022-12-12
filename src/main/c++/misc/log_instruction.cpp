@@ -62,8 +62,9 @@ void LogInstruction::SetupImpl(const Procedure&)
   if (!HasAttribute(MESSAGE_ATTRIBUTE_NAME) && !HasAttribute(INPUT_ATTRIBUTE_NAME))
   {
     std::string error_message =
-      "sup::sequencer::LogInstruction::SetupImpl(): instruction requires at least one of the "
-      "attributes [" + MESSAGE_ATTRIBUTE_NAME + ", " + INPUT_ATTRIBUTE_NAME + "]";
+      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: instruction "
+      "requires at least one of the attributes [" + MESSAGE_ATTRIBUTE_NAME + ", " +
+      INPUT_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
 }
@@ -78,8 +79,8 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     if (severity < 0)
     {
       std::string error_message =
-        "sup::sequencer::LogInstruction::ExecuteSingleImpl(): could not parse severity [" +
-        severity_str + "] as valid severity level";
+        "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse "
+        "severity [" + severity_str + "] as valid severity level";
       ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
       return ExecutionStatus::FAILURE;
     }
@@ -96,8 +97,8 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     if (!ws->HasVariable(input_var_name))
     {
       std::string error_message =
-        "sup::sequencer::LogInstruction::ExecuteSingleImpl(): workspace does not contain input "
-        "variable with name [" + input_var_name + "]";
+        "Instruction [" + GetName() + "] of type <" + Type + "> error: workspace does not "
+        "contain input variable with name [" + input_var_name + "]";
       ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
       return ExecutionStatus::FAILURE;
     }
@@ -105,7 +106,7 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     if (!ws->GetValue(GetAttribute(INPUT_ATTRIBUTE_NAME), value))
     {
       std::string warning_message =
-        "sup::sequencer::LogInstruction::ExecuteSingleImpl(): could not read variable "
+        "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not read variable "
         "field with name [" + input_var_name + "] from workspace";
       ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
       return ExecutionStatus::FAILURE;

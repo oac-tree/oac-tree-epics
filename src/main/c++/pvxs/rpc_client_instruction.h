@@ -59,11 +59,11 @@ public:
   static const std::string Type;
 
 private:
-  bool SetupImpl(const Procedure& proc) override;
+  void SetupImpl(const Procedure& proc) override;
 
   ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
 
-  sup::dto::AnyValue GetRequest(Workspace* ws);
+  sup::dto::AnyValue GetRequest(UserInterface* ui, Workspace* ws);
 
   double GetTimeoutSec();
 };

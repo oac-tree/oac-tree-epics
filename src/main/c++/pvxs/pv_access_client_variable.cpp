@@ -23,6 +23,7 @@
 
 #include "pv_access_helper.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable_registry.h>
 
 #include <sup/dto/anyvalue_helper.h>
@@ -92,25 +93,36 @@ bool PvAccessClientVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(value);
 }
 
-bool PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
+void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    return false;
+    std::string error_message =
+      "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
+      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
+    throw VariableSetupException(error_message);
   }
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
     // TODO: temporary hack for GUI! Remove this!
     auto type_attr = GetAttribute(TYPE_ATTRIBUTE_NAME);
-    if (!type_attr.empty())
+    if (type_attr.empty())
     {
-      sup::dto::JSONAnyTypeParser parser;
-      if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
-      {
-        return false;
-      }
-      m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
+      std::string error_message =
+        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: type attribute [" +
+         TYPE_ATTRIBUTE_NAME + "] is empty";
+      throw VariableSetupException(error_message);
     }
+    sup::dto::JSONAnyTypeParser parser;
+    auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
+    if (!parser.ParseString(type_str, &registry))
+    {
+      std::string error_message =
+        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: could not parse "
+        "type [" + type_str + "]";
+      throw VariableSetupException(error_message);
+    }
+    m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   }
   // Avoid dependence on destruction order of m_pv and m_type.
   sup::dto::AnyType type_copy = m_type ? *m_type : sup::dto::EmptyType;
@@ -122,7 +134,6 @@ bool PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     return;
   };
   m_pv.reset(new epics::PvAccessClientPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME), callback));
-  return true;
 }
 
 void PvAccessClientVariable::ResetImpl()

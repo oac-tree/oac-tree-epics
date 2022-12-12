@@ -23,6 +23,7 @@
 
 #include "pv_access_helper.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable_registry.h>
 
 #include <sup/dto/anyvalue_helper.h>
@@ -87,25 +88,43 @@ bool PvAccessServerVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(value);
 }
 
-bool PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
+void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME) || !HasAttribute(TYPE_ATTRIBUTE_NAME))
+  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    return false;
+    std::string error_message =
+      "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
+      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
+    throw VariableSetupException(error_message);
+  }
+  if (!HasAttribute(TYPE_ATTRIBUTE_NAME))
+  {
+    std::string error_message =
+      "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
+      "attribute [" + TYPE_ATTRIBUTE_NAME + "]";
+    throw VariableSetupException(error_message);
   }
   sup::dto::JSONAnyTypeParser parser;
-  if (!parser.ParseString(GetAttribute(TYPE_ATTRIBUTE_NAME), &registry))
+  auto type_attr_val = GetAttribute(TYPE_ATTRIBUTE_NAME);
+  if (!parser.ParseString(type_attr_val, &registry))
   {
-    return false;
+    std::string error_message =
+      "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: could not parse "
+      "attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
+    throw VariableSetupException(error_message);
   }
   m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
   sup::dto::AnyValue val(*m_type);
   if (HasAttribute(VALUE_ATTRIBUTE_NAME))
   {
+    auto val_str = GetAttribute(VALUE_ATTRIBUTE_NAME);
     sup::dto::JSONAnyValueParser value_parser;
-    if (!value_parser.TypedParseString(*m_type, GetAttribute(VALUE_ATTRIBUTE_NAME)))
+    if (!value_parser.TypedParseString(*m_type, val_str))
     {
-      return false;
+      std::string error_message =
+        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: could not parse "
+        "attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
+      throw VariableSetupException(error_message);
     }
     val = value_parser.MoveAnyValue();
   }
@@ -121,7 +140,6 @@ bool PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   auto start_value = pv_access_helper::PackIntoStructIfScalar(val);
   m_server->AddVariable(GetAttribute(CHANNEL_ATTRIBUTE_NAME), start_value);
   m_server->Start();
-  return true;
 }
 
 void PvAccessServerVariable::ResetImpl()

@@ -68,15 +68,15 @@ void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessReadInstruction::SetupImpl(): missing mandatory attribute [" +
-       CHANNEL_ATTRIBUTE_NAME + "]";
+      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
+      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessReadInstruction::SetupImpl(): missing mandatory attribute [" +
-       VARIABLE_NAME_ATTRIBUTE_NAME + "]";
+      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
+      "attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
@@ -86,15 +86,16 @@ void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
     if (!parser.TypedParseString(sup::dto::Float64Type, timeout_str))
     {
       std::string error_message =
-        "sup::sequencer::ChannelAccessReadInstruction::SetupImpl(): could not parse attribute [" +
-         TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str + "] to sup::dto::Float64Type";
+        "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: could not parse "
+        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
+        "] to sup::dto::Float64Type";
       throw InstructionSetupException(error_message);
     }
     auto timeout_val = parser.MoveAnyValue().As<sup::dto::float64>();
     if (timeout_val < 0)
     {
       std::string error_message =
-        "sup::sequencer::ChannelAccessReadInstruction::SetupImpl(): attribute [" +
+        "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: attribute [" +
          TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str + "] should be positive or zero";
       throw InstructionSetupException(error_message);
     }
@@ -114,7 +115,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (!ws->HasVariable(var_var_name))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): workspace does not "
+      "Instruction [" + GetName() + "] of type <" + Type + "> error: workspace does not "
       "contain input variable with name [" + var_var_name + "]";
     ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
     return ExecutionStatus::FAILURE;
@@ -123,7 +124,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (!ws->GetValue(var_field_name, value))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): could not read variable "
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not read variable "
       "field with name [" + var_field_name + "] from workspace";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
     return ExecutionStatus::FAILURE;
@@ -132,7 +133,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (channel_name.empty())
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): channel name from "
+      "Instruction [" + GetName() + "] of type <" + Type + "> error: channel name from "
       "attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
     ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
     return ExecutionStatus::FAILURE;
@@ -141,7 +142,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (sup::dto::IsEmptyType(channel_type))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): type of variable "
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: type of variable "
       "field with name [" + var_field_name + "] is Empty";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
     return ExecutionStatus::FAILURE;
@@ -150,7 +151,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (!pv.WaitForValidValue(m_timeout_sec))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): channel with name [" +
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: channel with name [" +
       channel_name + "] timed out";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
     return ExecutionStatus::FAILURE;
@@ -160,7 +161,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (sup::dto::IsEmptyValue(var_val))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): could not convert "
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not convert "
       "value from channel [" + channel_name + "] to type of variable field with name [" +
       var_field_name + "]";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
@@ -169,7 +170,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   if (!ws->SetValue(GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME), var_val))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessReadInstruction::ExecuteSingleImpl(): could not set "
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not set "
       "value from channel [" + channel_name + "] to workspace variable field with name [" +
       var_field_name + "]";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
@@ -190,16 +191,16 @@ void ChannelAccessWriteInstruction::SetupImpl(const Procedure&)
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::SetupImpl(): missing mandatory attribute [" +
-       CHANNEL_ATTRIBUTE_NAME + "]";
+      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
+      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME) &&
      (!HasAttribute(TYPE_ATTRIBUTE_NAME) || !HasAttribute(VALUE_ATTRIBUTE_NAME)))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::SetupImpl(): instruction requires either "
-      "attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME + "] or both attributes [" +
+      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: instruction "
+      "requires either attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME + "] or both attributes [" +
       TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
@@ -210,15 +211,16 @@ void ChannelAccessWriteInstruction::SetupImpl(const Procedure&)
     if (!parser.TypedParseString(sup::dto::Float64Type, timeout_str))
     {
       std::string error_message =
-        "sup::sequencer::ChannelAccessWriteInstruction::SetupImpl(): could not parse attribute [" +
-         TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str + "] to sup::dto::Float64Type";
+        "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: could not parse "
+        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
+        "] to sup::dto::Float64Type";
       throw InstructionSetupException(error_message);
     }
     auto timeout_val = parser.MoveAnyValue().As<sup::dto::float64>();
     if (timeout_val < 0)
     {
       std::string error_message =
-        "sup::sequencer::ChannelAccessWriteInstruction::SetupImpl(): attribute [" +
+        "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: attribute [" +
          TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str + "] should be positive or zero";
       throw InstructionSetupException(error_message);
     }
@@ -238,7 +240,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   if (sup::dto::IsEmptyValue(value))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::ExecuteSingleImpl(): value to write is Empty";
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: value to write is Empty";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
     return ExecutionStatus::FAILURE;
   }
@@ -246,7 +248,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   if (channel_name.empty())
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::ExecuteSingleImpl(): channel name from "
+      "Instruction [" + GetName() + "] of type <" + Type + "> error: channel name from "
       "attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
     ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
     return ExecutionStatus::FAILURE;
@@ -256,16 +258,16 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   if (!pv.WaitForConnected(m_timeout_sec))
   {
     std::string warning_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::ExecuteSingleImpl(): channel with name [" +
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: channel with name [" +
       channel_name + "] timed out";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.SetValue(value))
   {
-    auto json_value = sup::dto::ValuesToJSONString(value);
+    auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
     std::string warning_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::ExecuteSingleImpl(): could not write value "
+      "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not write value "
       "[" + json_value + "] to channel [" + channel_name + "]";
     ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
     return ExecutionStatus::FAILURE;
@@ -283,7 +285,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
     if (!ws->HasVariable(var_var_name))
     {
       std::string error_message =
-        "sup::sequencer::ChannelAccessWriteInstruction::GetNewValue(): workspace does not "
+        "Instruction [" + GetName() + "] of type <" + Type + "> error: workspace does not "
         "contain input variable with name [" + var_var_name + "]";
       ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
       return {};
@@ -292,7 +294,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
     if (!ws->GetValue(var_field_name, result))
     {
       std::string error_message =
-        "sup::sequencer::ChannelAccessWriteInstruction::GetNewValue(): could not read variable "
+        "Instruction [" + GetName() + "] of type <" + Type + "> error: could not read variable "
         "field with name [" + var_field_name + "] from workspace";
       ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
       return {};
@@ -305,7 +307,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
   if (!type_parser.ParseString(type_str, registry))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::GetNewValue(): could not parse type [" +
+      "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse type [" +
       type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
     ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
     return {};
@@ -316,7 +318,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
   if (!val_parser.TypedParseString(anytype, val_str))
   {
     std::string error_message =
-      "sup::sequencer::ChannelAccessWriteInstruction::GetNewValue(): could not parse value [" +
+      "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse value [" +
       val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME + "] to type [" + type_str + "]";
     ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
     return {};

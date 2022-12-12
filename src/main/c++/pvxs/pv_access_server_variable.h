@@ -59,7 +59,7 @@ private:
   bool GetValueImpl(sup::dto::AnyValue &value) const override;
   bool SetValueImpl(const sup::dto::AnyValue &value) override;
   bool IsAvailableImpl() const override;
-  bool SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
+  void SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
   void ResetImpl() override;
 
   std::unique_ptr<sup::dto::AnyType> m_type;
