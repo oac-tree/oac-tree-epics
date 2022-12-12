@@ -23,7 +23,6 @@
 #include "pv_access_helper.h"
 
 #include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/log_severity.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
@@ -69,18 +68,16 @@ void RPCClientInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(SERVICE_ATTRIBUTE_NAME))
   {
-    std::string error_message =
-      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
-      "attribute [" + SERVICE_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "missing mandatory attribute [" + SERVICE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(REQUEST_ATTRIBUTE_NAME) &&
       !(HasAttribute(TYPE_ATTRIBUTE_NAME) && HasAttribute(VALUE_ATTRIBUTE_NAME)))
   {
-    std::string error_message =
-      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: instruction "
-      "requires either attribute [" + REQUEST_ATTRIBUTE_NAME + "] or both attributes [" +
-      TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "instruction requires either attribute [" + REQUEST_ATTRIBUTE_NAME +
+      "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
 }
@@ -109,20 +106,18 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
     auto output_var_name = SplitFieldName(output_field_name).first;
     if (!ws->HasVariable(output_var_name))
     {
-      std::string error_message =
-        "Instruction [" + GetName() + "] of type <" + Type + "> error: workspace does not "
-        "contain output variable with name [" + output_var_name + "]";
-      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+        "workspace does not contain output variable with name [" + output_var_name + "]";
+      ui->LogError(error_message);
       return ExecutionStatus::FAILURE;
     }
     if (!ws->SetValue(output_field_name, reply))
     {
       auto json_reply = sup::dto::ValuesToJSONString(reply).substr(0, 1024);
-      std::string warning_message =
-        "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not set "
-        "reply from RPC call [" + json_reply + "] to workspace variable field with name [" +
-        output_field_name + "]";
-      ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
+      std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+        "could not set reply from RPC call [" + json_reply +
+        "] to workspace variable field with name [" + output_field_name + "]";
+      ui->LogWarning(warning_message);
       return ExecutionStatus::FAILURE;
     }
   }
@@ -138,19 +133,17 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
     auto request_var_name = SplitFieldName(request_field_name).first;
     if (!ws->HasVariable(request_var_name))
     {
-      std::string error_message =
-        "Instruction [" + GetName() + "] of type <" + Type + "> error: workspace does not "
-        "contain input variable with name [" + request_var_name + "]";
-      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+        "workspace does not contain input variable with name [" + request_var_name + "]";
+      ui->LogError(error_message);
       return {};
     }
     sup::dto::AnyValue request;
     if (!ws->GetValue(request_field_name, request))
     {
-      std::string error_message =
-        "Instruction [" + GetName() + "] of type <" + Type + "> error: could not read variable "
-        "field with name [" + request_field_name + "] from workspace";
-      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+        "could not read variable field with name [" + request_field_name + "] from workspace";
+      ui->LogError(error_message);
       return {};
     }
     return request;
@@ -159,10 +152,9 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
   sup::dto::JSONAnyTypeParser type_parser;
   if (!type_parser.ParseString(type_str, ws->GetTypeRegistry()))
   {
-    std::string error_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse type [" +
-      type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
+    ui->LogError(error_message);
     return {};
   }
   auto anytype = type_parser.MoveAnyType();
@@ -170,10 +162,10 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
   sup::dto::JSONAnyValueParser value_parser;
   if (!value_parser.TypedParseString(anytype, val_str))
   {
-    std::string error_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse value [" +
-      val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME + "] to type [" + type_str + "]";
-    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
+      "] to type [" + type_str + "]";
+    ui->LogError(error_message);
     return {};
   }
   return value_parser.MoveAnyValue();

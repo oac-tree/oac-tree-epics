@@ -45,9 +45,8 @@ void SystemCallInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(COMMAND_ATTRIBUTE_NAME))
   {
-    std::string error_message =
-      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
-      "attribute [" + COMMAND_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "missing mandatory attribute [" + COMMAND_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
 }

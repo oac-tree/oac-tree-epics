@@ -97,9 +97,8 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    std::string error_message =
-      "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
-      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
+    std::string error_message = VariableSetupExceptionProlog(GetName(), Type) +
+      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw VariableSetupException(error_message);
   }
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
@@ -108,18 +107,16 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     auto type_attr = GetAttribute(TYPE_ATTRIBUTE_NAME);
     if (type_attr.empty())
     {
-      std::string error_message =
-        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: type attribute [" +
-         TYPE_ATTRIBUTE_NAME + "] is empty";
+      std::string error_message = VariableSetupExceptionProlog(GetName(), Type) +
+        "type attribute [" + TYPE_ATTRIBUTE_NAME + "] is empty";
       throw VariableSetupException(error_message);
     }
     sup::dto::JSONAnyTypeParser parser;
     auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
     if (!parser.ParseString(type_str, &registry))
     {
-      std::string error_message =
-        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: could not parse "
-        "type [" + type_str + "]";
+      std::string error_message = VariableSetupExceptionProlog(GetName(), Type) +
+        "could not parse type [" + type_str + "]";
       throw VariableSetupException(error_message);
     }
     m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));

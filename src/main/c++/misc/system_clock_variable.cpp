@@ -81,9 +81,9 @@ void SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
     auto time_format = GetAttribute(TIMEFORMAT_ATTRIBUTE_NAME);
     if (!IsSupportedTimeFormat(time_format))
     {
-      std::string error_message =
-        "Setup of variable [" + GetName() + "] of type <" + Type + "> failed: attribute [" +
-        TIMEFORMAT_ATTRIBUTE_NAME + "] contains unsupported time format [" + time_format + "]";
+      std::string error_message = VariableSetupExceptionProlog(GetName(), Type) +
+        "attribute [" + TIMEFORMAT_ATTRIBUTE_NAME + "] contains unsupported time format [" +
+        time_format + "]";
       throw VariableSetupException(error_message);
     }
     m_time_format = time_format;

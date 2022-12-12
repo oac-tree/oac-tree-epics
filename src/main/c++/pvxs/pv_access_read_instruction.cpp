@@ -25,7 +25,6 @@
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/log_severity.h>
 #include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/workspace.h>
 
@@ -59,16 +58,14 @@ void PvAccessReadInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    std::string error_message =
-      "sup::sequencer::PvAccessReadInstruction::SetupImpl(): missing mandatory attribute [" +
-       CHANNEL_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(OUTPUT_ATTRIBUTE_NAME))
   {
-    std::string error_message =
-      "sup::sequencer::PvAccessReadInstruction::SetupImpl(): missing mandatory attribute [" +
-       OUTPUT_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "missing mandatory attribute [" + OUTPUT_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
 }
@@ -79,10 +76,9 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Wo
   auto output_var_name = SplitFieldName(output_field_name).first;
   if (!ws->HasVariable(output_var_name))
   {
-    std::string error_message =
-      "sup::sequencer::PvAccessReadInstruction::ExecuteSingleImpl(): workspace does not "
-      "contain output variable with name [" + output_var_name + "]";
-    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      "workspace does not contain output variable with name [" + output_var_name + "]";
+    ui->LogError(error_message);
     return ExecutionStatus::FAILURE;
   }
 
@@ -93,6 +89,9 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Wo
   auto timeout = pv_access_helper::ParseTimeoutString(timeout_str);
   if (timeout >= 0.0 && !pv.WaitForValidValue(timeout))
   {
+    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      "channel with name [" + channel_name + "] timed out";
+    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   auto value = pv.GetValue();
@@ -100,8 +99,12 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Wo
   {
     return ExecutionStatus::FAILURE;
   }
-  if (!ws->SetValue(GetAttribute(OUTPUT_ATTRIBUTE_NAME), value))
+  if (!ws->SetValue(output_field_name, value))
   {
+    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      "could not set value from channel [" + channel_name +
+      "] to workspace variable field with name [" + output_field_name + "]";
+    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;

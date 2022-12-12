@@ -25,7 +25,6 @@
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/log_severity.h>
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/workspace.h>
@@ -64,18 +63,16 @@ void PvAccessWriteInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    std::string error_message =
-      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: missing mandatory "
-      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME) &&
      (!HasAttribute(TYPE_ATTRIBUTE_NAME) || !HasAttribute(VALUE_ATTRIBUTE_NAME)))
   {
-    std::string error_message =
-      "Setup of instruction [" + GetName() + "] of type <" + Type + "> failed: instruction "
-      "requires either attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME + "] or both attributes [" +
-      TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
+    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      "instruction requires either attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME +
+      "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
 }
@@ -85,18 +82,17 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, W
   auto value = pv_access_helper::PackIntoStructIfScalar(GetNewValue(ui, ws));
   if (sup::dto::IsEmptyValue(value))
   {
-    std::string warning_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> warning: value to write is Empty";
-    ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
+    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      "value to write is Empty";
+    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   if (channel_name.empty())
   {
-    std::string error_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> error: channel name from "
-      "attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
-    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      "channel name from attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
+    ui->LogError(error_message);
     return ExecutionStatus::FAILURE;
   }
   sup::epics::PvAccessClientPV pv(channel_name);
@@ -105,19 +101,17 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, W
   auto timeout = pv_access_helper::ParseTimeoutString(timeout_str);
   if (timeout >= 0.0 && !pv.WaitForConnected(timeout))
   {
-    std::string warning_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> warning: channel with name [" +
-      channel_name + "] timed out";
-    ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
+    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      "channel with name [" + channel_name + "] timed out";
+    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.SetValue(value))
   {
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
-    std::string warning_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> warning: could not write value "
-      "[" + json_value + "] to channel [" + channel_name + "]";
-    ui->Log(log::SUP_SEQ_LOG_WARNING, warning_message);
+    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      "could not write value [" + json_value + "] to channel [" + channel_name + "]";
+    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;
@@ -131,19 +125,17 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface* ui, Work
     auto var_var_name = SplitFieldName(var_field_name).first;
     if (!ws->HasVariable(var_var_name))
     {
-      std::string error_message =
-        "Instruction [" + GetName() + "] of type <" + Type + "> error: workspace does not "
-        "contain input variable with name [" + var_var_name + "]";
-      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+        "workspace does not contain input variable with name [" + var_var_name + "]";
+      ui->LogError(error_message);
       return {};
     }
     sup::dto::AnyValue result;
     if (!ws->GetValue(var_field_name, result))
     {
-      std::string error_message =
-        "Instruction [" + GetName() + "] of type <" + Type + "> error: could not read variable "
-        "field with name [" + var_field_name + "] from workspace";
-      ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+        "could not read variable field with name [" + var_field_name + "] from workspace";
+      ui->LogError(error_message);
       return {};
     }
     return result;
@@ -152,10 +144,9 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface* ui, Work
   sup::dto::JSONAnyTypeParser type_parser;
   if (!type_parser.ParseString(type_str, ws->GetTypeRegistry()))
   {
-    std::string error_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse type [" +
-      type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
+    ui->LogError(error_message);
     return {};
   }
   sup::dto::AnyType anytype = type_parser.MoveAnyType();
@@ -163,10 +154,10 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface* ui, Work
   sup::dto::JSONAnyValueParser val_parser;
   if (!val_parser.TypedParseString(anytype, val_str))
   {
-    std::string error_message =
-      "Instruction [" + GetName() + "] of type <" + Type + "> error: could not parse value [" +
-      val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME + "] to type [" + type_str + "]";
-    ui->Log(log::SUP_SEQ_LOG_ERR, error_message);
+    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
+      "] to type [" + type_str + "]";
+    ui->LogError(error_message);
     return {};
   }
   return val_parser.MoveAnyValue();
