@@ -61,7 +61,7 @@ void LogInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(MESSAGE_ATTRIBUTE_NAME) && !HasAttribute(INPUT_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "instruction requires at least one of the attributes [" + MESSAGE_ATTRIBUTE_NAME + ", " +
       INPUT_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
@@ -77,7 +77,7 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     severity = SeverityFromString(severity_str);
     if (severity < 0)
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "could not parse severity [" + severity_str + "] as valid severity level";
       ui->LogError(error_message);
       return ExecutionStatus::FAILURE;
@@ -94,7 +94,7 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     auto input_var_name = SplitFieldName(input_field_name).first;
     if (!ws->HasVariable(input_var_name))
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "workspace does not contain input variable with name [" + input_var_name + "]";
       ui->LogError(error_message);
       return ExecutionStatus::FAILURE;
@@ -102,7 +102,7 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     sup::dto::AnyValue value;
     if (!ws->GetValue(GetAttribute(INPUT_ATTRIBUTE_NAME), value))
     {
-      std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      std::string warning_message = InstructionWarningLogProlog() +
         "could not read variable field with name [" + input_var_name + "] from workspace";
       ui->LogWarning(warning_message);
       return ExecutionStatus::FAILURE;

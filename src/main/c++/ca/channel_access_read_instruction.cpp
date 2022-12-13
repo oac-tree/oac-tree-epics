@@ -57,13 +57,13 @@ void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "missing mandatory attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
@@ -73,7 +73,7 @@ void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
     auto timeout_val = channel_access_helper::ParseTimeoutString(timeout_str);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      std::string error_message = InstructionSetupExceptionProlog() +
         "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
         "] to positive or zero floating point value";
       throw InstructionSetupException(error_message);
@@ -93,7 +93,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   auto var_var_name = SplitFieldName(var_field_name).first;
   if (!ws->HasVariable(var_var_name))
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "workspace does not contain input variable with name [" + var_var_name + "]";
     ui->LogError(error_message);
     return ExecutionStatus::FAILURE;
@@ -101,7 +101,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   sup::dto::AnyValue value;
   if (!ws->GetValue(var_field_name, value))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "could not read variable field with name [" + var_field_name + "] from workspace";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -109,7 +109,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   if (channel_name.empty())
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "channel name from attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
     ui->LogError(error_message);
     return ExecutionStatus::FAILURE;
@@ -117,7 +117,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   auto channel_type = channel_access_helper::ChannelType(value.GetType());
   if (sup::dto::IsEmptyType(channel_type))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "type of variable field with name [" + var_field_name + "] is Empty";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -125,7 +125,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   if (!pv.WaitForValidValue(m_timeout_sec))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "channel with name [" + channel_name + "] timed out";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -134,7 +134,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   auto var_val = channel_access_helper::ConvertToTypedAnyValue(ext_val, value.GetType());
   if (sup::dto::IsEmptyValue(var_val))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "could not convert value from channel [" + channel_name +
       "] to type of variable field with name [" + var_field_name + "]";
     ui->LogWarning(warning_message);
@@ -142,7 +142,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* u
   }
   if (!ws->SetValue(GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME), var_val))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "could not set value from channel [" + channel_name +
       "] to workspace variable field with name [" + var_field_name + "]";
     ui->LogWarning(warning_message);

@@ -62,14 +62,14 @@ void ChannelAccessWriteInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME) &&
      (!HasAttribute(TYPE_ATTRIBUTE_NAME) || !HasAttribute(VALUE_ATTRIBUTE_NAME)))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "instruction requires either attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME +
       "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
@@ -80,7 +80,7 @@ void ChannelAccessWriteInstruction::SetupImpl(const Procedure&)
     auto timeout_val = channel_access_helper::ParseTimeoutString(timeout_str);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      std::string error_message = InstructionSetupExceptionProlog() +
         "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
         "] to positive or zero floating point value";
       throw InstructionSetupException(error_message);
@@ -100,7 +100,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   auto value = channel_access_helper::ExtractChannelValue(GetNewValue(ui, ws));
   if (sup::dto::IsEmptyValue(value))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "value to write is Empty";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -108,7 +108,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   if (channel_name.empty())
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "channel name from attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
     ui->LogError(error_message);
     return ExecutionStatus::FAILURE;
@@ -117,7 +117,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   if (!pv.WaitForConnected(m_timeout_sec))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "channel with name [" + channel_name + "] timed out";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -125,7 +125,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface* 
   if (!pv.SetValue(value))
   {
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "could not write value [" + json_value + "] to channel [" + channel_name + "]";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -142,7 +142,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
     auto var_var_name = SplitFieldName(var_field_name).first;
     if (!ws->HasVariable(var_var_name))
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "workspace does not contain input variable with name [" + var_var_name + "]";
       ui->LogError(error_message);
       return {};
@@ -150,7 +150,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
     sup::dto::AnyValue result;
     if (!ws->GetValue(var_field_name, result))
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "could not read variable field with name [" + var_field_name + "] from workspace";
       ui->LogError(error_message);
       return {};
@@ -162,7 +162,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
   auto registry = (ws == nullptr) ? nullptr : ws->GetTypeRegistry();
   if (!type_parser.ParseString(type_str, registry))
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
     ui->LogError(error_message);
     return {};
@@ -172,7 +172,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface* ui,
   sup::dto::JSONAnyValueParser val_parser;
   if (!val_parser.TypedParseString(anytype, val_str))
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
       "] to type [" + type_str + "]";
     ui->LogError(error_message);

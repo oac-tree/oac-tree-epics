@@ -69,14 +69,14 @@ void RPCClientInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(SERVICE_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "missing mandatory attribute [" + SERVICE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(REQUEST_ATTRIBUTE_NAME) &&
       !(HasAttribute(TYPE_ATTRIBUTE_NAME) && HasAttribute(VALUE_ATTRIBUTE_NAME)))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "instruction requires either attribute [" + REQUEST_ATTRIBUTE_NAME +
       "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
@@ -87,7 +87,7 @@ void RPCClientInstruction::SetupImpl(const Procedure&)
     auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      std::string error_message = InstructionSetupExceptionProlog() +
         "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
         "] to positive or zero floating point value";
       throw InstructionSetupException(error_message);
@@ -122,7 +122,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
     auto output_var_name = SplitFieldName(output_field_name).first;
     if (!ws->HasVariable(output_var_name))
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "workspace does not contain output variable with name [" + output_var_name + "]";
       ui->LogError(error_message);
       return ExecutionStatus::FAILURE;
@@ -130,7 +130,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
     if (!ws->SetValue(output_field_name, reply))
     {
       auto json_reply = sup::dto::ValuesToJSONString(reply).substr(0, 1024);
-      std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+      std::string warning_message = InstructionWarningLogProlog() +
         "could not set reply from RPC call [" + json_reply +
         "] to workspace variable field with name [" + output_field_name + "]";
       ui->LogWarning(warning_message);
@@ -149,7 +149,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
     auto request_var_name = SplitFieldName(request_field_name).first;
     if (!ws->HasVariable(request_var_name))
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "workspace does not contain input variable with name [" + request_var_name + "]";
       ui->LogError(error_message);
       return {};
@@ -157,7 +157,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
     sup::dto::AnyValue request;
     if (!ws->GetValue(request_field_name, request))
     {
-      std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+      std::string error_message = InstructionErrorLogProlog() +
         "could not read variable field with name [" + request_field_name + "] from workspace";
       ui->LogError(error_message);
       return {};
@@ -168,7 +168,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
   sup::dto::JSONAnyTypeParser type_parser;
   if (!type_parser.ParseString(type_str, ws->GetTypeRegistry()))
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
     ui->LogError(error_message);
     return {};
@@ -178,7 +178,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
   sup::dto::JSONAnyValueParser value_parser;
   if (!value_parser.TypedParseString(anytype, val_str))
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
       "] to type [" + type_str + "]";
     ui->LogError(error_message);

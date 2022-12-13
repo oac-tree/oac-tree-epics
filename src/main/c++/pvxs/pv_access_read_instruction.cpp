@@ -59,13 +59,13 @@ void PvAccessReadInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
   if (!HasAttribute(OUTPUT_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+    std::string error_message = InstructionSetupExceptionProlog() +
       "missing mandatory attribute [" + OUTPUT_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
@@ -75,7 +75,7 @@ void PvAccessReadInstruction::SetupImpl(const Procedure&)
     auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog(GetName(), Type) +
+      std::string error_message = InstructionSetupExceptionProlog() +
         "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
         "] to positive or zero floating point value";
       throw InstructionSetupException(error_message);
@@ -95,7 +95,7 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Wo
   auto output_var_name = SplitFieldName(output_field_name).first;
   if (!ws->HasVariable(output_var_name))
   {
-    std::string error_message = InstructionErrorLogProlog(GetName(), Type) +
+    std::string error_message = InstructionErrorLogProlog() +
       "workspace does not contain output variable with name [" + output_var_name + "]";
     ui->LogError(error_message);
     return ExecutionStatus::FAILURE;
@@ -104,7 +104,7 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Wo
   sup::epics::PvAccessClientPV pv(channel_name);
   if (!pv.WaitForValidValue(m_timeout_sec))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "channel with name [" + channel_name + "] timed out";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
@@ -112,14 +112,14 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Wo
   auto value = pv.GetValue();
   if (sup::dto::IsEmptyValue(value))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "value retrieved from channel [" + channel_name + "] is empty";
     ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!ws->SetValue(output_field_name, value))
   {
-    std::string warning_message = InstructionWarningLogProlog(GetName(), Type) +
+    std::string warning_message = InstructionWarningLogProlog() +
       "could not set value from channel [" + channel_name +
       "] to workspace variable field with name [" + output_field_name + "]";
     ui->LogWarning(warning_message);
