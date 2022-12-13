@@ -22,6 +22,9 @@
 #include "unit_test_helper.h"
 
 #include <sup/sequencer/generic_utils.h>
+#include <sup/sequencer/variable.h>
+#include <sup/sequencer/variable_registry.h>
+#include <sup/sequencer/workspace.h>
 
 #include <sup/dto/anyvalue_helper.h>
 
@@ -47,6 +50,22 @@ bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate)
   return predicate();
 }
 
+bool WaitForCAChannel(const std::string& channel, const std::string& type_str, double timeout)
+{
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  if (!variable)
+  {
+    return false;
+  }
+  variable->AddAttribute("channel", channel);
+  variable->AddAttribute("type", type_str);
+  ws.AddVariable("var", variable.release());
+  ws.Setup();
+
+  return ws.WaitForVariable("var", timeout);
+}
+
 ReadOnlyVariable::ReadOnlyVariable(const sup::dto::AnyValue& value)
   : Variable("UnitTest_ReadOnlyVariable")
   , m_value{value}
@@ -59,7 +78,7 @@ bool ReadOnlyVariable::GetValueImpl(sup::dto::AnyValue& value) const
   return sup::dto::TryConvert(value, m_value);
 }
 
-bool ReadOnlyVariable::SetValueImpl(const sup::dto::AnyValue& value)
+bool ReadOnlyVariable::SetValueImpl(const sup::dto::AnyValue&)
 {
   return false;
 }

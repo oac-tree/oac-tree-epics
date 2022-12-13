@@ -35,6 +35,8 @@ namespace unit_test_helper {
 
 bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate);
 
+bool WaitForCAChannel(const std::string& channel, const std::string& type_str, double timeout);
+
 class ReadOnlyVariable : public Variable
 {
 public:

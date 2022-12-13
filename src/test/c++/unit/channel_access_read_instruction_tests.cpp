@@ -39,8 +39,17 @@ using namespace sup::sequencer;
 static const std::string WRONGSTRUCTTYPE =
   R"RAW({"type":"wrongstruct","attributes":[{"flag":{"type":"bool"}}]})RAW";
 
+static const std::string WRONGCONNECTEDTYPE =
+  R"RAW({"type":"wrongextrafield","attributes":[{"value":{"type":"bool"}},{"connected":{"type":"string"}}]})RAW";
+
 static const std::string WRONGTIMESTAMPTYPE =
   R"RAW({"type":"wrongextrafield","attributes":[{"value":{"type":"bool"}},{"timestamp":{"type":"string"}}]})RAW";
+
+static const std::string WRONGSTATUSTYPE =
+  R"RAW({"type":"wrongextrafield","attributes":[{"value":{"type":"bool"}},{"status":{"type":"string"}}]})RAW";
+
+static const std::string WRONGSEVERITYTYPE =
+  R"RAW({"type":"wrongextrafield","attributes":[{"value":{"type":"bool"}},{"severity":{"type":"string"}}]})RAW";
 
 static const std::string READBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
@@ -70,9 +79,6 @@ class ChannelAccessReadInstructionTest : public ::testing::Test
 protected:
   ChannelAccessReadInstructionTest();
   virtual ~ChannelAccessReadInstructionTest();
-
-  bool WaitForChannel(const std::string& channel, const std::string& type_str,
-                      double timeout) const;
 };
 
 TEST_F(ChannelAccessReadInstructionTest, Setup)
@@ -230,7 +236,38 @@ TEST_F(ChannelAccessReadInstructionTest, Timeout)
   EXPECT_EQ(value.GetType(), sup::dto::BooleanType);
 }
 
-TEST_F(ChannelAccessReadInstructionTest, WrongFieldType)
+TEST_F(ChannelAccessReadInstructionTest, WrongConnectedType)
+{
+  unit_test_helper::NullUserInterface ui;
+  Procedure proc;
+
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("Local");
+
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("type", WRONGCONNECTEDTYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
+
+  auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
+  ASSERT_TRUE(static_cast<bool>(read_instruction));
+
+  // Variable to write to doesn't exist in workspace
+  EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
+  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
+  EXPECT_NO_THROW(read_instruction->Setup(proc));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
+  EXPECT_NO_THROW(read_instruction->Reset());
+
+  sup::dto::AnyValue value;
+  EXPECT_TRUE(ws.GetValue("var", value));
+  EXPECT_TRUE(value.HasField("value"));
+  EXPECT_TRUE(value.HasField("connected"));
+}
+
+TEST_F(ChannelAccessReadInstructionTest, WrongTimestampType)
 {
   unit_test_helper::NullUserInterface ui;
   Procedure proc;
@@ -259,6 +296,68 @@ TEST_F(ChannelAccessReadInstructionTest, WrongFieldType)
   EXPECT_TRUE(ws.GetValue("var", value));
   EXPECT_TRUE(value.HasField("value"));
   EXPECT_TRUE(value.HasField("timestamp"));
+}
+
+TEST_F(ChannelAccessReadInstructionTest, WrongStatusType)
+{
+  unit_test_helper::NullUserInterface ui;
+  Procedure proc;
+
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("Local");
+
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("type", WRONGSTATUSTYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
+
+  auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
+  ASSERT_TRUE(static_cast<bool>(read_instruction));
+
+  // Variable to write to doesn't exist in workspace
+  EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
+  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
+  EXPECT_NO_THROW(read_instruction->Setup(proc));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
+  EXPECT_NO_THROW(read_instruction->Reset());
+
+  sup::dto::AnyValue value;
+  EXPECT_TRUE(ws.GetValue("var", value));
+  EXPECT_TRUE(value.HasField("value"));
+  EXPECT_TRUE(value.HasField("status"));
+}
+
+TEST_F(ChannelAccessReadInstructionTest, WrongSeverityType)
+{
+  unit_test_helper::NullUserInterface ui;
+  Procedure proc;
+
+  Workspace ws;
+  auto variable = GlobalVariableRegistry().Create("Local");
+
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("type", WRONGSEVERITYTYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
+
+  auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
+  ASSERT_TRUE(static_cast<bool>(read_instruction));
+
+  // Variable to write to doesn't exist in workspace
+  EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
+  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
+  EXPECT_NO_THROW(read_instruction->Setup(proc));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
+  EXPECT_NO_THROW(read_instruction->Reset());
+
+  sup::dto::AnyValue value;
+  EXPECT_TRUE(ws.GetValue("var", value));
+  EXPECT_TRUE(value.HasField("value"));
+  EXPECT_TRUE(value.HasField("severity"));
 }
 
 TEST_F(ChannelAccessReadInstructionTest, ReadOnlyVariable)
@@ -297,7 +396,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
   ASSERT_TRUE(static_cast<bool>(proc));
   ASSERT_TRUE(proc->Setup());
 
-  ASSERT_TRUE(WaitForChannel("SEQ-TEST:BOOL", R"RAW({"type":"bool"})RAW", 5.0));
+  ASSERT_TRUE(unit_test_helper::WaitForCAChannel("SEQ-TEST:BOOL", R"RAW({"type":"bool"})RAW", 5.0));
 
   std::string command = softioc_utils::GetEPICSBinaryPath() + "caput SEQ-TEST:BOOL TRUE";
   EXPECT_TRUE(std::system(command.c_str()) == 0);
@@ -332,20 +431,3 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
 ChannelAccessReadInstructionTest::ChannelAccessReadInstructionTest() = default;
 
 ChannelAccessReadInstructionTest::~ChannelAccessReadInstructionTest() = default;
-
-bool ChannelAccessReadInstructionTest::WaitForChannel(
-  const std::string& channel, const std::string& type_str, double timeout) const
-{
-  Workspace ws;
-  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
-  if (!variable)
-  {
-    return false;
-  }
-  variable->AddAttribute("channel", channel);
-  variable->AddAttribute("type", type_str);
-  ws.AddVariable("var", variable.release());
-  ws.Setup();
-
-  return ws.WaitForVariable("var", timeout);
-}
