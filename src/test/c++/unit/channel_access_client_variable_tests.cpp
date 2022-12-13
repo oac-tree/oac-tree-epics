@@ -222,7 +222,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValueError)
   EXPECT_TRUE(variable->AddAttribute("irrelevant", "undefined"));
   EXPECT_THROW(variable->Setup(), VariableSetupException);
 
-  sup::dto::AnyValue value; // Placeholder
+  sup::dto::AnyValue value;
 
   EXPECT_FALSE(variable->GetValue(value));
   EXPECT_TRUE(sup::dto::IsEmptyValue(value));
@@ -242,43 +242,97 @@ TEST_F(ChannelAccessClientVariableTest, SetValueSuccess)
   EXPECT_TRUE(ws.AddVariable("var", variable.release()));
   EXPECT_NO_THROW(ws.Setup());
 
-
   // Add channel to CA client reader
   EXPECT_TRUE(ca_client.AddVariable("SEQ-TEST:FLOAT", sup::dto::Float32Type));
   EXPECT_TRUE(ca_client.WaitForConnected("SEQ-TEST:FLOAT", 5.0));
 
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 
+  // Set using variable
   sup::dto::AnyValue value{0.1f};
-
   EXPECT_TRUE(ws.SetValue("var", value));
-
   // Read from variable
   EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 0.1f;
   }));
-
   // Read from CA client
   EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
     sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
     return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 0.1f;
   }));
 
+  // Set using CA client
   value = 3.5f;
-  EXPECT_TRUE(ws.SetValue("var", value));
-
-  // Read from CA client
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
-    sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
-    return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 3.5f;
-  }));
+  EXPECT_TRUE(ca_client.SetValue("SEQ-TEST:FLOAT", value));
 
   // Read from variable
   EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 3.5f;
   }));
+
+  // Read from CA client
+  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
+    sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
+    return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 3.5f;
+  }));
+}
+
+TEST_F(ChannelAccessClientVariableTest, SetValueBadSetup)
+{
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+
+  // Missing mandatory attribute
+  EXPECT_TRUE(variable->AddAttribute("irrelevant", "undefined"));
+  EXPECT_THROW(variable->Setup(), VariableSetupException);
+
+  sup::dto::AnyValue value = 2;
+
+  EXPECT_FALSE(variable->SetValue(value));
+}
+
+TEST_F(ChannelAccessClientVariableTest, SetValueUnconnected)
+{
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+
+  // Missing mandatory attribute
+  EXPECT_TRUE(variable->AddAttribute("channel", "DOESNOTEXIST"));
+  EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
+  EXPECT_NO_THROW(variable->Setup());
+
+  sup::dto::AnyValue value = 2;
+
+  EXPECT_FALSE(variable->SetValue(value));
+}
+
+TEST_F(ChannelAccessClientVariableTest, SetValueWrongStruct)
+{
+  Workspace ws;
+  sup::epics::ChannelAccessClient ca_client;
+
+  auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(variable));
+
+  // Setup implicit with AddAttribute .. access as 'float32'
+  EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
+  EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_NO_THROW(ws.Setup());
+  EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
+
+  // Set value using a struct with a 'value' field:
+  sup::dto::AnyValue struct_value = {
+    {"value", {sup::dto::Float32Type, 22.25f}}
+  };
+  EXPECT_TRUE(ws.SetValue("var", struct_value));
+
+  sup::dto::AnyValue wrong_struct = {
+    {"measurement", {sup::dto::Float32Type, -1.5f}}
+  };
+  EXPECT_FALSE(ws.SetValue("var", wrong_struct));
 }
 
 ChannelAccessClientVariableTest::ChannelAccessClientVariableTest()
