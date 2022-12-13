@@ -14,6 +14,6 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
 endif()
 
 add_subdirectory(main/c++)
-# add_subdirectory(test/c++)
+add_subdirectory(test/c++)
 
 # include(installation)

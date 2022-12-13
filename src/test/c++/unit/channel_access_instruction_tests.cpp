@@ -23,6 +23,7 @@
 #include "softioc_utils.h"
 #include "unit_test_helper.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
@@ -96,11 +97,17 @@ TEST_F(ChannelAccessInstructionTest, MissingAttribute)
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
   ASSERT_TRUE(static_cast<bool>(read_instruction));
-  EXPECT_FALSE(read_instruction->Setup(proc));
+  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
+  read_instruction->AddAttribute("channel", "some_channel");
+  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
+  read_instruction->AddAttribute("varName", "some_var_name");
+  EXPECT_NO_THROW(read_instruction->Setup(proc));
+  read_instruction->AddAttribute("timeout", "cant_parse_this");
+  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
 
   auto write_instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(write_instruction));
-  EXPECT_FALSE(write_instruction->Setup(proc));
+  EXPECT_THROW(write_instruction->Setup(proc), InstructionSetupException);
 }
 
 TEST_F(ChannelAccessInstructionTest, WriteToNonExistingChannel)
@@ -114,7 +121,7 @@ TEST_F(ChannelAccessInstructionTest, WriteToNonExistingChannel)
   EXPECT_TRUE(write_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_TRUE(write_instruction->AddAttribute("type", "{\"type\": \"string\"}"));
   EXPECT_TRUE(write_instruction->AddAttribute("value", "\"undefined\""));
-  EXPECT_TRUE(write_instruction->Setup(proc));
+  EXPECT_NO_THROW(write_instruction->Setup(proc));
   write_instruction->ExecuteSingle(&ui, nullptr);
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
@@ -254,7 +261,7 @@ TEST_F(ChannelAccessInstructionTest, Write_NoSuchChannel)
   EXPECT_TRUE(instruction->AddAttribute("timeout", "1"));
 
   Procedure proc;
-  EXPECT_TRUE(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->Setup(proc));
 
   unit_test_helper::NullUserInterface ui;
   instruction->ExecuteSingle(&ui, nullptr);

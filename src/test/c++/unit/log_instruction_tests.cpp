@@ -21,9 +21,9 @@
 
 #include "null_user_interface.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/log.h>
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/sequence_parser.h>
 
@@ -78,9 +78,9 @@ TEST_F(LogInstructionTest, Setup)
 
   Procedure proc;
   std::string log_message = "Hello test!";
-  EXPECT_FALSE(instruction->Setup(proc));
+  EXPECT_THROW(instruction->Setup(proc), InstructionSetupException);
   EXPECT_TRUE(instruction->AddAttribute("message", log_message));
-  EXPECT_TRUE(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->Setup(proc));
 }
 
 TEST_F(LogInstructionTest, Message)
@@ -91,7 +91,7 @@ TEST_F(LogInstructionTest, Message)
   Procedure proc;
   std::string log_message = "Hello test!";
   EXPECT_TRUE(instruction->AddAttribute("message", log_message));
-  EXPECT_TRUE(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->Setup(proc));
 
   std::ostringstream oss;
   log::LogStreamRedirector redirector(oss);

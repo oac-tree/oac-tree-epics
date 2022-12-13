@@ -23,6 +23,7 @@
 #include "softioc_runner.h"
 #include "unit_test_helper.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
@@ -66,7 +67,38 @@ protected:
   softioc_utils::SoftIocRunner m_softioc_runner;
 };
 
-TEST_F(ChannelAccessClientVariableTest, GetValue_success)
+TEST_F(ChannelAccessClientVariableTest, Setup)
+{
+  // Missing attributes or parse error
+  auto var_1 = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(var_1));
+  EXPECT_THROW(var_1->Setup(), VariableSetupException);
+  EXPECT_TRUE(var_1->AddAttribute("channel", "DOESNT-MATTER"));
+  EXPECT_THROW(var_1->Setup(), VariableSetupException);
+  EXPECT_TRUE(var_1->AddAttribute("type", "Cannot parse this as a type"));
+  EXPECT_THROW(var_1->Setup(), VariableSetupException);
+
+  // Missing attributes or wrong type
+  auto var_2 = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(var_2));
+  EXPECT_THROW(var_2->Setup(), VariableSetupException);
+  EXPECT_TRUE(var_2->AddAttribute("channel", "DOESNT-MATTER"));
+  EXPECT_THROW(var_2->Setup(), VariableSetupException);
+  EXPECT_TRUE(var_2->AddAttribute("type", R"RAW({"type":"empty"})RAW"));
+  EXPECT_THROW(var_2->Setup(), VariableSetupException);
+
+  // Successful setup
+  auto var_3 = GlobalVariableRegistry().Create("ChannelAccessClient");
+  ASSERT_TRUE(static_cast<bool>(var_3));
+  EXPECT_THROW(var_3->Setup(), VariableSetupException);
+  EXPECT_TRUE(var_3->AddAttribute("channel", "DOESNT-MATTER"));
+  EXPECT_THROW(var_3->Setup(), VariableSetupException);
+  EXPECT_TRUE(var_3->AddAttribute("type", R"RAW({"type":"bool"})RAW"));
+  EXPECT_NO_THROW(var_3->Setup());
+  EXPECT_NO_THROW(var_3->Reset());
+}
+
+TEST_F(ChannelAccessClientVariableTest, GetValueSuccess)
 {
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
@@ -89,7 +121,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_success)
   EXPECT_EQ(value.GetType(), sup::dto::StringType);
 }
 
-TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
+TEST_F(ChannelAccessClientVariableTest, GetValueConnected)
 {
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
@@ -111,7 +143,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_connected)
   EXPECT_TRUE(connected.As<bool>());
 }
 
-TEST_F(ChannelAccessClientVariableTest, GetValue_disconnect)
+TEST_F(ChannelAccessClientVariableTest, GetValueDisconnect)
 {
   m_softioc_runner.Start(SINGLE_RECORD_DB_CONTENT);
   ASSERT_TRUE(m_softioc_runner.IsActive());
@@ -144,7 +176,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_disconnect)
   EXPECT_FALSE(connected.As<bool>());
 }
 
-TEST_F(ChannelAccessClientVariableTest, GetValue_extended)
+TEST_F(ChannelAccessClientVariableTest, GetValueExtended)
 {
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
@@ -181,14 +213,14 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_extended)
   EXPECT_EQ(severity.As<sup::dto::int16>(), 0);
 }
 
-TEST_F(ChannelAccessClientVariableTest, GetValue_error)
+TEST_F(ChannelAccessClientVariableTest, GetValueError)
 {
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   // Missing mandatory attribute
   EXPECT_TRUE(variable->AddAttribute("irrelevant", "undefined"));
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_THROW(variable->Setup(), VariableSetupException);
 
   sup::dto::AnyValue value; // Placeholder
 
@@ -196,7 +228,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValue_error)
   EXPECT_TRUE(sup::dto::IsEmptyValue(value));
 }
 
-TEST_F(ChannelAccessClientVariableTest, SetValue_success)
+TEST_F(ChannelAccessClientVariableTest, SetValueSuccess)
 {
   Workspace ws;
   sup::epics::ChannelAccessClient ca_client;
