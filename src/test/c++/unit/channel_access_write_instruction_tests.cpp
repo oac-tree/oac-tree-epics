@@ -19,7 +19,7 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "null_user_interface.h"
+#include "test_user_interface.h"
 #include "softioc_utils.h"
 #include "unit_test_helper.h"
 
@@ -212,7 +212,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   EXPECT_TRUE(write_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
   EXPECT_TRUE(write_instruction->AddAttribute("type", BOOLEANTYPE));
   EXPECT_TRUE(write_instruction->AddAttribute("value", "true"));
-  EXPECT_TRUE(write_instruction->AddAttribute("timeout", "2.0"));
+  EXPECT_TRUE(write_instruction->AddAttribute("timeout", "5.0"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
@@ -255,7 +255,6 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccessStruct)
   EXPECT_TRUE(write_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
   EXPECT_TRUE(write_instruction->AddAttribute("type", BOOLEANSTRUCTTYPE));
   EXPECT_TRUE(write_instruction->AddAttribute("value", R"RAW({"value":true})RAW"));
-  EXPECT_TRUE(write_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);

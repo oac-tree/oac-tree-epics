@@ -19,7 +19,7 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "null_user_interface.h"
+#include "test_user_interface.h"
 #include "softioc_utils.h"
 #include "unit_test_helper.h"
 

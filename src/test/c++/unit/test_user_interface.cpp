@@ -19,7 +19,7 @@
 * of the distribution package.
 ******************************************************************************/
 
-#include "null_user_interface.h"
+#include "test_user_interface.h"
 
 namespace sup {
 
@@ -33,6 +33,20 @@ NullUserInterface::~NullUserInterface() = default;
 
 void NullUserInterface::UpdateInstructionStatusImpl(const Instruction*)
 {}
+
+LogUserInterface::LogUserInterface()
+  : m_log_entries{}
+{}
+
+LogUserInterface::~LogUserInterface() = default;
+
+void LogUserInterface::UpdateInstructionStatusImpl(const Instruction*)
+{}
+
+void LogUserInterface::LogImpl(int severity, const std::string& message)
+{
+  m_log_entries.emplace_back(severity, message);
+}
 
 } // namespace unit_test_helper
 

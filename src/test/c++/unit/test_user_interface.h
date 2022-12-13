@@ -19,10 +19,13 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
-#define SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
+#ifndef SUP_SEQUENCER_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
+#define SUP_SEQUENCER_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
 
 #include <sup/sequencer/user_interface.h>
+
+#include <utility>
+#include <vector>
 
 namespace sup {
 
@@ -34,9 +37,23 @@ class NullUserInterface : public UserInterface
 {
 public:
   NullUserInterface();
-  ~NullUserInterface() override;
+  ~NullUserInterface();
 
-  virtual void UpdateInstructionStatusImpl(const Instruction* instruction);
+  void UpdateInstructionStatusImpl(const Instruction* instruction) override;
+};
+
+class LogUserInterface : public UserInterface
+{
+public:
+  using LogEntry = std::pair<int, std::string>;
+
+  LogUserInterface();
+  ~LogUserInterface();
+
+  void UpdateInstructionStatusImpl(const Instruction* instruction) override;
+  void LogImpl(int severity, const std::string& message) override;
+
+  std::vector<LogEntry> m_log_entries;
 };
 
 } // namespace unit_test_helper
@@ -45,5 +62,5 @@ public:
 
 } // namespace sup
 
-#endif // SUP_SEQUENCER_PLUGIN_EPICS_NULL_INTERFACE_H_
+#endif // SUP_SEQUENCER_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
 

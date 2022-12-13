@@ -100,7 +100,7 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
       return ExecutionStatus::FAILURE;
     }
     sup::dto::AnyValue value;
-    if (!ws->GetValue(GetAttribute(INPUT_ATTRIBUTE_NAME), value))
+    if (!ws->GetValue(input_field_name, value))
     {
       std::string warning_message = InstructionWarningLogProlog() +
         "could not read variable field with name [" + input_var_name + "] from workspace";

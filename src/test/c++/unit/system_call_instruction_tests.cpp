@@ -19,7 +19,7 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "null_user_interface.h"
+#include "test_user_interface.h"
 
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
