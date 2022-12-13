@@ -19,7 +19,6 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "null_user_interface.h"
 #include "softioc_runner.h"
 #include "unit_test_helper.h"
 
@@ -31,8 +30,6 @@
 #include <sup/epics/channel_access_client.h>
 
 #include <gtest/gtest.h>
-
-#include <thread>
 
 static const std::string BOOLCONNECTEDTYPE =
   R"RAW({"type":"boolconnected","attributes":[{"value":{"type":"bool"}},{"connected":{"type":"bool"}}]})RAW";

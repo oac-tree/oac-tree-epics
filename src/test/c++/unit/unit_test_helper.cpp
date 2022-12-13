@@ -23,6 +23,8 @@
 
 #include <sup/sequencer/generic_utils.h>
 
+#include <sup/dto/anyvalue_helper.h>
+
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -43,6 +45,23 @@ bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate)
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
   }
   return predicate();
+}
+
+ReadOnlyVariable::ReadOnlyVariable(const sup::dto::AnyValue& value)
+  : Variable("UnitTest_ReadOnlyVariable")
+  , m_value{value}
+{}
+
+ReadOnlyVariable::~ReadOnlyVariable() = default;
+
+bool ReadOnlyVariable::GetValueImpl(sup::dto::AnyValue& value) const
+{
+  return sup::dto::TryConvert(value, m_value);
+}
+
+bool ReadOnlyVariable::SetValueImpl(const sup::dto::AnyValue& value)
+{
+  return false;
 }
 
 } // namespace unit_test_helper

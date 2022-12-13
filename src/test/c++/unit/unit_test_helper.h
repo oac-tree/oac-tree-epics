@@ -25,6 +25,8 @@
 #include <functional>
 #include <string>
 
+#include <sup/sequencer/variable.h>
+
 namespace sup {
 
 namespace sequencer {
@@ -32,6 +34,17 @@ namespace sequencer {
 namespace unit_test_helper {
 
 bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate);
+
+class ReadOnlyVariable : public Variable
+{
+public:
+  ReadOnlyVariable(const sup::dto::AnyValue& value);
+  ~ReadOnlyVariable();
+private:
+  sup::dto::AnyValue m_value;
+  bool GetValueImpl(sup::dto::AnyValue& value) const override;
+  bool SetValueImpl(const sup::dto::AnyValue& value) override;
+};
 
 } // namespace unit_test_helper
 

@@ -83,14 +83,14 @@ static const std::string REPEATPROCEDURE = R"RAW(<?xml version="1.0" encoding="U
     </Workspace>
 </Procedure>)RAW";
 
-class ChannelAccessInstructionTest : public ::testing::Test
+class ChannelAccessReadInstructionTest : public ::testing::Test
 {
 protected:
-  ChannelAccessInstructionTest();
-  virtual ~ChannelAccessInstructionTest();
+  ChannelAccessReadInstructionTest();
+  virtual ~ChannelAccessReadInstructionTest();
 };
 
-TEST_F(ChannelAccessInstructionTest, MissingAttribute)
+TEST_F(ChannelAccessReadInstructionTest, MissingAttribute)
 {
   unit_test_helper::NullUserInterface ui;
   Procedure proc;
@@ -110,7 +110,7 @@ TEST_F(ChannelAccessInstructionTest, MissingAttribute)
   EXPECT_THROW(write_instruction->Setup(proc), InstructionSetupException);
 }
 
-TEST_F(ChannelAccessInstructionTest, WriteToNonExistingChannel)
+TEST_F(ChannelAccessReadInstructionTest, WriteToNonExistingChannel)
 {
   unit_test_helper::NullUserInterface ui;
   Procedure proc;
@@ -126,7 +126,7 @@ TEST_F(ChannelAccessInstructionTest, WriteToNonExistingChannel)
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
-TEST_F(ChannelAccessInstructionTest, ReadBoolean)
+TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
 {
   unit_test_helper::NullUserInterface ui;
   auto proc = ParseProcedureString(READBOOLPROCEDURE);
@@ -162,7 +162,7 @@ TEST_F(ChannelAccessInstructionTest, ReadBoolean)
   EXPECT_TRUE(string_var == "TRUE");
 }
 
-TEST_F(ChannelAccessInstructionTest, Write_boolean)
+TEST_F(ChannelAccessReadInstructionTest, Write_boolean)
 {
   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(instruction));
@@ -191,7 +191,7 @@ TEST_F(ChannelAccessInstructionTest, Write_boolean)
   }));
 }
 
-TEST_F(ChannelAccessInstructionTest, Write_float32)
+TEST_F(ChannelAccessReadInstructionTest, Write_float32)
 {
   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(instruction));
@@ -220,7 +220,7 @@ TEST_F(ChannelAccessInstructionTest, Write_float32)
   }));
 }
 
-TEST_F(ChannelAccessInstructionTest, Write_array)
+TEST_F(ChannelAccessReadInstructionTest, Write_array)
 {
   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(instruction));
@@ -250,7 +250,7 @@ TEST_F(ChannelAccessInstructionTest, Write_array)
   EXPECT_TRUE(readback_val[3] == 4);
 }
 
-TEST_F(ChannelAccessInstructionTest, Write_NoSuchChannel)
+TEST_F(ChannelAccessReadInstructionTest, Write_NoSuchChannel)
 {
   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(instruction));
@@ -268,7 +268,7 @@ TEST_F(ChannelAccessInstructionTest, Write_NoSuchChannel)
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
-TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
+TEST_F(ChannelAccessReadInstructionTest, Procedure_repeat)
 {
   unit_test_helper::NullUserInterface ui;
   auto proc = ParseProcedureString(REPEATPROCEDURE);
@@ -286,6 +286,6 @@ TEST_F(ChannelAccessInstructionTest, Procedure_repeat)
   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 }
 
-ChannelAccessInstructionTest::ChannelAccessInstructionTest() = default;
+ChannelAccessReadInstructionTest::ChannelAccessReadInstructionTest() = default;
 
-ChannelAccessInstructionTest::~ChannelAccessInstructionTest() = default;
+ChannelAccessReadInstructionTest::~ChannelAccessReadInstructionTest() = default;
