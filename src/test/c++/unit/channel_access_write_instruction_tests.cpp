@@ -216,11 +216,25 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
-  // Check channel with variable
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
-    sup::dto::AnyValue tmp;
-    return ws.GetValue("var", tmp) && tmp.As<bool>();
-  }));
+
+  // TODO: the next code block is only a replacement for the commented out chech just after.
+  // This needs to be changed when a solution is found for the EPICS callback issue (see sup-epics).
+  {
+    auto check_var = GlobalVariableRegistry().Create("ChannelAccessClient");
+    ASSERT_TRUE(static_cast<bool>(check_var));
+    EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:BOOL"));
+    EXPECT_TRUE(check_var->AddAttribute("type", BOOLEANTYPE));
+    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&check_var]{
+      sup::dto::AnyValue tmp;
+      return check_var->GetValue(tmp) && tmp.As<bool>();
+    }));
+  }
+  // // Check channel with variable
+  // EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  //   sup::dto::AnyValue tmp;
+  //   return ws.GetValue("var", tmp) && tmp.As<bool>();
+  // }));
 
   // Reset instruction and change value to false
   EXPECT_NO_THROW(write_instruction->Reset());
@@ -228,11 +242,25 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
-  // Check channel with variable
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
-    sup::dto::AnyValue tmp;
-    return ws.GetValue("var", tmp) && !tmp.As<bool>();
-  }));
+
+  // TODO: the next code block is only a replacement for the commented out chech just after.
+  // This needs to be changed when a solution is found for the EPICS callback issue (see sup-epics).
+  {
+    auto check_var = GlobalVariableRegistry().Create("ChannelAccessClient");
+    ASSERT_TRUE(static_cast<bool>(check_var));
+    EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:BOOL"));
+    EXPECT_TRUE(check_var->AddAttribute("type", BOOLEANTYPE));
+    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&check_var]{
+      sup::dto::AnyValue tmp;
+      return check_var->GetValue(tmp) && !tmp.As<bool>();
+    }));
+  }
+  // // Check channel with variable
+  // EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  //   sup::dto::AnyValue tmp;
+  //   return ws.GetValue("var", tmp) && !tmp.As<bool>();
+  // }));
 }
 
 TEST_F(ChannelAccessWriteInstructionTest, WriteSuccessStruct)
@@ -258,26 +286,41 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccessStruct)
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
-  // Check channel with variable
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
-    sup::dto::AnyValue tmp;
-    return ws.GetValue("var", tmp) && tmp.As<bool>();
-  }));
+
+  // TODO: the next code block is only a replacement for the commented out chech just after.
+  // This needs to be changed when a solution is found for the EPICS callback issue (see sup-epics).
+  {
+    auto check_var = GlobalVariableRegistry().Create("ChannelAccessClient");
+    ASSERT_TRUE(static_cast<bool>(check_var));
+    EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:BOOL"));
+    EXPECT_TRUE(check_var->AddAttribute("type", BOOLEANTYPE));
+    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&check_var]{
+      sup::dto::AnyValue tmp;
+      return check_var->GetValue(tmp) && tmp.As<bool>();
+    }));
+  }
+  // // Check channel with variable
+  // EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  //   sup::dto::AnyValue tmp;
+  //   return ws.GetValue("var", tmp) && tmp.As<bool>();
+  // }));
 }
 
 TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
 {
+  unit_test_helper::LogUserInterface ui;
+  Procedure proc;
   Workspace ws;
+
   auto instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(instruction));
-
+  // Set array
   EXPECT_TRUE(instruction->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
   EXPECT_TRUE(instruction->AddAttribute("type", UINT32ARRAYTYPE));
   EXPECT_TRUE(instruction->AddAttribute("value", "[1, 2, 3, 4, 5, 6, 7, 8]"));
-  EXPECT_TRUE(instruction->AddAttribute("timeout", "5.0"));
-
-  unit_test_helper::NullUserInterface ui;
-  instruction->ExecuteSingle(&ui, &ws);
+  EXPECT_NO_THROW(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
   // Test variable
@@ -289,12 +332,55 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 
-  // Read from variable
-  sup::dto::AnyValue readback_val;
-  ASSERT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws, &readback_val]{
-    return ws.GetValue("var", readback_val) && sup::dto::IsArrayValue(readback_val);
-  }));
-  EXPECT_TRUE(readback_val[3] == 4);
+  // TODO: the next code block is only a replacement for the commented out chech just after.
+  // This needs to be changed when a solution is found for the EPICS callback issue (see sup-epics).
+  {
+    auto check_var = GlobalVariableRegistry().Create("ChannelAccessClient");
+    ASSERT_TRUE(static_cast<bool>(check_var));
+    EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
+    EXPECT_TRUE(check_var->AddAttribute("type", UINT32ARRAYTYPE));
+    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&check_var]{
+      sup::dto::AnyValue tmp;
+      return check_var->GetValue(tmp) && sup::dto::IsArrayValue(tmp) && tmp[3] == 4;
+    }));
+  }
+  // // Read from variable
+  // sup::dto::AnyValue readback_val;
+  // EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws, &readback_val]{
+  //   return ws.GetValue("var", readback_val) && sup::dto::IsArrayValue(readback_val) &&
+  //          readback_val[3] == 4;
+  // }));
+
+  // Set array back to zero
+  EXPECT_TRUE(instruction->SetAttribute("value", "[0, 0, 0, 0, 0, 0, 0, 0]"));
+  EXPECT_NO_THROW(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
+
+  // TODO: the next code block is only a replacement for the commented out chech just after.
+  // This needs to be changed when a solution is found for the EPICS callback issue (see sup-epics).
+  {
+    auto check_var = GlobalVariableRegistry().Create("ChannelAccessClient");
+    ASSERT_TRUE(static_cast<bool>(check_var));
+    EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
+    EXPECT_TRUE(check_var->AddAttribute("type", UINT32ARRAYTYPE));
+    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&check_var]{
+      sup::dto::AnyValue tmp;
+      return check_var->GetValue(tmp) && sup::dto::IsArrayValue(tmp) && tmp[3] == 0;
+    }));
+  }
+  // // Read from variable
+  // EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws, &readback_val]{
+  //   return ws.GetValue("var", readback_val) && sup::dto::IsArrayValue(readback_val) &&
+  //          readback_val[3] == 0;
+  // }));
+
+  if (!ui.m_log_entries.empty())
+  {
+    std::cout << ui.GetFullLog();
+  }
 }
 
 ChannelAccessWriteInstructionTest::ChannelAccessWriteInstructionTest() = default;

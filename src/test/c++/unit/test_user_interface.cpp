@@ -21,6 +21,8 @@
 
 #include "test_user_interface.h"
 
+#include <sstream>
+
 namespace sup {
 
 namespace sequencer {
@@ -46,6 +48,16 @@ void LogUserInterface::UpdateInstructionStatusImpl(const Instruction*)
 void LogUserInterface::LogImpl(int severity, const std::string& message)
 {
   m_log_entries.emplace_back(severity, message);
+}
+
+std::string LogUserInterface::GetFullLog() const
+{
+  std::ostringstream oss;
+  for (const auto& log_entry : m_log_entries)
+  {
+    oss << "Severity(" << log_entry.first << "): " << log_entry.second << std::endl;
+  }
+  return oss.str();
 }
 
 } // namespace unit_test_helper

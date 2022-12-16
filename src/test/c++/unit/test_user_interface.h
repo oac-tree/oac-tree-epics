@@ -53,6 +53,8 @@ public:
   void UpdateInstructionStatusImpl(const Instruction* instruction) override;
   void LogImpl(int severity, const std::string& message) override;
 
+  std::string GetFullLog() const;
+
   std::vector<LogEntry> m_log_entries;
 };
 
