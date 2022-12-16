@@ -24,8 +24,10 @@
 
 #include <pvxs/pv_access_read_instruction.h>
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
+#include <sup/sequencer/log_severity.h>
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/sequence_parser.h>
 #include <sup/sequencer/variable_registry.h>
@@ -86,71 +88,117 @@ protected:
   unit_test_helper::NullUserInterface ui;
 };
 
-TEST_F(PvAccessReadInstructionTest, read_success)
+TEST_F(PvAccessReadInstructionTest, Setup)
 {
-  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSSERVERPROCEDURE);
+  Procedure proc;
+  // read instruction requires a channel and an output attribute
+  {
+    PvAccessReadInstruction instruction{};
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("output", "Some_Var_Name"));
+    EXPECT_NO_THROW(instruction.Setup(proc));
+    EXPECT_NO_THROW(instruction.Reset());
+  }
+  // timeout attribute should be parsed to double
+  {
+    PvAccessReadInstruction instruction{};
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_TRUE(instruction.AddAttribute("output", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("timeout", "1s"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_NO_THROW(instruction.Reset());
+  }
+  // timeout attribute should be positive
+  {
+    PvAccessReadInstruction instruction{};
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_TRUE(instruction.AddAttribute("output", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("timeout", "-1"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_NO_THROW(instruction.Reset());
+  }
+}
+
+TEST_F(PvAccessReadInstructionTest, MissingVariable)
+{
+  Procedure proc;
+  Workspace ws;
+  unit_test_helper::LogUserInterface ui;
+
+  PvAccessReadInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("output", "DoesNotExist"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(last_log_entry.second.find("DoesNotExist"), std::string::npos);
+}
+
+TEST_F(PvAccessReadInstructionTest, Timeout)
+{
+  Procedure proc;
+  Workspace ws;
+  unit_test_helper::LogUserInterface ui;
+
+  auto variable = GlobalVariableRegistry().Create("Local");
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+
+  PvAccessReadInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "ThisTimeouts"));
+  EXPECT_TRUE(instruction.AddAttribute("output", "var"));
+  EXPECT_TRUE(instruction.AddAttribute("timeout", "0.1"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(last_log_entry.second.find("ThisTimeouts"), std::string::npos);
+}
+
+TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
+{
+  auto procedure = ParseProcedureString(PVACCESSSERVERPROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
 
-  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+  ExecutionStatus exec = ExecutionStatus::FAILURE;
 
   do
   {
     procedure->ExecuteSingle(&ui);
     exec = procedure->GetStatus();
-  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-           (sup::sequencer::ExecutionStatus::FAILURE != exec));
+  } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
 
-  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
+  EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 }
 
-TEST_F(PvAccessReadInstructionTest, missing_attributes)
+TEST_F(PvAccessReadInstructionTest, ProcedureMissingChannel)
 {
-  sup::sequencer::Procedure proc{};
-  proc.AddVariable("SOME_VARIABLE",
-    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PvAccessRead");
-  ASSERT_TRUE(static_cast<bool>(instruction));
-  EXPECT_FALSE(instruction->Setup(proc));
-
-  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
-  EXPECT_FALSE(instruction->Setup(proc));
-  EXPECT_TRUE(instruction->AddAttribute("output", "SOME_VARIABLE"));
-  EXPECT_TRUE(instruction->Setup(proc));
-}
-
-TEST_F(PvAccessReadInstructionTest, missing_variable)
-{
-  sup::sequencer::Procedure proc{};
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PvAccessRead");
-  ASSERT_TRUE(static_cast<bool>(instruction));
-  EXPECT_FALSE(instruction->Setup(proc));
-
-  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
-  EXPECT_FALSE(instruction->Setup(proc));
-  EXPECT_TRUE(instruction->AddAttribute("output", "SOME_VARIABLE"));
-  EXPECT_FALSE(instruction->Setup(proc));
-  proc.AddVariable("SOME_VARIABLE",
-    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
-  EXPECT_TRUE(instruction->Setup(proc));
-}
-
-TEST_F(PvAccessReadInstructionTest, missing_channel)
-{
-  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
+  auto procedure = ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
 
-  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+  ExecutionStatus exec = ExecutionStatus::FAILURE;
 
   do
   {
     procedure->ExecuteSingle(&ui);
     exec = procedure->GetStatus();
-  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-           (sup::sequencer::ExecutionStatus::FAILURE != exec));
+  } while ((ExecutionStatus::SUCCESS != exec) &&
+           (ExecutionStatus::FAILURE != exec));
 
-  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::FAILURE);
+  EXPECT_EQ(exec, ExecutionStatus::FAILURE);
 }
 
 PvAccessReadInstructionTest::PvAccessReadInstructionTest()
