@@ -21,6 +21,10 @@
 
 #include <misc/system_clock_variable.h>
 
+#include <sup/sequencer/exceptions.h>
+#include <sup/sequencer/variable.h>
+#include <sup/sequencer/variable_registry.h>
+
 #include <gtest/gtest.h>
 
 using namespace sup::sequencer;
@@ -31,6 +35,31 @@ protected:
   SystemClockVariableTest();
   ~SystemClockVariableTest();
 };
+
+TEST_F(SystemClockVariableTest, Setup)
+{
+  {
+    auto variable = GlobalVariableRegistry().Create("SystemClock");
+    ASSERT_TRUE(static_cast<bool>(variable));
+    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_TRUE(variable->AddAttribute("format", "BAD_FORMAT"));
+    EXPECT_THROW(variable->Setup(), VariableSetupException);
+  }
+  {
+    auto variable = GlobalVariableRegistry().Create("SystemClock");
+    ASSERT_TRUE(static_cast<bool>(variable));
+    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_TRUE(variable->AddAttribute("format", "uint64"));
+    EXPECT_NO_THROW(variable->Setup());
+  }
+  {
+    auto variable = GlobalVariableRegistry().Create("SystemClock");
+    ASSERT_TRUE(static_cast<bool>(variable));
+    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_TRUE(variable->AddAttribute("format", "ISO8601"));
+    EXPECT_NO_THROW(variable->Setup());
+  }
+}
 
 TEST_F(SystemClockVariableTest, DefaultConstructed)
 {
@@ -100,7 +129,7 @@ TEST_F(SystemClockVariableTest, UnknownFormat)
 {
   SystemClockVariable clock_var{};
   EXPECT_TRUE(clock_var.AddAttribute("format", "unknown"));
-  EXPECT_NO_THROW(clock_var.Setup());
+  EXPECT_THROW(clock_var.Setup(), VariableSetupException);
   EXPECT_EQ(clock_var.GetType(), "SystemClock");
   EXPECT_TRUE(clock_var.GetName().empty());
 
