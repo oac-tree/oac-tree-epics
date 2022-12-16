@@ -21,46 +21,54 @@
 
 #include "test_user_interface.h"
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
+#include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
 
-TEST(SystemCallInstruction, Execute_missing)
+using namespace sup::sequencer;
+
+TEST(SystemCallInstruction, Setup)
 {
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+  Procedure proc;
+
+  auto instruction = GlobalInstructionRegistry().Create("SystemCall");
   ASSERT_TRUE(static_cast<bool>(instruction));
 
-  sup::sequencer::unit_test_helper::NullUserInterface ui;
-  sup::sequencer::Procedure proc;
-  EXPECT_FALSE(instruction->Setup(proc));
+  EXPECT_THROW(instruction->Setup(proc), InstructionSetupException);
+  EXPECT_TRUE(instruction->AddAttribute("command", "not_relevant"));
+  EXPECT_NO_THROW(instruction->Setup(proc));
 }
 
-TEST(SystemCallInstruction, Execute_success)
+TEST(SystemCallInstruction, Success)
 {
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+  auto instruction = GlobalInstructionRegistry().Create("SystemCall");
   ASSERT_TRUE(static_cast<bool>(instruction));
 
   EXPECT_TRUE(instruction->AddAttribute("command", "/usr/bin/ls /tmp &> /dev/null"));
 
-  sup::sequencer::unit_test_helper::NullUserInterface ui;
-  sup::sequencer::Procedure proc;
-  EXPECT_TRUE(instruction->Setup(proc));
-  instruction->ExecuteSingle(&ui, nullptr);
-  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::SUCCESS);
+  unit_test_helper::NullUserInterface ui;
+  Workspace ws;
+  Procedure proc;
+  EXPECT_NO_THROW(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 }
 
-TEST(SystemCallInstruction, Execute_error)
+TEST(SystemCallInstruction, Failure)
 {
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("SystemCall");
+  auto instruction = GlobalInstructionRegistry().Create("SystemCall");
   ASSERT_TRUE(static_cast<bool>(instruction));
 
   EXPECT_TRUE(instruction->AddAttribute("command", "/usr/bin/undefined &> /dev/null"));
 
-  sup::sequencer::unit_test_helper::NullUserInterface ui;
-  sup::sequencer::Procedure proc;
-  EXPECT_TRUE(instruction->Setup(proc));
-  instruction->ExecuteSingle(&ui, nullptr);
-  EXPECT_EQ(instruction->GetStatus(), sup::sequencer::ExecutionStatus::FAILURE);
+  unit_test_helper::NullUserInterface ui;
+  Workspace ws;
+  Procedure proc;
+  EXPECT_NO_THROW(instruction->Setup(proc));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
