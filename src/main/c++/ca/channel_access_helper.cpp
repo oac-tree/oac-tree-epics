@@ -24,6 +24,12 @@
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/dto/json_value_parser.h>
 
+namespace
+{
+bool PopulateExtraFields(sup::dto::AnyValue& anyvalue,
+                         const sup::epics::ChannelAccessPV::ExtendedValue& ext_value);
+}  // unnamed namespace
+
 namespace sup
 {
 namespace sequencer
@@ -70,23 +76,7 @@ sup::dto::AnyValue ConvertToTypedAnyValue(
   {
     return {};
   }
-  if (anytype.HasField(CONNECTED_FIELD_NAME) &&
-      !sup::dto::TryConvert(result[CONNECTED_FIELD_NAME], ext_value.connected))
-  {
-    return {};
-  }
-  if (anytype.HasField(TIMESTAMP_FIELD_NAME) &&
-      !sup::dto::TryConvert(result[TIMESTAMP_FIELD_NAME], ext_value.timestamp))
-  {
-    return {};
-  }
-  if (anytype.HasField(STATUS_FIELD_NAME) &&
-      !sup::dto::TryConvert(result[STATUS_FIELD_NAME], ext_value.status))
-  {
-    return {};
-  }
-  if (anytype.HasField(SEVERITY_FIELD_NAME) &&
-      !sup::dto::TryConvert(result[SEVERITY_FIELD_NAME], ext_value.severity))
+  if (!PopulateExtraFields(result, ext_value))
   {
     return {};
   }
@@ -108,3 +98,34 @@ double ParseTimeoutString(const std::string& timeout_str)
 } // namespace sequencer
 
 } // namespace sup
+
+using namespace sup::sequencer::channel_access_helper;
+
+namespace
+{
+bool PopulateExtraFields(sup::dto::AnyValue& anyvalue,
+                         const sup::epics::ChannelAccessPV::ExtendedValue& ext_value)
+{
+  if (anyvalue.HasField(CONNECTED_FIELD_NAME) &&
+      !sup::dto::TryConvert(anyvalue[CONNECTED_FIELD_NAME], ext_value.connected))
+  {
+    return false;
+  }
+  if (anyvalue.HasField(TIMESTAMP_FIELD_NAME) &&
+      !sup::dto::TryConvert(anyvalue[TIMESTAMP_FIELD_NAME], ext_value.timestamp))
+  {
+    return false;
+  }
+  if (anyvalue.HasField(STATUS_FIELD_NAME) &&
+      !sup::dto::TryConvert(anyvalue[STATUS_FIELD_NAME], ext_value.status))
+  {
+    return false;
+  }
+  if (anyvalue.HasField(SEVERITY_FIELD_NAME) &&
+      !sup::dto::TryConvert(anyvalue[SEVERITY_FIELD_NAME], ext_value.severity))
+  {
+    return false;
+  }
+  return true;
+}
+}  // unnamed namespace
