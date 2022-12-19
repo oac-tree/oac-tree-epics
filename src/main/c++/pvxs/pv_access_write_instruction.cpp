@@ -101,9 +101,6 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, W
   auto value = pv_access_helper::PackIntoStructIfScalar(GetNewValue(ui, ws));
   if (sup::dto::IsEmptyValue(value))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
-      "value to write is Empty";
-    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
@@ -153,6 +150,12 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface* ui, Work
         "could not read variable field with name [" + var_field_name + "] from workspace";
       ui->LogError(error_message);
       return {};
+    }
+    if (sup::dto::IsEmptyValue(result))
+    {
+      std::string warning_message = InstructionWarningLogProlog() +
+        "value from field [" + var_field_name + "] is empty";
+      ui->LogWarning(warning_message);
     }
     return result;
   }

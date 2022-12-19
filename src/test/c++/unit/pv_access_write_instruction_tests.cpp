@@ -24,8 +24,10 @@
 
 #include <pvxs/pv_access_write_instruction.h>
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
+#include <sup/sequencer/log_severity.h>
 #include <sup/sequencer/procedure.h>
 #include <sup/sequencer/sequence_parser.h>
 #include <sup/sequencer/variable_registry.h>
@@ -33,48 +35,45 @@
 
 #include <gtest/gtest.h>
 
-static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+static const std::string UINT16_STRUCT_TYPE =
+  R"RAW({"type":"seq-test::uint16-struct-type","attributes":[{"value":{"type":"uint16"}}]})RAW";
+
+static const std::string UINT16_STRUCT_VALUE = R"RAW({"value":42})RAW";
+
+static const std::string PV_ACCESS_CHANNEL_MISMATCH_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
-    <Sequence>
-        <Copy input="old-pvxs-value" output="pvxs-variable"/>
-        <Equals lhs="pvxs-variable" rhs="old-pvxs-value"/>
-        <PvAccessWrite name="write to pv"
-            channel="seq::write-test::variable"
-            varName="new-pvxs-value"
-            timeout="2.0"/>
-    </Sequence>
+    <PvAccessWrite name="write to pv"
+                   channel="seq::write-test::variable"
+                   varName="pvxs-value"/>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
-            channel="seq::write-test::variable"
-            type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
-        <Local name="old-pvxs-value"
-               type='{"type":"seq::pva_write_test::Type/v1.0"}'
-               value='{"value":1.0}'/>
-        <Local name="new-pvxs-value"
-               type='{"type":"seq::pva_write_test::Type/v1.0"}'
-               value='{"value":12.5}'/>
+                        channel="seq::write-test::variable"
+                        type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
+        <Local name="pvxs-value"
+               type='{"type":"string"}'
+               value='"my_string"'/>
     </Workspace>
 </Procedure>)RAW";
 
-static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+static const std::string PV_ACCESS_WRITE_SUCCESS_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <RegisterType jsontype='{"type":"seq::missing-channel-test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
-    <Sequence>
-        <PvAccessWrite name="write to pv"
-            channel="seq::test::missing-channel"
-            varName="pvxs-value"
-            timeout="0.3"/>
-    </Sequence>
+    <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+    <PvAccessWrite name="write to pv"
+                   channel="seq::write-test::variable"
+                   varName="pvxs-value"/>
     <Workspace>
+        <PvAccessServer name="pvxs-variable"
+                        channel="seq::write-test::variable"
+                        type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
         <Local name="pvxs-value"
-               type='{"type":"seq::missing-channel-test::Type/v1.0"}'
+               type='{"type":"seq::pva_write_test::Type/v1.0"}'
                value='{"value":1.0}'/>
     </Workspace>
 </Procedure>)RAW";
@@ -87,25 +86,244 @@ protected:
   PvAccessWriteInstructionTest();
   virtual ~PvAccessWriteInstructionTest();
 
-  unit_test_helper::NullUserInterface ui;
+  unit_test_helper::LogUserInterface ui;
 };
 
-TEST_F(PvAccessWriteInstructionTest, write_success)
+TEST_F(PvAccessWriteInstructionTest, Setup)
 {
-  auto procedure = sup::sequencer::ParseProcedureString(PV_ACCESS_READ_SUCCESS_PROCEDURE);
+  Procedure proc;
+  // write instruction can be setup with channel and varName attribute
+  {
+    PvAccessWriteInstruction instruction{};
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
+    EXPECT_NO_THROW(instruction.Setup(proc));
+    EXPECT_NO_THROW(instruction.Reset());
+  }
+  // write instruction can be setup with channel, type and value attribute
+  {
+    PvAccessWriteInstruction instruction{};
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("type", "Some_Type"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("value", "Some_Value"));
+    EXPECT_NO_THROW(instruction.Setup(proc));
+    EXPECT_NO_THROW(instruction.Reset());
+  }
+  // write instruction needs to be able to parse the timeout attribute as a double
+  {
+    PvAccessWriteInstruction instruction{};
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("timeout", "Three"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+  }
+  // write instruction needs to be able to parse the timeout attribute as a positive double
+  {
+    PvAccessWriteInstruction instruction{};
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("timeout", "-3.5"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+  }
+  // write instruction correctly parses the timeout attribute as a positive double
+  {
+    PvAccessWriteInstruction instruction{};
+    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("timeout", "5.0"));
+    EXPECT_NO_THROW(instruction.Setup(proc));
+    EXPECT_NO_THROW(instruction.Reset());
+  }
+}
+
+TEST_F(PvAccessWriteInstructionTest, MissingVariable)
+{
+  Procedure proc;
+  Workspace ws;
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("varName", "DoesNotExist"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(last_log_entry.second.find("DoesNotExist"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, MissingVariableField)
+{
+  Procedure proc;
+  Workspace ws;
+
+  auto variable = GlobalVariableRegistry().Create("Local");
+  ASSERT_TRUE(static_cast<bool>(variable));
+  EXPECT_TRUE(variable->AddAttribute("type", UINT16_STRUCT_TYPE));
+  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("varName", "var.val"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(last_log_entry.second.find("var.val"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
+{
+  Procedure proc;
+  Workspace ws;
+
+  auto variable = new unit_test_helper::ReadOnlyVariable({});
+  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_TRUE(ws.AddVariable("var", variable));
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("varName", "var"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(last_log_entry.second.find("var"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, TypeParseError)
+{
+  Procedure proc;
+  Workspace ws;
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("type", "TypeCannotBeParsed"));
+  EXPECT_TRUE(instruction.AddAttribute("value", "ignored"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(last_log_entry.second.find("TypeCannotBeParsed"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, ValueParseError)
+{
+  Procedure proc;
+  Workspace ws;
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("type", UINT16_STRUCT_TYPE));
+  EXPECT_TRUE(instruction.AddAttribute("value", "ValueCannotBeParsed"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(last_log_entry.second.find("ValueCannotBeParsed"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, ChannelEmpty)
+{
+  Procedure proc;
+  Workspace ws;
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", ""));
+  EXPECT_TRUE(instruction.AddAttribute("type", UINT16_STRUCT_TYPE));
+  EXPECT_TRUE(instruction.AddAttribute("value", UINT16_STRUCT_VALUE));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(last_log_entry.second.find("channel"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
+{
+  Procedure proc;
+  Workspace ws;
+
+  PvAccessWriteInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Exist"));
+  EXPECT_TRUE(instruction.AddAttribute("type", UINT16_STRUCT_TYPE));
+  EXPECT_TRUE(instruction.AddAttribute("value", UINT16_STRUCT_VALUE));
+  EXPECT_TRUE(instruction.AddAttribute("timeout", "0.1"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(last_log_entry.second.find("Does_Not_Exist"), std::string::npos);
+}
+
+TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
+{
+  auto procedure = ParseProcedureString(PV_ACCESS_CHANNEL_MISMATCH_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
 
-  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
+  ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
     procedure->ExecuteSingle(&ui);
     exec = procedure->GetStatus();
-  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-           (sup::sequencer::ExecutionStatus::FAILURE != exec));
+  } while ((ExecutionStatus::SUCCESS != exec) &&
+           (ExecutionStatus::FAILURE != exec));
+  EXPECT_EQ(exec, ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(last_log_entry.second.find("seq::write-test::variable"), std::string::npos);
+  EXPECT_NE(last_log_entry.second.find("my_string"), std::string::npos);
+}
 
-  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::SUCCESS);
+TEST_F(PvAccessWriteInstructionTest, Success)
+{
+  auto procedure = ParseProcedureString(PV_ACCESS_WRITE_SUCCESS_PROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(procedure));
+  ASSERT_TRUE(procedure->Setup());
+
+  ExecutionStatus exec = ExecutionStatus::FAILURE;
+  do
+  {
+    procedure->ExecuteSingle(&ui);
+    exec = procedure->GetStatus();
+  } while ((ExecutionStatus::SUCCESS != exec) &&
+           (ExecutionStatus::FAILURE != exec));
+  EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 
     // Creating sequencer's PvAccessClientVariable
   Workspace ws;
@@ -121,57 +339,8 @@ TEST_F(PvAccessWriteInstructionTest, write_success)
     return ws.GetValue("var", client_val) &&
            client_val.HasField("value") &&
            client_val["value"].GetType() == sup::dto::Float32Type &&
-           client_val["value"].As<sup::dto::float32>() == 12.5f;
+           client_val["value"].As<sup::dto::float32>() == 1.0f;
   }));
-}
-
-TEST_F(PvAccessWriteInstructionTest, missing_attributes)
-{
-  sup::sequencer::Procedure proc{};
-  proc.AddVariable("SOME_VARIABLE",
-    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PvAccessWrite");
-  ASSERT_TRUE(static_cast<bool>(instruction));
-  EXPECT_FALSE(instruction->Setup(proc));
-
-  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
-  EXPECT_FALSE(instruction->Setup(proc));
-  EXPECT_TRUE(instruction->AddAttribute("varName", "SOME_VARIABLE"));
-  EXPECT_TRUE(instruction->Setup(proc));
-}
-
-TEST_F(PvAccessWriteInstructionTest, missing_variable)
-{
-  sup::sequencer::Procedure proc{};
-  auto instruction = sup::sequencer::GlobalInstructionRegistry().Create("PvAccessWrite");
-  ASSERT_TRUE(static_cast<bool>(instruction));
-  EXPECT_FALSE(instruction->Setup(proc));
-
-  EXPECT_TRUE(instruction->AddAttribute("channel", "SOME_CHANNEL"));
-  EXPECT_FALSE(instruction->Setup(proc));
-  EXPECT_TRUE(instruction->AddAttribute("varName", "SOME_VARIABLE"));
-  EXPECT_FALSE(instruction->Setup(proc));
-  proc.AddVariable("SOME_VARIABLE",
-    sup::sequencer::GlobalVariableRegistry().Create("Local").release());
-  EXPECT_TRUE(instruction->Setup(proc));
-}
-
-TEST_F(PvAccessWriteInstructionTest, missing_channel)
-{
-  auto procedure = sup::sequencer::ParseProcedureString(PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE);
-  ASSERT_TRUE(static_cast<bool>(procedure));
-  ASSERT_TRUE(procedure->Setup());
-
-  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
-
-  do
-  {
-    procedure->ExecuteSingle(&ui);
-    exec = procedure->GetStatus();
-  } while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-           (sup::sequencer::ExecutionStatus::FAILURE != exec));
-
-  EXPECT_EQ(exec, sup::sequencer::ExecutionStatus::FAILURE);
 }
 
 PvAccessWriteInstructionTest::PvAccessWriteInstructionTest()

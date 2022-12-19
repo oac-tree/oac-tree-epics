@@ -127,7 +127,6 @@ TEST_F(PvAccessReadInstructionTest, MissingVariable)
 {
   Procedure proc;
   Workspace ws;
-  unit_test_helper::LogUserInterface ui;
 
   PvAccessReadInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
@@ -147,7 +146,6 @@ TEST_F(PvAccessReadInstructionTest, Timeout)
 {
   Procedure proc;
   Workspace ws;
-  unit_test_helper::LogUserInterface ui;
 
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
