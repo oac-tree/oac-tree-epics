@@ -53,10 +53,6 @@ PvAccessServerVariable::~PvAccessServerVariable() = default;
 
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
-  if (!m_server || !m_type || !HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    return false;
-  }
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
     m_server->GetValue(GetAttribute(CHANNEL_ATTRIBUTE_NAME)), *m_type);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryConvert(value, converted_val);
@@ -64,10 +60,6 @@ bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 
 bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
 {
-  if (!m_server || !m_type || !HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    return false;
-  }
   sup::dto::AnyValue copy(*m_type);
   if (!sup::dto::TryConvert(copy, value))
   {
@@ -79,10 +71,6 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
 
 bool PvAccessServerVariable::IsAvailableImpl() const
 {
-  if (!m_server || !m_type || !HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    return false;
-  }
   auto value = pv_access_helper::ConvertToTypedAnyValue(
     m_server->GetValue(GetAttribute(CHANNEL_ATTRIBUTE_NAME)), *m_type);
   return !sup::dto::IsEmptyValue(value);

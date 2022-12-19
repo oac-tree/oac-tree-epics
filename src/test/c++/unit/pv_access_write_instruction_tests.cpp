@@ -33,7 +33,7 @@
 
 #include <gtest/gtest.h>
 
-static const std::string PVACCESSSERVERPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
@@ -60,7 +60,7 @@ static const std::string PVACCESSSERVERPROCEDURE = R"RAW(<?xml version="1.0" enc
     </Workspace>
 </Procedure>)RAW";
 
-static const std::string PVACCESSMISSINGCHANNELPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
@@ -92,7 +92,7 @@ protected:
 
 TEST_F(PvAccessWriteInstructionTest, write_success)
 {
-  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSSERVERPROCEDURE);
+  auto procedure = sup::sequencer::ParseProcedureString(PV_ACCESS_READ_SUCCESS_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
 
@@ -158,7 +158,7 @@ TEST_F(PvAccessWriteInstructionTest, missing_variable)
 
 TEST_F(PvAccessWriteInstructionTest, missing_channel)
 {
-  auto procedure = sup::sequencer::ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
+  auto procedure = sup::sequencer::ParseProcedureString(PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
 

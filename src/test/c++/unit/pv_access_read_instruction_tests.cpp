@@ -35,7 +35,27 @@
 
 #include <gtest/gtest.h>
 
-static const std::string PVACCESSSERVERPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <RegisterType jsontype='{"type":"seq::wrong-field-test::channel-type","attributes":[{"value":{"type":"uint16"}}]}'/>
+    <PvAccessRead name="read from pv"
+                  channel="seq::read-test::variable2"
+                  output="pvxs-value.value"
+                  timeout="2.0"/>
+    <Workspace>
+        <PvAccessServer name="pvxs-variable"
+                        channel="seq::read-test::variable2"
+                        type='{"type":"seq::wrong-field-test::channel-type"}'/>
+                        value='{"value":1.0}'/>
+        <Local name="pvxs-value"
+               type='{"type":"seq::wrong-field-test::channel-type"}'/>
+    </Workspace>
+</Procedure>)RAW";
+
+static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
 <Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
@@ -59,24 +79,6 @@ static const std::string PVACCESSSERVERPROCEDURE = R"RAW(<?xml version="1.0" enc
     </Workspace>
 </Procedure>)RAW";
 
-static const std::string PVACCESSMISSINGCHANNELPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
-           name="Trivial procedure for testing purposes"
-           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <RegisterType jsontype='{"type":"seq::missing-channel-test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
-    <Sequence>
-        <PvAccessRead name="read from pv"
-            channel="seq::test::missing-channel"
-            output="pvxs-value"
-            timeout="0.3"/>
-    </Sequence>
-    <Workspace>
-        <Local name="pvxs-value"
-               type='{"type":"seq::missing-channel-test::Type/v1.0"}'/>
-    </Workspace>
-</Procedure>)RAW";
-
 using namespace sup::sequencer;
 
 class PvAccessReadInstructionTest : public ::testing::Test
@@ -85,7 +87,7 @@ protected:
   PvAccessReadInstructionTest();
   virtual ~PvAccessReadInstructionTest();
 
-  unit_test_helper::NullUserInterface ui;
+  unit_test_helper::LogUserInterface ui;
 };
 
 TEST_F(PvAccessReadInstructionTest, Setup)
@@ -166,39 +168,40 @@ TEST_F(PvAccessReadInstructionTest, Timeout)
   EXPECT_NE(last_log_entry.second.find("ThisTimeouts"), std::string::npos);
 }
 
-TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
+TEST_F(PvAccessReadInstructionTest, ProcedureWrongOutputField)
 {
-  auto procedure = ParseProcedureString(PVACCESSSERVERPROCEDURE);
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  auto procedure = ParseProcedureString(PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
   ASSERT_TRUE(procedure->Setup());
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
-
-  do
-  {
-    procedure->ExecuteSingle(&ui);
-    exec = procedure->GetStatus();
-  } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
-
-  EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
-}
-
-TEST_F(PvAccessReadInstructionTest, ProcedureMissingChannel)
-{
-  auto procedure = ParseProcedureString(PVACCESSMISSINGCHANNELPROCEDURE);
-  ASSERT_TRUE(static_cast<bool>(procedure));
-  ASSERT_TRUE(procedure->Setup());
-
-  ExecutionStatus exec = ExecutionStatus::FAILURE;
-
   do
   {
     procedure->ExecuteSingle(&ui);
     exec = procedure->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) &&
            (ExecutionStatus::FAILURE != exec));
-
   EXPECT_EQ(exec, ExecutionStatus::FAILURE);
+  ASSERT_EQ(ui.m_log_entries.size(), 1);
+  auto last_log_entry = ui.m_log_entries.back();
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(last_log_entry.second.find("pvxs-value.value"), std::string::npos);
+}
+
+TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
+{
+  auto procedure = ParseProcedureString(PV_ACCESS_READ_SUCCESS_PROCEDURE);
+  ASSERT_TRUE(static_cast<bool>(procedure));
+  ASSERT_TRUE(procedure->Setup());
+
+  ExecutionStatus exec = ExecutionStatus::FAILURE;
+  do
+  {
+    procedure->ExecuteSingle(&ui);
+    exec = procedure->GetStatus();
+  } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
+  EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 }
 
 PvAccessReadInstructionTest::PvAccessReadInstructionTest()

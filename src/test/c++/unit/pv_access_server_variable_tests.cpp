@@ -24,6 +24,7 @@
 
 #include <pvxs/pv_access_server_variable.h>
 
+#include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/sequence_parser.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
@@ -35,6 +36,12 @@
 
 using namespace sup::sequencer;
 
+static const std::string UINT16_STRUCT_TYPE =
+  R"RAW({"type":"seq-test::uint16-struct-type","attributes":[{"value":{"type":"uint16"}}]})RAW";
+
+static const std::string UINT16_STRUCT_WRONG_VALUE =
+  R"RAW({"value":"A_String!"})RAW";
+
 class PvAccessServerVariableTest : public ::testing::Test
 {
 protected:
@@ -44,36 +51,62 @@ protected:
 
 TEST_F(PvAccessServerVariableTest, VariableRegistration)
 {
-  auto registry = sup::sequencer::GlobalVariableRegistry();
+  auto registry = GlobalVariableRegistry();
   auto names = registry.RegisteredVariableNames();
   ASSERT_TRUE(std::find(names.begin(), names.end(), PvAccessServerVariable::Type) != names.end());
   EXPECT_TRUE(dynamic_cast<PvAccessServerVariable*>(registry.Create(PvAccessServerVariable::Type).get()));
 }
 
-TEST_F(PvAccessServerVariableTest, InvalidSetup)
+TEST_F(PvAccessServerVariableTest, Setup)
 {
-  PvAccessServerVariable variable;
-  EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessClientVariableTest:INTEGER"));
-  EXPECT_NO_THROW(variable.AddAttribute("type", "invalid-type"));
-  EXPECT_NO_THROW(variable.Setup());
+  // channel and type attribute is mandatory
+  {
+    PvAccessServerVariable variable;
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_TRUE(variable.AddAttribute("channel", "pvaccess-server-var-test::setup"));
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_TRUE(variable.AddAttribute("type", UINT16_STRUCT_TYPE));
+    EXPECT_NO_THROW(variable.Setup());
+    EXPECT_NO_THROW(variable.Reset());
+  }
+  // type attribute must be parsed correctly
+  {
+    PvAccessServerVariable variable;
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_TRUE(variable.AddAttribute("channel", "pvaccess-server-var-test::setup"));
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_TRUE(variable.AddAttribute("type", "cannot_be_parsed"));
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+  }
+  // value attribute must be parsed correctly
+  {
+    PvAccessServerVariable variable;
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_TRUE(variable.AddAttribute("channel", "pvaccess-server-var-test::setup"));
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_TRUE(variable.AddAttribute("type", UINT16_STRUCT_TYPE));
+    EXPECT_TRUE(variable.AddAttribute("value", UINT16_STRUCT_WRONG_VALUE));
+    EXPECT_THROW(variable.Setup(), VariableSetupException);
+  }
 }
 
-TEST_F(PvAccessServerVariableTest, ValidSetup)
+TEST_F(PvAccessServerVariableTest, ScalarSetup)
 {
   PvAccessServerVariable variable;
-  EXPECT_NO_THROW(variable.AddAttribute("channel", "PvAccessClientVariableTest:INTEGER"));
+  EXPECT_NO_THROW(variable.AddAttribute("channel", "pvaccess-server-var-test::scalar-setup"));
   EXPECT_NO_THROW(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
   EXPECT_NO_THROW(variable.Setup());
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(variable.GetValue(value));
   EXPECT_EQ(value.GetType(), sup::dto::UnsignedInteger64Type);
+  EXPECT_TRUE(variable.IsAvailable());
 }
 
 //! Server creates a structure with the value.
 //! Check that we can get and set the value from PvAccessClientVariable.
 
-TEST_F(PvAccessServerVariableTest, PvAccessServerClientTest)
+TEST_F(PvAccessServerVariableTest, ServerClientTest)
 {
   const std::string kDataType =
       R"({"type":"testtype","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]})";

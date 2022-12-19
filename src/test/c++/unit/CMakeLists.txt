@@ -10,7 +10,7 @@ target_sources(unit-tests
         ${CMAKE_CURRENT_LIST_DIR}/test_user_interface.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_client_variable_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/pv_access_read_instruction_tests.cpp
-        # ${CMAKE_CURRENT_LIST_DIR}/pv_access_server_variable_tests.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/pv_access_server_variable_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/pv_access_write_instruction_tests.cpp
         # ${CMAKE_CURRENT_LIST_DIR}/rpc_client_instruction_tests.cpp
         ${CMAKE_CURRENT_LIST_DIR}/softioc_runner.cpp
