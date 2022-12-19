@@ -108,6 +108,14 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface* ui, Works
   {
     return ExecutionStatus::FAILURE;
   }
+  auto service_name = GetAttribute(SERVICE_ATTRIBUTE_NAME);
+  if (service_name.empty())
+  {
+    std::string error_message = InstructionErrorLogProlog() +
+      "service name from attribute [" + SERVICE_ATTRIBUTE_NAME + "] is empty";
+    ui->LogError(error_message);
+    return ExecutionStatus::FAILURE;
+  }
   auto client_config = sup::epics::GetDefaultRPCClientConfig(GetAttribute(SERVICE_ATTRIBUTE_NAME));
   if (m_timeout >= 0.0)
   {
@@ -161,6 +169,12 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface* ui, Workspace
         "could not read variable field with name [" + request_field_name + "] from workspace";
       ui->LogError(error_message);
       return {};
+    }
+    if (sup::dto::IsEmptyValue(request))
+    {
+      std::string warning_message = InstructionWarningLogProlog() +
+        "value from field [" + request_field_name + "] is empty";
+      ui->LogWarning(warning_message);
     }
     return request;
   }
