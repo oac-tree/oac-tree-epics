@@ -31,10 +31,20 @@ endif()
 # Directories
 # -----------------------------------------------------------------------------
 
+if (NOT DEFINED PLUGIN_PATH)
+  set(PLUGIN_PATH lib/sequencer/plugin)
+endif()
+message(STATUS "PLUGIN_PATH: ${PLUGIN_PATH}")
+
+if (NOT DEFINED PLUGIN_RUNTIME_DIRECTORY)
+  set(PLUGIN_RUNTIME_DIRECTORY ${CMAKE_BINARY_DIR}/${PLUGIN_PATH})
+endif()
+
 if (NOT DEFINED TEST_OUTPUT_DIRECTORY)
   set(TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 endif()
 
+file(MAKE_DIRECTORY ${PLUGIN_RUNTIME_DIRECTORY})
 file(MAKE_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
 
 # -----------------------------------------------------------------------------

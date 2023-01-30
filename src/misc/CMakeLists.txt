@@ -4,6 +4,7 @@ set_target_properties(sequencer-misc PROPERTIES
     EXPORT_NAME sequencer-misc
     SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
     VERSION ${SUP_SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
+    LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_RUNTIME_DIRECTORY}
 )
 
 target_sources(sequencer-misc
@@ -17,4 +18,4 @@ target_include_directories(sequencer-misc PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(sequencer-misc PUBLIC sequencer::sequencer)
 
-install(TARGETS sequencer-misc DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(TARGETS sequencer-misc DESTINATION ${PLUGIN_PATH})
