@@ -6,9 +6,9 @@
 
  Description   : SUP sequencer EPICS plugin module
 
- Authors       : B.Bauvir (IO)
+ Authors       : CODAC Operation Applications Team
 
- Copyright (c) : 2010-2020 ITER Organization,
+ Copyright (c) : 2010-2023 ITER Organization,
                  CS 90 046
                  13067 St. Paul-lez-Durance Cedex
                  France
@@ -18,35 +18,39 @@
  refer to the file ITER-LICENSE.TXT located in the top level directory
  of the distribution package.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.iter.codac.units</groupId>
     <artifactId>sequencer-plugin-epics</artifactId>
     <packaging>codac</packaging>
+    <!-- See ChangeLog file for details -->
     <version>2.0.0</version>
     <name>SUP sequencer EPICS plugin module</name>
     <description>SUP sequencer EPICS plugin module</description>
     <url>http://www.iter.org/</url>
 
-    <!-- project properties -->
+    <!-- Project properties -->
     <properties>
         <unit.type>module</unit.type>
         <integrity.level>1</integrity.level>
+        <!-- -->
         <cppcheck.args>--enable=all --suppress=missingInclude --inline-suppr</cppcheck.args>
-        <valgrind.enable>false</valgrind.enable>
-        <sonar.exclusions>src/test/**</sonar.exclusions>
-        <pluginpath>lib/sequencer/plugins</pluginpath>
+        <sonar.sources.cpp>src</sonar.sources.cpp>
+        <sonar.tests.cpp>test</sonar.tests.cpp>
+        <sonar.exclusions>test/**</sonar.exclusions>
+        <coverage>false</coverage>
     </properties>
 
-    <!-- parent pom.xml -->
+    <!-- Parent pom.xml -->
     <parent>
         <groupId>org.iter.codac.units</groupId>
         <artifactId>maven-iter-settings</artifactId>
         <version>7.1.0</version>
     </parent>
 
-    <!-- unit owner and developers -->
+    <!-- Unit owner and developers -->
     <developers>
         <developer>
             <id>vanherw</id>
@@ -61,12 +65,12 @@
         <developer>
             <id>bauvirb</id>
             <name>Bertrand Bauvir</name>
-            <organization>ITER Organisation</organization>
+              <organization>ITER Organisation</organization>
             <email>bertrand.bauvir@iter.org</email>
-            <roles>
-                <role>developer</role>
-            </roles>
-        </developer>
+              <roles>
+                  <role>developer</role>
+              </roles>
+          </developer>
         <developer>
             <id>ferrog</id>
             <name>Giuseppe Ferro</name>
@@ -76,52 +80,103 @@
                 <role>developer</role>
             </roles>
         </developer>
+        <developer>
+            <id>gracasr</id>
+            <name>Rafael Silva</name>
+            <organization>CSW</organization>
+            <email>rg-silva@criticalsoftware.com</email>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
     </developers>
 
-    <!-- configuration of how the project is built -->
+    <!-- Configure how the project is built -->
     <build>
-        <!-- default phase is compile -->
+        <!-- Default phase is compile -->
+        <!-- This command is executed if you just write 'mvn' -->
         <defaultGoal>compile</defaultGoal>
-        <!-- this command is executed if you just write 'mvn' -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-iter-plugin</artifactId>
-                <extensions>true</extensions>
                 <configuration>
-                 <init>
-                        <expand source="-" file="main/VERSION">
-                            <![CDATA[${project.version}]]>
-                        </expand>
+                    <!-- Copy the sources over to target -->
+                    <init>
+                        <copy source="src" target="main/src" />
+                        <copy source="test" target="main/test" />
+                        <copy source="cmake" target="main/cmake" />
+                        <copy source="CMakeLists.txt" target="main/CMakeLists.txt" />
                     </init>
+                    <!-- Configure packaging and dependencies -->
                     <packaging>
                         <package>
-                            <!-- Libraries -->
-                            <include type="file" source="lib64" target="${pluginpath}">
-                                <include>*.so*</include>
-                            </include>
-                            <!-- Package dependencies -->
-                            <requires codac="true">sup-dto</requires>
-                            <requires codac="true">sup-epics</requires>
-                            <requires codac="true">sequencer</requires>
-                            <requires version="current" buildOnly="true">cmake3</requires>
-                            <requires codac="true" buildOnly="true">sup-dto-devel</requires>
-                            <requires codac="true" buildOnly="true">sup-epics-devel</requires>
-                            <requires codac="true" buildOnly="true">sequencer-devel</requires>
-                            <!-- RPM scriptlet -->
-                            <scriptlet type="posttrans">
-                                <![CDATA[ ldconfig ]]>
-                            </scriptlet>
-                        </package>
-                        <package name="tests">
-                            <!-- Unit test -->
-                            <include type="file" source="bin/unit-tests" target="tests/${project.artifactId}/unit-tests"/>
-                            <!-- Package dependencies -->
-                            <requires version="current">%{codac_rpm_prefix}-${project.artifactId}</requires>
-                            <requires version="current" buildOnly="true">gtest-devel</requires>
-                        </package>
+                        <!-- Plugin libraries -->
+                        <include type="file" source="lib/sequencer/plugin" target="lib/sequencer/plugin">
+                            <include>*.so*</include>
+                        </include>
+                        <!-- Package dependencies -->
+                        <requires codac="true">sup-dto</requires>
+                        <requires codac="true">sup-epics</requires>
+                        <requires codac="true">sequencer</requires>
+                        <requires codac="true" buildOnly="true">sup-dto-devel</requires>
+                        <requires codac="true" buildOnly="true">sup-epics-devel</requires>
+                        <requires codac="true" buildOnly="true">sequencer-devel</requires>
+                        <requires codac="true" buildOnly="true">gtest-1.12.1-devel</requires>
+                        <requires version="current" buildOnly="true">cmake</requires>
+                        <!-- RPM scriptlet -->
+                        <scriptlet type="posttrans">
+                            <![CDATA[ ldconfig ]]>
+                        </scriptlet>
+                    </package>
                     </packaging>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <!-- Configure cmake build -->
+                    <execution>
+                        <id>configure-build</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>cmake</executable>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
+                            <arguments>
+                                <!-- CMAKE configuration options -->
+                                <argument>-B${project.build.directory}/main/build</argument>
+                                <argument>-DCMAKE_INSTALL_PREFIX=${project.build.directory}</argument>
+                                <argument>-DCMAKE_INSTALL_LIBDIR=lib</argument>
+                                <argument>-DTEST_OUTPUT_DIRECTORY=${project.build.directory}/test</argument>
+                                <argument>-DCOVERAGE=${coverage}</argument>
+                                <argument>${project.build.directory}/main</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <!-- Compile project -->
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>cmake</executable>
+                            <workingDirectory>${project.build.directory}</workingDirectory>
+                            <arguments>
+                                <argument>--build</argument>
+                                <argument>${project.build.directory}/main/build</argument>
+                                <argument>--target</argument>
+                                <argument>install</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
