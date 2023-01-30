@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(COVERAGE "Generate unit test coverage information" OFF)
 option(NO_CODAC "Don't look for the presence of CODAC environment" OFF)
 
-set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/src/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/module)
 include(configuration)
 
 if(CMAKE_VERSION VERSION_LESS "3.7.0")
