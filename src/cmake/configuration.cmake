@@ -34,11 +34,11 @@ endif()
 # Directories
 # -----------------------------------------------------------------------------
 
-if (DEFINED ENV{CODAC_ROOT})
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SUP_SEQUENCER_PLUGIN_EPICS_PROJECT_DIR}/target/bin)
-else()
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
+if (NOT DEFINED TEST_OUTPUT_DIRECTORY)
+  set(TEST_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test_bin)
 endif()
+
+file(MAKE_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
 
 # -----------------------------------------------------------------------------
 # Dependencies
