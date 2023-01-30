@@ -15,12 +15,6 @@ target_sources(sequencer-misc
 
 target_include_directories(sequencer-misc PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-if(SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
-  target_include_directories(sequencer-misc PRIVATE $ENV{CODAC_ROOT}/include)
-  target_link_directories(sequencer-misc PUBLIC $ENV{CODAC_ROOT}/lib)
-  target_link_libraries(sequencer-misc PUBLIC sequencer sup-epics sup-dto)
-else()
-  target_link_libraries(sequencer-misc PUBLIC sequencer::sequencer)
-endif()
+target_link_libraries(sequencer-misc PUBLIC sequencer::sequencer)
 
 install(TARGETS sequencer-misc DESTINATION ${CMAKE_INSTALL_LIBDIR})

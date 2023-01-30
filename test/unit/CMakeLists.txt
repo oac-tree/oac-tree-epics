@@ -28,13 +28,7 @@ target_include_directories(unit-tests
 
 find_package(GTest REQUIRED)
 
-if(SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
-  target_include_directories(unit-tests PRIVATE $ENV{CODAC_ROOT}/include)
-  target_link_directories(unit-tests PUBLIC $ENV{CODAC_ROOT}/lib)
-  target_link_libraries(unit-tests PUBLIC  GTest::GTest GTest::Main sequencer-ca sequencer-misc sequencer-pvxs sup-rpc)
-else()
-  target_link_libraries(unit-tests PUBLIC GTest::GTest GTest::Main sequencer-ca sequencer-misc sequencer-pvxs sup-dto::sup-rpc)
-endif()
+target_link_libraries(unit-tests PUBLIC GTest::GTest GTest::Main sequencer-ca sequencer-misc sequencer-pvxs sup-dto::sup-rpc)
 
 set_target_properties(unit-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
 

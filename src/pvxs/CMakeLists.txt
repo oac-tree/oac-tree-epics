@@ -18,12 +18,6 @@ target_sources(sequencer-pvxs
 
 target_include_directories(sequencer-pvxs PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
-if(SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
-  target_include_directories(sequencer-pvxs PRIVATE $ENV{CODAC_ROOT}/include)
-  target_link_directories(sequencer-pvxs PUBLIC $ENV{CODAC_ROOT}/lib)
-  target_link_libraries(sequencer-pvxs PUBLIC sequencer sup-epics sup-dto)
-else()
-  target_link_libraries(sequencer-pvxs PUBLIC sequencer::sequencer sup-epics::sup-epics)
-endif()
+target_link_libraries(sequencer-pvxs PUBLIC sequencer::sequencer sup-epics::sup-epics)
 
 install(TARGETS sequencer-pvxs DESTINATION ${CMAKE_INSTALL_LIBDIR})

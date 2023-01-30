@@ -6,17 +6,14 @@ include(CTest)
 include(GNUInstallDirs)
 
 # -----------------------------------------------------------------------------
-# Find if we are on CODAC infrastructure
+# CODAC enviorenment
 # -----------------------------------------------------------------------------
 
-get_filename_component(SUP_SEQUENCER_PLUGIN_EPICS_PROJECT_DIR "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
-
-if (DEFINED ENV{CODAC_ROOT})
-  message(STATUS "CODAC environment detected at $ENV{CODAC_ROOT}")
-  set(SUP_SEQUENCER_PLUGIN_EPICS_CODAC ON)
+if (NOT NO_CODAC AND DEFINED ENV{CODAC_ROOT})
+    message(STATUS "CODAC environment detected at $ENV{CODAC_ROOT}")
+    list(APPEND CMAKE_PREFIX_PATH $ENV{CODAC_ROOT} $ENV{CODAC_ROOT}/common)
 else()
-  message(STATUS "No CODAC environment detected")
-  set(SUP_SEQUENCER_PLUGIN_EPICS_CODAC OFF)
+  message(STATUS "Compiling without CODAC")
 endif()
 
 # -----------------------------------------------------------------------------
@@ -44,11 +41,9 @@ file(MAKE_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
 # Dependencies
 # -----------------------------------------------------------------------------
 
-if (NOT SUP_SEQUENCER_PLUGIN_EPICS_CODAC)
-  find_package(sup-dto REQUIRED)
-  find_package(sequencer REQUIRED)
-  find_package(sup-epics REQUIRED)
-endif()
+find_package(sup-dto REQUIRED)
+find_package(sequencer REQUIRED)
+find_package(sup-epics REQUIRED)
 
 # -----------------------------------------------------------------------------
 # Flags
