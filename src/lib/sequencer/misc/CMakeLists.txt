@@ -1,5 +1,7 @@
 add_library(sequencer-misc SHARED)
 
+target_compile_features(sequencer-misc PRIVATE cxx_std_11)
+
 set_target_properties(sequencer-misc PROPERTIES
     EXPORT_NAME sequencer-misc
     SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
@@ -14,7 +16,10 @@ target_sources(sequencer-misc
         ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable.cpp
 )
 
-target_include_directories(sequencer-misc PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(sequencer-misc PUBLIC
+  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../..>
+)
 
 target_link_libraries(sequencer-misc PUBLIC sequencer::sequencer)
 

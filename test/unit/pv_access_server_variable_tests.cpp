@@ -22,7 +22,7 @@
 #include "test_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <pvxs/pv_access_server_variable.h>
+#include <sequencer/pvxs/pv_access_server_variable.h>
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/sequence_parser.h>

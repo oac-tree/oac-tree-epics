@@ -1,5 +1,7 @@
 add_library(sequencer-pvxs SHARED)
 
+target_compile_features(sequencer-pvxs PRIVATE cxx_std_11)
+
 set_target_properties(sequencer-pvxs PROPERTIES
     EXPORT_NAME sequencer-pvxs
     SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
@@ -17,7 +19,10 @@ target_sources(sequencer-pvxs
         ${CMAKE_CURRENT_LIST_DIR}/rpc_client_instruction.cpp
 )
 
-target_include_directories(sequencer-pvxs PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(sequencer-pvxs PUBLIC
+  $<INSTALL_INTERFACE:include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/../..>
+)
 
 target_link_libraries(sequencer-pvxs PUBLIC sequencer::sequencer sup-epics::sup-epics)
 

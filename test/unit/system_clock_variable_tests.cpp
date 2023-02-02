@@ -19,7 +19,7 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include <misc/system_clock_variable.h>
+#include <sequencer/misc/system_clock_variable.h>
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable.h>

@@ -22,7 +22,7 @@
 #include "test_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <pvxs/rpc_client_instruction.h>
+#include <sequencer/pvxs/rpc_client_instruction.h>
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
