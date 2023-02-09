@@ -32,7 +32,7 @@ endif()
 # -----------------------------------------------------------------------------
 
 if (NOT DEFINED PLUGIN_PATH)
-  set(PLUGIN_PATH lib/sequencer/plugin)
+  set(PLUGIN_PATH lib/sequencer/plugins)
 endif()
 message(STATUS "PLUGIN_PATH: ${PLUGIN_PATH}")
 

@@ -113,7 +113,7 @@
                     <packaging>
                         <package>
                         <!-- Plugin libraries -->
-                        <include type="file" source="lib/sequencer/plugin" target="lib/sequencer/plugin">
+                        <include type="file" source="lib/sequencer/plugins" target="lib/sequencer/plugins">
                             <include>*.so*</include>
                         </include>
                         <!-- Package dependencies -->
