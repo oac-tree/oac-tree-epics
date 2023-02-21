@@ -34,6 +34,7 @@
 #include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
+#include <sup/epics-test/unit_test_helper.h>
 
 static const std::string UINT16_STRUCT_TYPE =
   R"RAW({"type":"seq-test::uint16-struct-type","attributes":[{"value":{"type":"uint16"}}]})RAW";
@@ -334,7 +335,7 @@ TEST_F(PvAccessWriteInstructionTest, Success)
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 
   // reading from the client variable
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue client_val;
     return ws.GetValue("var", client_val) &&
            client_val.HasField("value") &&

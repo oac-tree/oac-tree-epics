@@ -19,9 +19,6 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "test_user_interface.h"
-#include "unit_test_helper.h"
-
 #include <sequencer/pvxs/pv_access_client_variable.h>
 
 #include <sup/sequencer/exceptions.h>
@@ -33,6 +30,7 @@
 #include <sup/epics/pv_access_server.h>
 
 #include <gtest/gtest.h>
+#include <sup/epics-test/unit_test_helper.h>
 
 #include <algorithm>
 
@@ -137,7 +135,7 @@ TEST_F(PvAccessClientVariableTest, ServerClient)
 
   // Reading the value from PvAccessClientVariable
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.HasField("value") && tmp["value"] == 42.1f;
   }));
@@ -147,7 +145,7 @@ TEST_F(PvAccessClientVariableTest, ServerClient)
   EXPECT_TRUE(ws.SetValue("var.value", new_value));
 
   // reading from the server
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&server, channel, new_value]{
     auto server_val = server.GetValue(channel);
     return server_val.HasField("value") && server_val["value"] == new_value;
   }));
@@ -182,7 +180,7 @@ TEST_F(PvAccessClientVariableTest, ServerClientNoType)
 
   // Reading the value from PvAccessClientVariable
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.HasField("value") && tmp["value"] == 42.1f;
   }));
@@ -192,7 +190,7 @@ TEST_F(PvAccessClientVariableTest, ServerClientNoType)
   EXPECT_TRUE(ws.SetValue("var.value", new_value));
 
   // reading from the server
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&server, channel, new_value]{
     auto server_val = server.GetValue(channel);
     return server_val.HasField("value") && server_val["value"] == new_value;
   }));
@@ -231,7 +229,7 @@ TEST_F(PvAccessClientVariableTest, ScalarClient)
 
   // Reading the value from PvAccessClientVariable
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.GetType() == sup::dto::Float32Type &&
            tmp.As<float>() == 42.1f;
@@ -242,7 +240,7 @@ TEST_F(PvAccessClientVariableTest, ScalarClient)
   EXPECT_TRUE(ws.SetValue("var", new_value));
 
   // reading from the server
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&server, channel, new_value]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&server, channel, new_value]{
     auto server_val = server.GetValue(channel);
     return server_val.HasField("value") && server_val["value"] == new_value;
   }));

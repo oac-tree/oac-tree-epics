@@ -19,13 +19,13 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "softioc_runner.h"
-#include "unit_test_helper.h"
+#include <sup/epics-test/unit_test_helper.h>
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
+#include <sup/epics-test/softioc_runner.h>
 
 #include <sup/epics/channel_access_client.h>
 
@@ -61,7 +61,7 @@ protected:
   ChannelAccessClientVariableTest();
   ~ChannelAccessClientVariableTest();
 
-  softioc_utils::SoftIocRunner m_softioc_runner;
+  sup::epics::test::SoftIocRunner m_softioc_runner;
 };
 
 TEST_F(ChannelAccessClientVariableTest, Setup)
@@ -249,12 +249,12 @@ TEST_F(ChannelAccessClientVariableTest, SetValueSuccess)
   sup::dto::AnyValue value{0.1f};
   EXPECT_TRUE(ws.SetValue("var", value));
   // Read from variable
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 0.1f;
   }));
   // Read from CA client
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ca_client]{
     sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
     return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 0.1f;
   }));
@@ -264,13 +264,13 @@ TEST_F(ChannelAccessClientVariableTest, SetValueSuccess)
   EXPECT_TRUE(ca_client.SetValue("SEQ-TEST:FLOAT", value));
 
   // Read from variable
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws]{
     sup::dto::AnyValue tmp;
     return ws.GetValue("var", tmp) && tmp.As<sup::dto::float32>() == 3.5f;
   }));
 
   // Read from CA client
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ca_client]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ca_client]{
     sup::dto::AnyValue tmp = ca_client.GetValue("SEQ-TEST:FLOAT");
     return !sup::dto::IsEmptyValue(tmp) && tmp.As<sup::dto::float32>() == 3.5f;
   }));

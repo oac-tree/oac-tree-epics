@@ -20,7 +20,6 @@
  ******************************************************************************/
 
 #include "test_user_interface.h"
-#include "softioc_utils.h"
 #include "unit_test_helper.h"
 
 #include <sup/sequencer/exceptions.h>
@@ -33,6 +32,7 @@
 #include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
+#include <sup/epics-test/softioc_utils.h>
 
 using namespace sup::sequencer;
 
@@ -398,7 +398,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
 
   ASSERT_TRUE(unit_test_helper::WaitForCAChannel("SEQ-TEST:BOOL", R"RAW({"type":"bool"})RAW", 5.0));
 
-  std::string command = softioc_utils::GetEPICSBinaryPath() + "caput SEQ-TEST:BOOL TRUE";
+  std::string command = sup::epics::test::GetEPICSExecutablePath("caput") + " SEQ-TEST:BOOL TRUE";
   EXPECT_TRUE(std::system(command.c_str()) == 0);
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;

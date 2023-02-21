@@ -39,17 +39,6 @@ namespace sequencer {
 
 namespace unit_test_helper {
 
-bool BusyWaitFor(double timeout_sec, std::function<bool()> predicate)
-{
-  long timeout_ns = std::lround(timeout_sec * 1e9);
-  auto time_end = std::chrono::system_clock::now() + std::chrono::nanoseconds(timeout_ns);
-  while(!predicate() && std::chrono::system_clock::now() < time_end)
-  {
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
-  }
-  return predicate();
-}
-
 bool WaitForCAChannel(const std::string& channel, const std::string& type_str, double timeout)
 {
   Workspace ws;

@@ -19,9 +19,6 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include "test_user_interface.h"
-#include "unit_test_helper.h"
-
 #include <sequencer/pvxs/pv_access_server_variable.h>
 
 #include <sup/sequencer/exceptions.h>
@@ -33,6 +30,7 @@
 #include <sup/dto/json_type_parser.h>
 
 #include <gtest/gtest.h>
+#include <sup/epics-test/unit_test_helper.h>
 
 using namespace sup::sequencer;
 
@@ -146,7 +144,7 @@ TEST_F(PvAccessServerVariableTest, ServerClientTest)
   EXPECT_TRUE(ws.SetValue("client_var.value", new_value));
 
   // reading from the server
-  EXPECT_TRUE(unit_test_helper::BusyWaitFor(2.0, [&ws, new_value]{
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws, new_value]{
     sup::dto::AnyValue server_val;
     return ws.GetValue("server_var", server_val) &&
            server_val.HasField("value") &&
