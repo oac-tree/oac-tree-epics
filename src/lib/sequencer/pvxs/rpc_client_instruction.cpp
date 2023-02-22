@@ -33,7 +33,7 @@
 #include <sup/dto/json_type_parser.h>
 #include <sup/dto/json_value_parser.h>
 #include <sup/epics/pv_access_rpc_client.h>
-#include <sup/rpc/protocol_rpc.h>
+#include <sup/protocol/protocol_rpc.h>
 
 #include <algorithm>
 
@@ -209,11 +209,11 @@ namespace
 {
 bool IsSuccessfulReply(sup::dto::AnyValue reply)
 {
-  if (!sup::rpc::utils::CheckReplyFormat(reply))
+  if (!sup::protocol::utils::CheckReplyFormat(reply))
   {
     return false;
   }
-  return reply[sup::rpc::constants::REPLY_RESULT].As<sup::dto::uint32>() ==
-         sup::rpc::Success.GetValue();
+  return reply[sup::protocol::constants::REPLY_RESULT].As<sup::dto::uint32>() ==
+         sup::protocol::Success.GetValue();
 }
 }  // unnamed namespace

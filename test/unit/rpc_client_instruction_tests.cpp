@@ -34,7 +34,7 @@
 
 #include <sup/epics/pv_access_rpc_server.h>
 
-#include <sup/rpc/protocol_rpc.h>
+#include <sup/protocol/protocol_rpc.h>
 
 #include <gtest/gtest.h>
 
@@ -77,7 +77,7 @@ public:
 
   sup::dto::AnyValue operator()(const sup::dto::AnyValue& input) override
   {
-    return sup::rpc::utils::CreateRPCReply(sup::rpc::Success, "", input["query"]);
+    return sup::protocol::utils::CreateRPCReply(sup::protocol::Success, "", input["query"]);
   }
 };
 
@@ -357,8 +357,8 @@ TEST_F(RPCClientInstructionTest, Success) // Must be associated to a variable in
 
   sup::dto::AnyValue reply;
   proc->GetVariableValue("reply", reply);
-  ASSERT_TRUE(sup::rpc::utils::CheckReplyFormat(reply));
-  EXPECT_EQ(reply["result"].As<sup::dto::uint32>(), sup::rpc::Success.GetValue());
+  ASSERT_TRUE(sup::protocol::utils::CheckReplyFormat(reply));
+  EXPECT_EQ(reply["result"].As<sup::dto::uint32>(), sup::protocol::Success.GetValue());
   EXPECT_TRUE(reply["reply"].As<sup::dto::boolean>());
 }
 
