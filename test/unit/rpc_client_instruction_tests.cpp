@@ -90,11 +90,13 @@ protected:
   static void SetUpTestCase();
   static void TearDownTestCase();
 
+  static RPCTestHandler m_handler;
   static std::unique_ptr<sup::epics::PvAccessRPCServer> server;
 
   unit_test_helper::LogUserInterface ui;
 };
 
+RPCTestHandler RPCClientInstructionTest::m_handler{};
 std::unique_ptr<sup::epics::PvAccessRPCServer> RPCClientInstructionTest::server{};
 
 TEST_F(RPCClientInstructionTest, Setup)
@@ -368,8 +370,7 @@ RPCClientInstructionTest::~RPCClientInstructionTest() = default;
 void RPCClientInstructionTest::SetUpTestCase()
 {
   auto config = sup::epics::GetDefaultRPCServerConfig(TEST_SERVICE_NAME);
-  std::unique_ptr<sup::dto::AnyFunctor> handler{new RPCTestHandler{}};
-  server.reset(new sup::epics::PvAccessRPCServer(config, std::move(handler)));
+  server.reset(new sup::epics::PvAccessRPCServer(config, m_handler));
 }
 
 void RPCClientInstructionTest::TearDownTestCase()
