@@ -153,7 +153,7 @@ TEST_F(PvAccessWriteInstructionTest, MissingVariable)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -177,7 +177,7 @@ TEST_F(PvAccessWriteInstructionTest, MissingVariableField)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -200,7 +200,7 @@ TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -220,7 +220,7 @@ TEST_F(PvAccessWriteInstructionTest, TypeParseError)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -240,7 +240,7 @@ TEST_F(PvAccessWriteInstructionTest, ValueParseError)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -260,7 +260,7 @@ TEST_F(PvAccessWriteInstructionTest, ChannelEmpty)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -281,7 +281,7 @@ TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -299,7 +299,7 @@ TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
-    procedure->ExecuteSingle(&ui);
+    procedure->ExecuteSingle(ui);
     exec = procedure->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) &&
            (ExecutionStatus::FAILURE != exec));
@@ -320,7 +320,7 @@ TEST_F(PvAccessWriteInstructionTest, Success)
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
-    procedure->ExecuteSingle(&ui);
+    procedure->ExecuteSingle(ui);
     exec = procedure->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) &&
            (ExecutionStatus::FAILURE != exec));

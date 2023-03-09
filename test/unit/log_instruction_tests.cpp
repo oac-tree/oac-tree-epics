@@ -96,7 +96,7 @@ TEST_F(LogInstructionTest, SimpleMessage)
 
   Workspace ws;
   EXPECT_EQ(NumberOfLogEntries(), 0);
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&m_ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(m_ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
   EXPECT_EQ(NumberOfLogEntries(), 1);
   auto last_entry = LastLogEntry();
@@ -117,7 +117,7 @@ TEST_F(LogInstructionTest, MessageWithSeverity)
 
   Workspace ws;
   EXPECT_EQ(NumberOfLogEntries(), 0);
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&m_ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(m_ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
   EXPECT_EQ(NumberOfLogEntries(), 1);
   auto last_entry = LastLogEntry();
@@ -138,7 +138,7 @@ TEST_F(LogInstructionTest, MessageWithSeverityError)
 
   Workspace ws;
   EXPECT_EQ(NumberOfLogEntries(), 0);
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&m_ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(m_ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_EQ(NumberOfLogEntries(), 1);
   auto last_entry = LastLogEntry();
@@ -158,7 +158,7 @@ TEST_F(LogInstructionTest, VariableDoesNotExist)
 
   Workspace ws;
   EXPECT_EQ(NumberOfLogEntries(), 0);
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&m_ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(m_ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_EQ(NumberOfLogEntries(), 1);
   auto last_entry = LastLogEntry();
@@ -183,7 +183,7 @@ TEST_F(LogInstructionTest, VariableCannotBeRead)
   EXPECT_NO_THROW(instruction->Setup(proc));
 
   EXPECT_EQ(NumberOfLogEntries(), 0);
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&m_ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(m_ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_EQ(NumberOfLogEntries(), 1);
   auto last_entry = LastLogEntry();
@@ -210,7 +210,7 @@ TEST_F(LogInstructionTest, VariableSuccess)
   EXPECT_NO_THROW(instruction->Setup(proc));
 
   EXPECT_EQ(NumberOfLogEntries(), 0);
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&m_ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(m_ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
   EXPECT_EQ(NumberOfLogEntries(), 1);
   auto last_entry = LastLogEntry();
@@ -227,7 +227,7 @@ TEST_F(LogInstructionTest, ParsedProcedure)
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
-    proc->ExecuteSingle(&m_ui);
+    proc->ExecuteSingle(m_ui);
     exec = proc->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
 

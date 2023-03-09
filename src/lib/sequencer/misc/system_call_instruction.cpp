@@ -43,15 +43,10 @@ SystemCallInstruction::~SystemCallInstruction() = default;
 
 void SystemCallInstruction::SetupImpl(const Procedure&)
 {
-  if (!HasAttribute(COMMAND_ATTRIBUTE_NAME))
-  {
-    std::string error_message = InstructionSetupExceptionProlog() +
-      "missing mandatory attribute [" + COMMAND_ATTRIBUTE_NAME + "]";
-    throw InstructionSetupException(error_message);
-  }
+  CheckMandatoryAttribute(*this, COMMAND_ATTRIBUTE_NAME);
 }
 
-ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
+ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   (void)ui;
   (void)ws;

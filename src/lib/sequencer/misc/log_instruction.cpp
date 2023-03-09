@@ -61,14 +61,14 @@ void LogInstruction::SetupImpl(const Procedure&)
 {
   if (!HasAttribute(MESSAGE_ATTRIBUTE_NAME) && !HasAttribute(INPUT_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog() +
+    std::string error_message = InstructionSetupExceptionProlog(*this) +
       "instruction requires at least one of the attributes [" + MESSAGE_ATTRIBUTE_NAME + ", " +
       INPUT_ATTRIBUTE_NAME + "]";
     throw InstructionSetupException(error_message);
   }
 }
 
-ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
+ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   int severity = log::SUP_SEQ_LOG_INFO;  // Default severity if not explicitly specified
   if (HasAttribute(SEVERITY_ATTRIBUTE_NAME))
@@ -77,9 +77,9 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
     severity = SeverityFromString(severity_str);
     if (severity < 0)
     {
-      std::string error_message = InstructionErrorLogProlog() +
+      std::string error_message = InstructionErrorProlog(*this) +
         "could not parse severity [" + severity_str + "] as valid severity level";
-      ui->LogError(error_message);
+      ui.LogError(error_message);
       return ExecutionStatus::FAILURE;
     }
   }
@@ -90,26 +90,14 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* 
   }
   if (HasAttribute(INPUT_ATTRIBUTE_NAME))
   {
-    auto input_field_name = GetAttribute(INPUT_ATTRIBUTE_NAME);
-    auto input_var_name = SplitFieldName(input_field_name).first;
-    if (!ws->HasVariable(input_var_name))
-    {
-      std::string error_message = InstructionErrorLogProlog() +
-        "workspace does not contain input variable with name [" + input_var_name + "]";
-      ui->LogError(error_message);
-      return ExecutionStatus::FAILURE;
-    }
     sup::dto::AnyValue value;
-    if (!ws->GetValue(input_field_name, value))
+    if (!GetValueFromAttributeName(*this, ws, ui, INPUT_ATTRIBUTE_NAME, value))
     {
-      std::string warning_message = InstructionWarningLogProlog() +
-        "could not read variable field with name [" + input_var_name + "] from workspace";
-      ui->LogWarning(warning_message);
       return ExecutionStatus::FAILURE;
     }
     oss << sup::dto::ValuesToJSONString(value);
   }
-  ui->Log(severity, oss.str());
+  ui.Log(severity, oss.str());
   return ExecutionStatus::SUCCESS;
 }
 

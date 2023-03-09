@@ -95,19 +95,14 @@ bool PvAccessClientVariable::IsAvailableImpl() const
 
 void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    std::string error_message = VariableSetupExceptionProlog() +
-      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
-    throw VariableSetupException(error_message);
-  }
+  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
     // TODO: temporary hack for GUI! Remove this!
     auto type_attr = GetAttribute(TYPE_ATTRIBUTE_NAME);
     if (type_attr.empty())
     {
-      std::string error_message = VariableSetupExceptionProlog() +
+      std::string error_message = VariableSetupExceptionProlog(*this) +
         "type attribute [" + TYPE_ATTRIBUTE_NAME + "] is empty";
       throw VariableSetupException(error_message);
     }
@@ -115,7 +110,7 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
     if (!parser.ParseString(type_str, &registry))
     {
-      std::string error_message = VariableSetupExceptionProlog() +
+      std::string error_message = VariableSetupExceptionProlog(*this) +
         "could not parse type [" + type_str + "]";
       throw VariableSetupException(error_message);
     }

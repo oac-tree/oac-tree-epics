@@ -54,7 +54,7 @@ TEST(SystemCallInstruction, Success)
   Workspace ws;
   Procedure proc;
   EXPECT_NO_THROW(instruction->Setup(proc));
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 }
 
@@ -69,6 +69,6 @@ TEST(SystemCallInstruction, Failure)
   Workspace ws;
   Procedure proc;
   EXPECT_NO_THROW(instruction->Setup(proc));
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
 }

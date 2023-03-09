@@ -78,23 +78,13 @@ bool PvAccessServerVariable::IsAvailableImpl() const
 
 void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    std::string error_message = VariableSetupExceptionProlog() +
-      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
-    throw VariableSetupException(error_message);
-  }
-  if (!HasAttribute(TYPE_ATTRIBUTE_NAME))
-  {
-    std::string error_message = VariableSetupExceptionProlog() +
-      "missing mandatory attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    throw VariableSetupException(error_message);
-  }
+  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
+  CheckMandatoryNonEmptyAttribute(*this, TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser parser;
   auto type_attr_val = GetAttribute(TYPE_ATTRIBUTE_NAME);
   if (!parser.ParseString(type_attr_val, &registry))
   {
-    std::string error_message = VariableSetupExceptionProlog() +
+    std::string error_message = VariableSetupExceptionProlog(*this) +
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
     throw VariableSetupException(error_message);
   }
@@ -106,7 +96,7 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     sup::dto::JSONAnyValueParser value_parser;
     if (!value_parser.TypedParseString(*m_type, val_str))
     {
-      std::string error_message = VariableSetupExceptionProlog() +
+      std::string error_message = VariableSetupExceptionProlog(*this) +
         "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
       throw VariableSetupException(error_message);
     }

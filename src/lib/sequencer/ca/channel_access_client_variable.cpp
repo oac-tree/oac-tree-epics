@@ -91,23 +91,13 @@ bool ChannelAccessClientVariable::IsAvailableImpl() const
 
 void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    std::string error_message = VariableSetupExceptionProlog() +
-      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
-    throw VariableSetupException(error_message);
-  }
-  if (!HasAttribute(TYPE_ATTRIBUTE_NAME))
-  {
-    std::string error_message = VariableSetupExceptionProlog() +
-      "missing mandatory attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    throw VariableSetupException(error_message);
-  }
+  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
+  CheckMandatoryNonEmptyAttribute(*this, TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser parser;
   auto type_attr_val = GetAttribute(TYPE_ATTRIBUTE_NAME);
   if (!parser.ParseString(type_attr_val, &registry))
   {
-    std::string error_message = VariableSetupExceptionProlog() +
+    std::string error_message = VariableSetupExceptionProlog(*this) +
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
     throw VariableSetupException(error_message);
   }
@@ -115,7 +105,7 @@ void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
   auto channel_type = channel_access_helper::ChannelType(*m_type);
   if (sup::dto::IsEmptyType(channel_type))
   {
-    std::string error_message = VariableSetupExceptionProlog() +
+    std::string error_message = VariableSetupExceptionProlog(*this) +
       "parsed channel type [" + type_attr_val + "] is not supported";
     throw VariableSetupException(error_message);
   }

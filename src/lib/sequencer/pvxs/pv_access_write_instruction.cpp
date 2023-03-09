@@ -62,19 +62,11 @@ PvAccessWriteInstruction::~PvAccessWriteInstruction() = default;
 
 void PvAccessWriteInstruction::SetupImpl(const Procedure&)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
+  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
+  if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
   {
-    std::string error_message = InstructionSetupExceptionProlog() +
-      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
-    throw InstructionSetupException(error_message);
-  }
-  if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME) &&
-     (!HasAttribute(TYPE_ATTRIBUTE_NAME) || !HasAttribute(VALUE_ATTRIBUTE_NAME)))
-  {
-    std::string error_message = InstructionSetupExceptionProlog() +
-      "instruction requires either attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME +
-      "] or both attributes [" + TYPE_ATTRIBUTE_NAME + ", " + VALUE_ATTRIBUTE_NAME + "]";
-    throw InstructionSetupException(error_message);
+    CheckMandatoryAttribute(*this, TYPE_ATTRIBUTE_NAME);
+    CheckMandatoryAttribute(*this, VALUE_ATTRIBUTE_NAME);
   }
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
@@ -82,7 +74,7 @@ void PvAccessWriteInstruction::SetupImpl(const Procedure&)
     auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog() +
+      std::string error_message = InstructionSetupExceptionProlog(*this) +
         "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
         "] to positive or zero floating point value";
       throw InstructionSetupException(error_message);
@@ -96,7 +88,7 @@ void PvAccessWriteInstruction::ResetHook()
   m_timeout_sec = pv_access_helper::DEFAULT_TIMEOUT_SEC;
 }
 
-ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
+ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   auto value = pv_access_helper::PackIntoStructIfScalar(GetNewValue(ui, ws));
   if (sup::dto::IsEmptyValue(value))
@@ -104,68 +96,49 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface* ui, W
     return ExecutionStatus::FAILURE;
   }
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
-  if (channel_name.empty())
-  {
-    std::string error_message = InstructionErrorLogProlog() +
-      "channel name from attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
-    ui->LogError(error_message);
-    return ExecutionStatus::FAILURE;
-  }
   sup::epics::PvAccessClientPV pv(channel_name);
   if (!pv.WaitForConnected(m_timeout_sec))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
+    std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
-    ui->LogWarning(warning_message);
+    ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.SetValue(value))
   {
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
-    std::string warning_message = InstructionWarningLogProlog() +
+    std::string warning_message = InstructionWarningProlog(*this) +
       "could not write value [" + json_value + "] to channel [" + channel_name + "]";
-    ui->LogWarning(warning_message);
+    ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;
 }
 
-sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface* ui, Workspace* ws) const
+sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Workspace& ws) const
 {
   if (HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
   {
-    auto var_field_name = GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME);
-    auto var_var_name = SplitFieldName(var_field_name).first;
-    if (!ws->HasVariable(var_var_name))
-    {
-      std::string error_message = InstructionErrorLogProlog() +
-        "workspace does not contain input variable with name [" + var_var_name + "]";
-      ui->LogError(error_message);
-      return {};
-    }
     sup::dto::AnyValue result;
-    if (!ws->GetValue(var_field_name, result))
+    if (!GetValueFromAttributeName(*this, ws, ui, VARIABLE_NAME_ATTRIBUTE_NAME, result))
     {
-      std::string error_message = InstructionErrorLogProlog() +
-        "could not read variable field with name [" + var_field_name + "] from workspace";
-      ui->LogError(error_message);
       return {};
     }
     if (sup::dto::IsEmptyValue(result))
     {
-      std::string warning_message = InstructionWarningLogProlog() +
-        "value from field [" + var_field_name + "] is empty";
-      ui->LogWarning(warning_message);
+      std::string warning_message = InstructionWarningProlog(*this) +
+        "value from field [" + GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
+      ui.LogWarning(warning_message);
     }
     return result;
   }
   auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser type_parser;
-  if (!type_parser.ParseString(type_str, ws->GetTypeRegistry()))
+  if (!type_parser.ParseString(type_str, ws.GetTypeRegistry()))
   {
-    std::string error_message = InstructionErrorLogProlog() +
+    std::string error_message = InstructionErrorProlog(*this) +
       "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    ui->LogError(error_message);
+    ui.LogError(error_message);
     return {};
   }
   sup::dto::AnyType anytype = type_parser.MoveAnyType();
@@ -173,10 +146,10 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface* ui, Work
   sup::dto::JSONAnyValueParser val_parser;
   if (!val_parser.TypedParseString(anytype, val_str))
   {
-    std::string error_message = InstructionErrorLogProlog() +
+    std::string error_message = InstructionErrorProlog(*this) +
       "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
       "] to type [" + type_str + "]";
-    ui->LogError(error_message);
+    ui.LogError(error_message);
     return {};
   }
   return val_parser.MoveAnyValue();

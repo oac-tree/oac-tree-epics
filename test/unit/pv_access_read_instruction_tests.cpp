@@ -134,7 +134,7 @@ TEST_F(PvAccessReadInstructionTest, MissingVariable)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -158,7 +158,7 @@ TEST_F(PvAccessReadInstructionTest, Timeout)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -176,7 +176,7 @@ TEST_F(PvAccessReadInstructionTest, ProcedureWrongOutputField)
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
-    procedure->ExecuteSingle(&ui);
+    procedure->ExecuteSingle(ui);
     exec = procedure->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) &&
            (ExecutionStatus::FAILURE != exec));
@@ -196,7 +196,7 @@ TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
-    procedure->ExecuteSingle(&ui);
+    procedure->ExecuteSingle(ui);
     exec = procedure->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);

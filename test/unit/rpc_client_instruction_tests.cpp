@@ -162,7 +162,7 @@ TEST_F(RPCClientInstructionTest, MissingVariable)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -186,7 +186,7 @@ TEST_F(RPCClientInstructionTest, MissingVariableField)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -209,7 +209,7 @@ TEST_F(RPCClientInstructionTest, EmptyVariable)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -229,7 +229,7 @@ TEST_F(RPCClientInstructionTest, TypeParseError)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -249,7 +249,7 @@ TEST_F(RPCClientInstructionTest, ValueParseError)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -269,7 +269,7 @@ TEST_F(RPCClientInstructionTest, ChannelEmpty)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -291,7 +291,7 @@ TEST_F(RPCClientInstructionTest, ServiceTimeout)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -308,7 +308,7 @@ TEST_F(RPCClientInstructionTest, MissingOutput)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -333,7 +333,7 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
@@ -350,7 +350,7 @@ TEST_F(RPCClientInstructionTest, Success) // Must be associated to a variable in
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
   do
   {
-    proc->ExecuteSingle(&ui);
+    proc->ExecuteSingle(ui);
     exec = proc->GetStatus();
   }
   while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&

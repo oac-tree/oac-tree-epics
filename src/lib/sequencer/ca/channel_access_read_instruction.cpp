@@ -55,25 +55,15 @@ ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
 
 void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
 {
-  if (!HasAttribute(CHANNEL_ATTRIBUTE_NAME))
-  {
-    std::string error_message = InstructionSetupExceptionProlog() +
-      "missing mandatory attribute [" + CHANNEL_ATTRIBUTE_NAME + "]";
-    throw InstructionSetupException(error_message);
-  }
-  if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
-  {
-    std::string error_message = InstructionSetupExceptionProlog() +
-      "missing mandatory attribute [" + VARIABLE_NAME_ATTRIBUTE_NAME + "]";
-    throw InstructionSetupException(error_message);
-  }
+  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
+  CheckMandatoryNonEmptyAttribute(*this, VARIABLE_NAME_ATTRIBUTE_NAME);
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
     auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
     auto timeout_val = channel_access_helper::ParseTimeoutString(timeout_str);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog() +
+      std::string error_message = InstructionSetupExceptionProlog(*this) +
         "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
         "] to positive or zero floating point value";
       throw InstructionSetupException(error_message);
@@ -87,65 +77,43 @@ void ChannelAccessReadInstruction::ResetHook()
   m_timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
 }
 
-ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface* ui, Workspace* ws)
+ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
-  auto var_field_name = GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME);
-  auto var_var_name = SplitFieldName(var_field_name).first;
-  if (!ws->HasVariable(var_var_name))
-  {
-    std::string error_message = InstructionErrorLogProlog() +
-      "workspace does not contain input variable with name [" + var_var_name + "]";
-    ui->LogError(error_message);
-    return ExecutionStatus::FAILURE;
-  }
   sup::dto::AnyValue value;
-  if (!ws->GetValue(var_field_name, value))
+  if (!GetValueFromAttributeName(*this, ws, ui, VARIABLE_NAME_ATTRIBUTE_NAME, value))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
-      "could not read variable field with name [" + var_field_name + "] from workspace";
-    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
+  auto var_field_name = GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME);
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
-  if (channel_name.empty())
-  {
-    std::string error_message = InstructionErrorLogProlog() +
-      "channel name from attribute [" + CHANNEL_ATTRIBUTE_NAME + "] is empty";
-    ui->LogError(error_message);
-    return ExecutionStatus::FAILURE;
-  }
   auto channel_type = channel_access_helper::ChannelType(value.GetType());
   if (sup::dto::IsEmptyType(channel_type))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
+    std::string warning_message = InstructionWarningProlog(*this) +
       "type of variable field with name [" + var_field_name + "] is Empty";
-    ui->LogWarning(warning_message);
+    ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   if (!pv.WaitForValidValue(m_timeout_sec))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
+    std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
-    ui->LogWarning(warning_message);
+    ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   auto ext_val = pv.GetExtendedValue();
   auto var_val = channel_access_helper::ConvertToTypedAnyValue(ext_val, value.GetType());
   if (sup::dto::IsEmptyValue(var_val))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
+    std::string warning_message = InstructionWarningProlog(*this) +
       "could not convert value from channel [" + channel_name +
       "] to type of variable field with name [" + var_field_name + "]";
-    ui->LogWarning(warning_message);
+    ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
-  if (!ws->SetValue(GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME), var_val))
+  if (!SetValueFromAttributeName(*this, ws, ui, VARIABLE_NAME_ATTRIBUTE_NAME, var_val))
   {
-    std::string warning_message = InstructionWarningLogProlog() +
-      "could not set value from channel [" + channel_name +
-      "] to workspace variable field with name [" + var_field_name + "]";
-    ui->LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;

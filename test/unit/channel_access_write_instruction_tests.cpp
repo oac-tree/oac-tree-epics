@@ -92,7 +92,7 @@ TEST_F(ChannelAccessWriteInstructionTest, VariableNotInWorkspace)
   EXPECT_TRUE(write_instruction->AddAttribute("channel", "undefined"));
   EXPECT_TRUE(write_instruction->AddAttribute("varName", "some_variable"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -112,7 +112,7 @@ TEST_F(ChannelAccessWriteInstructionTest, EmptyVariable)
   EXPECT_TRUE(write_instruction->AddAttribute("channel", "undefined"));
   EXPECT_TRUE(write_instruction->AddAttribute("varName", "var"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -133,7 +133,7 @@ TEST_F(ChannelAccessWriteInstructionTest, EmptyChannelName)
   EXPECT_TRUE(write_instruction->AddAttribute("channel", ""));
   EXPECT_TRUE(write_instruction->AddAttribute("varName", "var"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -155,7 +155,7 @@ TEST_F(ChannelAccessWriteInstructionTest, Timeout)
   EXPECT_TRUE(write_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(write_instruction->AddAttribute("timeout", "0.1"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -171,7 +171,7 @@ TEST_F(ChannelAccessWriteInstructionTest, TypeParseError)
   EXPECT_TRUE(write_instruction->AddAttribute("type", "cannot parse this"));
   EXPECT_TRUE(write_instruction->AddAttribute("value", BOOLEANVALUE));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -187,7 +187,7 @@ TEST_F(ChannelAccessWriteInstructionTest, ValueParseError)
   EXPECT_TRUE(write_instruction->AddAttribute("type", BOOLEANTYPE));
   EXPECT_TRUE(write_instruction->AddAttribute("value", "Definitely"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
 }
 
@@ -213,7 +213,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   EXPECT_TRUE(write_instruction->AddAttribute("value", "true"));
   EXPECT_TRUE(write_instruction->AddAttribute("timeout", "5.0"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
   // TODO: the next code block is only a replacement for the commented out chech just after.
@@ -239,7 +239,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   EXPECT_NO_THROW(write_instruction->Reset());
   EXPECT_TRUE(write_instruction->SetAttribute("value", "false"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
   // TODO: the next code block is only a replacement for the commented out chech just after.
@@ -283,7 +283,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccessStruct)
   EXPECT_TRUE(write_instruction->AddAttribute("type", BOOLEANSTRUCTTYPE));
   EXPECT_TRUE(write_instruction->AddAttribute("value", R"RAW({"value":true})RAW"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
   // TODO: the next code block is only a replacement for the commented out chech just after.
@@ -319,7 +319,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   EXPECT_TRUE(instruction->AddAttribute("type", UINT32ARRAYTYPE));
   EXPECT_TRUE(instruction->AddAttribute("value", "[1, 2, 3, 4, 5, 6, 7, 8]"));
   EXPECT_NO_THROW(instruction->Setup(proc));
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
   // Test variable
@@ -354,7 +354,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   // Set array back to zero
   EXPECT_TRUE(instruction->SetAttribute("value", "[0, 0, 0, 0, 0, 0, 0, 0]"));
   EXPECT_NO_THROW(instruction->Setup(proc));
-  EXPECT_NO_THROW(instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
   // TODO: the next code block is only a replacement for the commented out chech just after.

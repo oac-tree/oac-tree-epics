@@ -69,9 +69,9 @@ private:
 
   void ResetHook() override;
 
-  ExecutionStatus ExecuteSingleImpl(UserInterface* ui, Workspace* ws) override;
+  ExecutionStatus ExecuteSingleImpl(UserInterface& ui, Workspace& ws) override;
 
-  sup::dto::AnyValue GetRequest(UserInterface* ui, Workspace* ws);
+  sup::dto::AnyValue GetRequest(UserInterface& ui, Workspace& ws);
 };
 
 }  // namespace sequencer

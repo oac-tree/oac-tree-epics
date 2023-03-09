@@ -115,7 +115,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteMissingVariable)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "some_var_name"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 }
@@ -139,7 +139,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyVariable)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -167,7 +167,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannel)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -197,7 +197,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannelType)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -227,7 +227,7 @@ TEST_F(ChannelAccessReadInstructionTest, Timeout)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "0.1"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -257,7 +257,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongConnectedType)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -288,7 +288,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongTimestampType)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -319,7 +319,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongStatusType)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -350,7 +350,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongSeverityType)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -380,7 +380,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadOnlyVariable)
   EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(&ui, &ws));
+  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
   EXPECT_NO_THROW(read_instruction->Reset());
 
@@ -404,7 +404,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
   {
-    proc->ExecuteSingle(&ui);
+    proc->ExecuteSingle(ui);
     exec = proc->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
 
