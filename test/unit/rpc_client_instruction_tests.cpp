@@ -124,6 +124,13 @@ TEST_F(RPCClientInstructionTest, Setup)
     EXPECT_NO_THROW(instruction.Setup(proc));
     EXPECT_NO_THROW(instruction.Reset());
   }
+  // rpc client instruction with empty service attribute cannot be parsed
+  {
+    RPCClientInstruction instruction{};
+    EXPECT_TRUE(instruction.AddAttribute("service", ""));
+    EXPECT_TRUE(instruction.AddAttribute("requestVar", "Some_Var_Name"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+  }
   // rpc client instruction timeout attribute cannot be parsed
   {
     RPCClientInstruction instruction{};
@@ -190,7 +197,7 @@ TEST_F(RPCClientInstructionTest, MissingVariableField)
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
   EXPECT_NE(last_log_entry.second.find("var.val"), std::string::npos);
 }
 
@@ -255,27 +262,6 @@ TEST_F(RPCClientInstructionTest, ValueParseError)
   auto last_log_entry = ui.m_log_entries.back();
   EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
   EXPECT_NE(last_log_entry.second.find("ValueCannotBeParsed"), std::string::npos);
-}
-
-TEST_F(RPCClientInstructionTest, ChannelEmpty)
-{
-  Procedure proc;
-  Workspace ws;
-
-  RPCClientInstruction instruction{};
-  EXPECT_TRUE(instruction.AddAttribute("service", ""));
-  EXPECT_TRUE(instruction.AddAttribute("type", REQUEST_TYPE));
-  EXPECT_TRUE(instruction.AddAttribute("value", REQUEST_VALUE));
-  EXPECT_NO_THROW(instruction.Setup(proc));
-
-  EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
-  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
-  ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("service name"), std::string::npos);
-  EXPECT_NE(last_log_entry.second.find("empty"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, ServiceTimeout)
