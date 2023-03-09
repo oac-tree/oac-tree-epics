@@ -62,6 +62,9 @@ TEST_F(ChannelAccessWriteInstructionTest, SetupWithVariable)
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_TRUE(write_instruction->AddAttribute("timeout", "cant_parse_this"));
   EXPECT_THROW(write_instruction->Setup(proc), InstructionSetupException);
+  // Empty channel name
+  EXPECT_TRUE(write_instruction->SetAttribute("channel", ""));
+  EXPECT_THROW(write_instruction->Setup(proc), InstructionSetupException);
 }
 
 TEST_F(ChannelAccessWriteInstructionTest, SetupWithTypeValue)
@@ -78,6 +81,9 @@ TEST_F(ChannelAccessWriteInstructionTest, SetupWithTypeValue)
   EXPECT_TRUE(write_instruction->AddAttribute("value", BOOLEANVALUE));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_TRUE(write_instruction->AddAttribute("timeout", "cant_parse_this"));
+  EXPECT_THROW(write_instruction->Setup(proc), InstructionSetupException);
+  // Empty channel name
+  EXPECT_TRUE(write_instruction->SetAttribute("channel", ""));
   EXPECT_THROW(write_instruction->Setup(proc), InstructionSetupException);
 }
 
@@ -110,27 +116,6 @@ TEST_F(ChannelAccessWriteInstructionTest, EmptyVariable)
   auto write_instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
   ASSERT_TRUE(static_cast<bool>(write_instruction));
   EXPECT_TRUE(write_instruction->AddAttribute("channel", "undefined"));
-  EXPECT_TRUE(write_instruction->AddAttribute("varName", "var"));
-  EXPECT_NO_THROW(write_instruction->Setup(proc));
-  EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
-  EXPECT_EQ(write_instruction->GetStatus(), ExecutionStatus::FAILURE);
-}
-
-TEST_F(ChannelAccessWriteInstructionTest, EmptyChannelName)
-{
-  unit_test_helper::NullUserInterface ui;
-  Procedure proc;
-
-  Workspace ws;
-  auto variable = GlobalVariableRegistry().Create("Local");
-  ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(variable->AddAttribute("type", BOOLEANTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
-  EXPECT_NO_THROW(ws.Setup());
-
-  auto write_instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
-  ASSERT_TRUE(static_cast<bool>(write_instruction));
-  EXPECT_TRUE(write_instruction->AddAttribute("channel", ""));
   EXPECT_TRUE(write_instruction->AddAttribute("varName", "var"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));

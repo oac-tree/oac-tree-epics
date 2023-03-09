@@ -97,6 +97,13 @@ TEST_F(ChannelAccessReadInstructionTest, Setup)
   EXPECT_TRUE(read_instruction->SetAttribute("timeout", "30.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->Reset());
+  // Empty channel name
+  EXPECT_TRUE(read_instruction->SetAttribute("channel", ""));
+  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
+  // Empty variable name
+  EXPECT_TRUE(read_instruction->SetAttribute("channel", "some_channel"));
+  EXPECT_TRUE(read_instruction->SetAttribute("varName", ""));
+  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
 }
 
 TEST_F(ChannelAccessReadInstructionTest, ExecuteMissingVariable)
@@ -145,35 +152,6 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyVariable)
 
   sup::dto::AnyValue value;
   EXPECT_FALSE(ws.GetValue("var", value));
-}
-
-TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannel)
-{
-  unit_test_helper::NullUserInterface ui;
-  Procedure proc;
-
-  Workspace ws;
-  auto variable = GlobalVariableRegistry().Create("Local");
-  ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(variable->AddAttribute("type", R"RAW({"type":"bool"})RAW"));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
-  EXPECT_NO_THROW(ws.Setup());
-
-  auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
-  ASSERT_TRUE(static_cast<bool>(read_instruction));
-
-  // Variable to write to doesn't exist in workspace
-  EXPECT_TRUE(read_instruction->AddAttribute("channel", ""));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
-  EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
-  EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
-  EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
-
-  sup::dto::AnyValue value;
-  EXPECT_TRUE(ws.GetValue("var", value));
-  EXPECT_EQ(value.GetType(), sup::dto::BooleanType);
 }
 
 TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannelType)
