@@ -24,6 +24,7 @@
 
 #include <sequencer/pvxs/pv_access_read_instruction.h>
 
+#include <sup/epics/pv_access_server.h>
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
@@ -88,7 +89,14 @@ protected:
   virtual ~PvAccessReadInstructionTest();
 
   unit_test_helper::LogUserInterface ui;
+
+  static void SetUpTestCase();
+  static void TearDownTestCase();
+
+  static std::unique_ptr<sup::epics::PvAccessServer> server;
 };
+
+std::unique_ptr<sup::epics::PvAccessServer> PvAccessReadInstructionTest::server{};
 
 TEST_F(PvAccessReadInstructionTest, Setup)
 {
@@ -125,11 +133,12 @@ TEST_F(PvAccessReadInstructionTest, Setup)
 
 TEST_F(PvAccessReadInstructionTest, MissingVariable)
 {
+
   Procedure proc;
   Workspace ws;
 
   PvAccessReadInstruction instruction{};
-  EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
+  EXPECT_TRUE(instruction.AddAttribute("channel", "seq-plugin-epics-test::missing-var"));
   EXPECT_TRUE(instruction.AddAttribute("output", "DoesNotExist"));
   EXPECT_NO_THROW(instruction.Setup(proc));
 
@@ -204,6 +213,22 @@ TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
 
 PvAccessReadInstructionTest::PvAccessReadInstructionTest()
   : ui{}
-{}
+{
+}
 
 PvAccessReadInstructionTest::~PvAccessReadInstructionTest() = default;
+
+void PvAccessReadInstructionTest::SetUpTestCase()
+{
+  server.reset(new sup::epics::PvAccessServer{});
+  sup::dto::AnyValue value = {
+    { "enabled", { sup::dto::BooleanType, true }}
+  };
+  server->AddVariable("seq-plugin-epics-test::missing-var", value);
+  server->Start();
+}
+
+void PvAccessReadInstructionTest::TearDownTestCase()
+{
+  server.reset();
+}

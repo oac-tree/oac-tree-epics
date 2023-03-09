@@ -140,6 +140,15 @@ TEST_F(PvAccessWriteInstructionTest, Setup)
     EXPECT_NO_THROW(instruction.Setup(proc));
     EXPECT_NO_THROW(instruction.Reset());
   }
+  // write instruction cannot be setup with an empty channel name
+  {
+    PvAccessWriteInstruction instruction{};
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("channel", ""));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
+    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
+  }
 }
 
 TEST_F(PvAccessWriteInstructionTest, MissingVariable)
@@ -181,7 +190,7 @@ TEST_F(PvAccessWriteInstructionTest, MissingVariableField)
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
+  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
   EXPECT_NE(last_log_entry.second.find("var.val"), std::string::npos);
 }
 
@@ -246,26 +255,6 @@ TEST_F(PvAccessWriteInstructionTest, ValueParseError)
   auto last_log_entry = ui.m_log_entries.back();
   EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
   EXPECT_NE(last_log_entry.second.find("ValueCannotBeParsed"), std::string::npos);
-}
-
-TEST_F(PvAccessWriteInstructionTest, ChannelEmpty)
-{
-  Procedure proc;
-  Workspace ws;
-
-  PvAccessWriteInstruction instruction{};
-  EXPECT_TRUE(instruction.AddAttribute("channel", ""));
-  EXPECT_TRUE(instruction.AddAttribute("type", UINT16_STRUCT_TYPE));
-  EXPECT_TRUE(instruction.AddAttribute("value", UINT16_STRUCT_VALUE));
-  EXPECT_NO_THROW(instruction.Setup(proc));
-
-  EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
-  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
-  ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("channel"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
