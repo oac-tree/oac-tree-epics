@@ -110,12 +110,12 @@ void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
     throw VariableSetupException(error_message);
   }
   sup::dto::AnyType type_copy = *m_type;
-  auto callback = [this, type_copy](const epics::ChannelAccessPV::ExtendedValue& ext_value)
-                  {
-                    auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, type_copy);
-                    Notify(value);
-                    return;
-                  };
+  auto callback =
+    [this, type_copy](const epics::ChannelAccessPV::ExtendedValue& ext_value) {
+      auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, type_copy);
+      Notify(value, ext_value.connected);
+      return;
+    };
   m_pv.reset(new epics::ChannelAccessPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
                                         channel_type, callback));
 }

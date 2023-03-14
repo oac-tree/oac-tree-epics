@@ -107,7 +107,7 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   auto callback = [this, type_copy](const std::string&, const sup::dto::AnyValue& value)
   {
     auto typed_value = pv_access_helper::ConvertToTypedAnyValue(value, type_copy);
-    Notify(typed_value);
+    Notify(typed_value, true);
     return;
   };
   m_server.reset(new epics::PvAccessServer(callback));

@@ -122,7 +122,7 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   {
     auto value = sup::dto::IsEmptyType(type_copy) ? ext_value.value
                     : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, type_copy);
-    Notify(value);
+    Notify(value, ext_value.connected);
     return;
   };
   m_pv.reset(new epics::PvAccessClientPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME), callback));
