@@ -40,7 +40,7 @@ namespace sequencer {
 const std::string ChannelAccessReadInstruction::Type = "ChannelAccessRead";
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-const std::string VARIABLE_NAME_ATTRIBUTE_NAME = "varName";
+const std::string OUTPUT_ATTRIBUTE_NAME = "output";
 const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 
 static bool _ca_read_instruction_initialised_flag =
@@ -56,7 +56,7 @@ ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
 void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
 {
   CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
-  CheckMandatoryNonEmptyAttribute(*this, VARIABLE_NAME_ATTRIBUTE_NAME);
+  CheckMandatoryNonEmptyAttribute(*this, OUTPUT_ATTRIBUTE_NAME);
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
     auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
@@ -80,11 +80,11 @@ void ChannelAccessReadInstruction::ResetHook()
 ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   sup::dto::AnyValue value;
-  if (!GetValueFromAttributeName(*this, ws, ui, VARIABLE_NAME_ATTRIBUTE_NAME, value))
+  if (!GetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, value))
   {
     return ExecutionStatus::FAILURE;
   }
-  auto var_field_name = GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME);
+  auto var_field_name = GetAttribute(OUTPUT_ATTRIBUTE_NAME);
   auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
   auto channel_type = channel_access_helper::ChannelType(value.GetType());
   if (sup::dto::IsEmptyType(channel_type))
@@ -112,7 +112,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
     ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
-  if (!SetValueFromAttributeName(*this, ws, ui, VARIABLE_NAME_ATTRIBUTE_NAME, var_val))
+  if (!SetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, var_val))
   {
     return ExecutionStatus::FAILURE;
   }

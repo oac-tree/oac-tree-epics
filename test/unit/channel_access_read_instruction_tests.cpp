@@ -59,13 +59,13 @@ static const std::string READBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding=
     <Sequence>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            varName="boolean"/>
+            output="boolean"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            varName="uint32"/>
+            output="uint32"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            varName="string"/>
+            output="string"/>
     </Sequence>
     <Workspace>
         <Local name="boolean" type='{"type":"bool"}'/>
@@ -90,7 +90,7 @@ TEST_F(ChannelAccessReadInstructionTest, Setup)
   EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "some_channel"));
   EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "some_var_name"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "some_var_name"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "cant_parse_this"));
   EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
@@ -102,7 +102,7 @@ TEST_F(ChannelAccessReadInstructionTest, Setup)
   EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
   // Empty variable name
   EXPECT_TRUE(read_instruction->SetAttribute("channel", "some_channel"));
-  EXPECT_TRUE(read_instruction->SetAttribute("varName", ""));
+  EXPECT_TRUE(read_instruction->SetAttribute("output", ""));
   EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
 }
 
@@ -119,7 +119,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteMissingVariable)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "some_var_name"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "some_var_name"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -143,7 +143,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyVariable)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -172,7 +172,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannelType)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "1.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -202,7 +202,7 @@ TEST_F(ChannelAccessReadInstructionTest, Timeout)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "DOESNOTEXIST"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "0.1"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -232,7 +232,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongConnectedType)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -263,7 +263,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongTimestampType)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -294,7 +294,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongStatusType)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -325,7 +325,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongSeverityType)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
@@ -355,7 +355,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadOnlyVariable)
 
   // Variable to write to doesn't exist in workspace
   EXPECT_TRUE(read_instruction->AddAttribute("channel", "SEQ-TEST:BOOL"));
-  EXPECT_TRUE(read_instruction->AddAttribute("varName", "var"));
+  EXPECT_TRUE(read_instruction->AddAttribute("output", "var"));
   EXPECT_TRUE(read_instruction->AddAttribute("timeout", "2.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
