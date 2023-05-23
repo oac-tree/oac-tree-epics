@@ -22,6 +22,7 @@
 #include "channel_access_client_variable.h"
 #include "channel_access_helper.h"
 
+#include <sup/sequencer/concrete_constraints.h>
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable_registry.h>
 
@@ -43,7 +44,10 @@ ChannelAccessClientVariable::ChannelAccessClientVariable()
   : Variable(ChannelAccessClientVariable::Type)
   , m_pv{}
   , m_type{}
-{}
+{
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+}
 
 ChannelAccessClientVariable::~ChannelAccessClientVariable() = default;
 
@@ -91,10 +95,8 @@ bool ChannelAccessClientVariable::IsAvailableImpl() const
 
 void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
-  CheckMandatoryNonEmptyAttribute(*this, TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser parser;
-  auto type_attr_val = GetAttribute(TYPE_ATTRIBUTE_NAME);
+  auto type_attr_val = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
   if (!parser.ParseString(type_attr_val, &registry))
   {
     std::string error_message = VariableSetupExceptionProlog(*this) +
@@ -116,7 +118,7 @@ void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
       Notify(value, ext_value.connected);
       return;
     };
-  m_pv.reset(new epics::ChannelAccessPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
+  m_pv.reset(new epics::ChannelAccessPV(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME),
                                         channel_type, callback));
 }
 

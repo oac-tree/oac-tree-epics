@@ -47,14 +47,18 @@ PvAccessServerVariable::PvAccessServerVariable()
   : Variable(PvAccessServerVariable::Type)
   , m_type{}
   , m_server{}
-{}
+{
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
+}
 
 PvAccessServerVariable::~PvAccessServerVariable() = default;
 
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
-    m_server->GetValue(GetAttribute(CHANNEL_ATTRIBUTE_NAME)), *m_type);
+    m_server->GetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME)), *m_type);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryConvert(value, converted_val);
 }
 
@@ -65,23 +69,21 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
   {
     return false;
   }
-  return m_server->SetValue(GetAttribute(CHANNEL_ATTRIBUTE_NAME),
+  return m_server->SetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME),
                             pv_access_helper::PackIntoStructIfScalar(copy));
 }
 
 bool PvAccessServerVariable::IsAvailableImpl() const
 {
   auto value = pv_access_helper::ConvertToTypedAnyValue(
-    m_server->GetValue(GetAttribute(CHANNEL_ATTRIBUTE_NAME)), *m_type);
+    m_server->GetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME)), *m_type);
   return !sup::dto::IsEmptyValue(value);
 }
 
 void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
-  CheckMandatoryNonEmptyAttribute(*this, TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser parser;
-  auto type_attr_val = GetAttribute(TYPE_ATTRIBUTE_NAME);
+  auto type_attr_val = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
   if (!parser.ParseString(type_attr_val, &registry))
   {
     std::string error_message = VariableSetupExceptionProlog(*this) +
@@ -92,7 +94,7 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   sup::dto::AnyValue val(*m_type);
   if (HasAttribute(VALUE_ATTRIBUTE_NAME))
   {
-    auto val_str = GetAttribute(VALUE_ATTRIBUTE_NAME);
+    auto val_str = GetAttributeValue<std::string>(VALUE_ATTRIBUTE_NAME);
     sup::dto::JSONAnyValueParser value_parser;
     if (!value_parser.TypedParseString(*m_type, val_str))
     {
@@ -112,7 +114,7 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
   };
   m_server.reset(new epics::PvAccessServer(callback));
   auto start_value = pv_access_helper::PackIntoStructIfScalar(val);
-  m_server->AddVariable(GetAttribute(CHANNEL_ATTRIBUTE_NAME), start_value);
+  m_server->AddVariable(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME), start_value);
   m_server->Start();
 }
 

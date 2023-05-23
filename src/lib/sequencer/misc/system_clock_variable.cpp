@@ -54,7 +54,9 @@ const std::string ISO8601_TIME_FORMAT = "ISO8601";
 SystemClockVariable::SystemClockVariable()
   : Variable(SystemClockVariable::Type)
   , m_time_format{}
-{}
+{
+  AddAttributeDefinition(TIMEFORMAT_ATTRIBUTE_NAME, sup::dto::StringType);
+}
 
 SystemClockVariable::~SystemClockVariable() = default;
 
@@ -78,7 +80,7 @@ void SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
 {
   if (HasAttribute(TIMEFORMAT_ATTRIBUTE_NAME))
   {
-    auto time_format = GetAttribute(TIMEFORMAT_ATTRIBUTE_NAME);
+    auto time_format = GetAttributeValue<std::string>(TIMEFORMAT_ATTRIBUTE_NAME);
     if (!IsSupportedTimeFormat(time_format))
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +

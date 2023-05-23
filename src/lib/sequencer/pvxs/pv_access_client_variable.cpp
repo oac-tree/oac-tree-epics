@@ -45,7 +45,10 @@ PvAccessClientVariable::PvAccessClientVariable()
   : Variable(PvAccessClientVariable::Type)
   , m_type{}
   , m_pv{}
-{}
+{
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
+}
 
 PvAccessClientVariable::~PvAccessClientVariable() = default;
 
@@ -95,11 +98,10 @@ bool PvAccessClientVariable::IsAvailableImpl() const
 
 void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
-  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
     // TODO: temporary hack for GUI! Remove this!
-    auto type_attr = GetAttribute(TYPE_ATTRIBUTE_NAME);
+    auto type_attr = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
     if (type_attr.empty())
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +
@@ -107,11 +109,10 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
       throw VariableSetupException(error_message);
     }
     sup::dto::JSONAnyTypeParser parser;
-    auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
-    if (!parser.ParseString(type_str, &registry))
+    if (!parser.ParseString(type_attr, &registry))
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +
-        "could not parse type [" + type_str + "]";
+        "could not parse type [" + type_attr + "]";
       throw VariableSetupException(error_message);
     }
     m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
@@ -125,7 +126,8 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     Notify(value, ext_value.connected);
     return;
   };
-  m_pv.reset(new epics::PvAccessClientPV(GetAttribute(CHANNEL_ATTRIBUTE_NAME), callback));
+  m_pv.reset(new epics::PvAccessClientPV(
+    GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME), callback));
 }
 
 void PvAccessClientVariable::ResetImpl()
