@@ -78,10 +78,6 @@ namespace sequencer
  * @note EPICS CA support is provided through this class and also as blocking instructions.
  * Procedures mixing asynchronous handling using this class and synchronous instructions have
  * not been tested.
- *
- * @todo Assess if a default instance value should be provided for the variable cache.
- * @todo Assess if an additional status variable should be provided to reflect to the
- * procedure if the channel is connected, etc.
  */
 class ChannelAccessClientVariable : public Variable
 {

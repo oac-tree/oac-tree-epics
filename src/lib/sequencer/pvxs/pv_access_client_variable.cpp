@@ -100,7 +100,6 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
 {
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
-    // TODO: temporary hack for GUI! Remove this!
     auto type_attr = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
     if (type_attr.empty())
     {

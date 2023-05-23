@@ -33,9 +33,6 @@ namespace sequencer
  * @brief SystemClockVariable class.
  *
  * @details Returns current time when its value is retrieved.
- *
- * @todo Assess if different format should be supported, e.g. ISO8601 is the passed value
- * is string, etc.
  */
 class SystemClockVariable : public Variable
 {
