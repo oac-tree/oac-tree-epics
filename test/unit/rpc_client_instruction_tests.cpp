@@ -124,13 +124,6 @@ TEST_F(RPCClientInstructionTest, Setup)
     EXPECT_NO_THROW(instruction.Setup(proc));
     EXPECT_NO_THROW(instruction.Reset());
   }
-  // rpc client instruction with empty service attribute cannot be parsed
-  {
-    RPCClientInstruction instruction{};
-    EXPECT_TRUE(instruction.AddAttribute("service", ""));
-    EXPECT_TRUE(instruction.AddAttribute("requestVar", "Some_Var_Name"));
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-  }
   // rpc client instruction timeout attribute cannot be parsed
   {
     RPCClientInstruction instruction{};

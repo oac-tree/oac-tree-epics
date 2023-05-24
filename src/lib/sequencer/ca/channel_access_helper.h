@@ -48,8 +48,6 @@ sup::dto::AnyValue ExtractChannelValue(const sup::dto::AnyValue& value);
 sup::dto::AnyValue ConvertToTypedAnyValue(
   const sup::epics::ChannelAccessPV::ExtendedValue& ext_value, const sup::dto::AnyType& anytype);
 
-double ParseTimeoutString(const std::string& timeout_str);
-
 }  // namespace channel_access_helper
 
 }  // namespace sequencer

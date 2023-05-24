@@ -49,23 +49,24 @@ static bool _ca_read_instruction_initialised_flag =
 ChannelAccessReadInstruction::ChannelAccessReadInstruction()
   : Instruction(ChannelAccessReadInstruction::Type)
   , m_timeout_sec{channel_access_helper::DEFAULT_TIMEOUT_SEC}
-{}
+{
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+}
 
 ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
 
 void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
 {
-  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
-  CheckMandatoryNonEmptyAttribute(*this, OUTPUT_ATTRIBUTE_NAME);
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
-    auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
-    auto timeout_val = channel_access_helper::ParseTimeoutString(timeout_str);
+    auto timeout_val = GetAttributeValue<sup::dto::float64>(TIMEOUT_ATTRIBUTE_NAME);
     if (timeout_val < 0)
     {
       std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
-        "] to positive or zero floating point value";
+        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" +
+        GetAttributeString(TIMEOUT_ATTRIBUTE_NAME) + "] is not positive";
       throw InstructionSetupException(error_message);
     }
     m_timeout_sec = timeout_val;
@@ -84,8 +85,8 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
   {
     return ExecutionStatus::FAILURE;
   }
-  auto var_field_name = GetAttribute(OUTPUT_ATTRIBUTE_NAME);
-  auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
+  auto var_field_name = GetAttributeValue<std::string>(OUTPUT_ATTRIBUTE_NAME);
+  auto channel_name = GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME);
   auto channel_type = channel_access_helper::ChannelType(value.GetType());
   if (sup::dto::IsEmptyType(channel_type))
   {

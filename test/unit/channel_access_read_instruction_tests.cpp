@@ -97,13 +97,6 @@ TEST_F(ChannelAccessReadInstructionTest, Setup)
   EXPECT_TRUE(read_instruction->SetAttribute("timeout", "30.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->Reset());
-  // Empty channel name
-  EXPECT_TRUE(read_instruction->SetAttribute("channel", ""));
-  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
-  // Empty variable name
-  EXPECT_TRUE(read_instruction->SetAttribute("channel", "some_channel"));
-  EXPECT_TRUE(read_instruction->SetAttribute("output", ""));
-  EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
 }
 
 TEST_F(ChannelAccessReadInstructionTest, ExecuteMissingVariable)

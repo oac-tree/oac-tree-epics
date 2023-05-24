@@ -23,6 +23,7 @@
 
 #include "pv_access_helper.h"
 
+#include <sup/sequencer/concrete_constraints.h>
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
@@ -46,9 +47,9 @@ const std::string PvAccessWriteInstruction::Type = "PvAccessWrite";
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
 const std::string VARIABLE_NAME_ATTRIBUTE_NAME = "varName";
-const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 const std::string TYPE_ATTRIBUTE_NAME = "type";
 const std::string VALUE_ATTRIBUTE_NAME = "value";
+const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 
 static bool _pv_access_write_instruction_initialised_flag =
   RegisterGlobalInstruction<PvAccessWriteInstruction>();
@@ -56,27 +57,30 @@ static bool _pv_access_write_instruction_initialised_flag =
 PvAccessWriteInstruction::PvAccessWriteInstruction()
   : Instruction(PvAccessWriteInstruction::Type)
   , m_timeout_sec{pv_access_helper::DEFAULT_TIMEOUT_SEC}
-{}
+{
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(VARIABLE_NAME_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+  AddConstraint(MakeConstraint<Xor>(
+    MakeConstraint<Exists>(VARIABLE_NAME_ATTRIBUTE_NAME),
+    MakeConstraint<And>(MakeConstraint<Exists>(TYPE_ATTRIBUTE_NAME),
+                        MakeConstraint<Exists>(VALUE_ATTRIBUTE_NAME))));
+}
 
 PvAccessWriteInstruction::~PvAccessWriteInstruction() = default;
 
 void PvAccessWriteInstruction::SetupImpl(const Procedure&)
 {
-  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
-  if (!HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
-  {
-    CheckMandatoryAttribute(*this, TYPE_ATTRIBUTE_NAME);
-    CheckMandatoryAttribute(*this, VALUE_ATTRIBUTE_NAME);
-  }
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
-    auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
-    auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
+    auto timeout_val = GetAttributeValue<sup::dto::float64>(TIMEOUT_ATTRIBUTE_NAME);
     if (timeout_val < 0)
     {
       std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
-        "] to positive or zero floating point value";
+        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" +
+        GetAttributeString(TIMEOUT_ATTRIBUTE_NAME) + "] is not positive";
       throw InstructionSetupException(error_message);
     }
     m_timeout_sec = timeout_val;
@@ -95,7 +99,7 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
   {
     return ExecutionStatus::FAILURE;
   }
-  auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
+  auto channel_name = GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME);
   sup::epics::PvAccessClientPV pv(channel_name);
   if (!pv.WaitForConnected(m_timeout_sec))
   {
@@ -126,13 +130,14 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Work
     }
     if (sup::dto::IsEmptyValue(result))
     {
-      std::string warning_message = InstructionWarningProlog(*this) +
-        "value from field [" + GetAttribute(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
+      std::string warning_message =
+        InstructionWarningProlog(*this) + "value from field [" +
+        GetAttributeValue<std::string>(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
       ui.LogWarning(warning_message);
     }
     return result;
   }
-  auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
+  auto type_str = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser type_parser;
   if (!type_parser.ParseString(type_str, ws.GetTypeRegistry()))
   {
@@ -142,7 +147,7 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Work
     return {};
   }
   sup::dto::AnyType anytype = type_parser.MoveAnyType();
-  auto val_str = GetAttribute(VALUE_ATTRIBUTE_NAME);
+  auto val_str = GetAttributeValue<std::string>(VALUE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyValueParser val_parser;
   if (!val_parser.TypedParseString(anytype, val_str))
   {

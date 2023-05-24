@@ -51,23 +51,24 @@ static bool _pv_access_read_instruction_initialised_flag =
 PvAccessReadInstruction::PvAccessReadInstruction()
   : Instruction(PvAccessReadInstruction::Type)
   , m_timeout_sec{pv_access_helper::DEFAULT_TIMEOUT_SEC}
-{}
+{
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+}
 
 PvAccessReadInstruction::~PvAccessReadInstruction() = default;
 
 void PvAccessReadInstruction::SetupImpl(const Procedure&)
 {
-  CheckMandatoryNonEmptyAttribute(*this, CHANNEL_ATTRIBUTE_NAME);
-  CheckMandatoryNonEmptyAttribute(*this, OUTPUT_ATTRIBUTE_NAME);
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
-    auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
-    auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
+    auto timeout_val = GetAttributeValue<sup::dto::float64>(TIMEOUT_ATTRIBUTE_NAME);
     if (timeout_val < 0)
     {
       std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
-        "] to positive or zero floating point value";
+        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" +
+        GetAttributeString(TIMEOUT_ATTRIBUTE_NAME) + "] is not positive";
       throw InstructionSetupException(error_message);
     }
     m_timeout_sec = timeout_val;
@@ -81,7 +82,7 @@ void PvAccessReadInstruction::ResetHook()
 
 ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
-  auto channel_name = GetAttribute(CHANNEL_ATTRIBUTE_NAME);
+  auto channel_name = GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME);
   sup::epics::PvAccessClientPV pv(channel_name);
   if (!pv.WaitForValidValue(m_timeout_sec))
   {

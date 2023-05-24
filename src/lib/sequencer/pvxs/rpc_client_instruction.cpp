@@ -22,6 +22,7 @@
 #include "rpc_client_instruction.h"
 #include "pv_access_helper.h"
 
+#include <sup/sequencer/concrete_constraints.h>
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
@@ -61,27 +62,31 @@ static bool _rpcclient_instruction_initialised_flag =
 RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
   , m_timeout{-1.0}
-{}
+{
+  AddAttributeDefinition(SERVICE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(REQUEST_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+  AddConstraint(MakeConstraint<Xor>(
+    MakeConstraint<Exists>(REQUEST_ATTRIBUTE_NAME),
+    MakeConstraint<And>(MakeConstraint<Exists>(TYPE_ATTRIBUTE_NAME),
+                        MakeConstraint<Exists>(VALUE_ATTRIBUTE_NAME))));
+}
 
 RPCClientInstruction::~RPCClientInstruction() = default;
 
 void RPCClientInstruction::SetupImpl(const Procedure&)
 {
-  CheckMandatoryNonEmptyAttribute(*this, SERVICE_ATTRIBUTE_NAME);
-  if (!HasAttribute(REQUEST_ATTRIBUTE_NAME))
-  {
-    CheckMandatoryAttribute(*this, TYPE_ATTRIBUTE_NAME);
-    CheckMandatoryAttribute(*this, VALUE_ATTRIBUTE_NAME);
-  }
   if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
   {
-    auto timeout_str = GetAttribute(TIMEOUT_ATTRIBUTE_NAME);
-    auto timeout_val = pv_access_helper::ParseTimeoutString(timeout_str);
+    auto timeout_val = GetAttributeValue<sup::dto::float64>(TIMEOUT_ATTRIBUTE_NAME);
     if (timeout_val < 0)
     {
-      std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "could not parse attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" + timeout_str +
-        "] to positive or zero floating point value";
+      std::string error_message =
+        InstructionSetupExceptionProlog(*this) + "attribute [" + TIMEOUT_ATTRIBUTE_NAME +
+        "] with value [" + GetAttributeString(TIMEOUT_ATTRIBUTE_NAME) + "] is not positive";
       throw InstructionSetupException(error_message);
     }
     m_timeout = timeout_val;
@@ -100,8 +105,8 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
   {
     return ExecutionStatus::FAILURE;
   }
-  auto service_name = GetAttribute(SERVICE_ATTRIBUTE_NAME);
-  auto client_config = sup::epics::GetDefaultRPCClientConfig(GetAttribute(SERVICE_ATTRIBUTE_NAME));
+  auto service_name = GetAttributeValue<std::string>(SERVICE_ATTRIBUTE_NAME);
+  auto client_config = sup::epics::GetDefaultRPCClientConfig(service_name);
   if (m_timeout >= 0.0)
   {
     client_config.timeout = m_timeout;
@@ -132,12 +137,12 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
     if (sup::dto::IsEmptyValue(request))
     {
       std::string warning_message = InstructionWarningProlog(*this) +
-        "value from field [" + GetAttribute(REQUEST_ATTRIBUTE_NAME) + "] is empty";
+        "value from field [" + GetAttributeValue<std::string>(REQUEST_ATTRIBUTE_NAME) + "] is empty";
       ui.LogWarning(warning_message);
     }
     return request;
   }
-  auto type_str = GetAttribute(TYPE_ATTRIBUTE_NAME);
+  auto type_str = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyTypeParser type_parser;
   if (!type_parser.ParseString(type_str, ws.GetTypeRegistry()))
   {
@@ -147,7 +152,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
     return {};
   }
   auto anytype = type_parser.MoveAnyType();
-  auto val_str = GetAttribute(VALUE_ATTRIBUTE_NAME);
+  auto val_str = GetAttributeValue<std::string>(VALUE_ATTRIBUTE_NAME);
   sup::dto::JSONAnyValueParser value_parser;
   if (!value_parser.TypedParseString(anytype, val_str))
   {

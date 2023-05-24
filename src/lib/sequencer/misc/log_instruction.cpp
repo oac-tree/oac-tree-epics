@@ -21,6 +21,7 @@
 
 #include "log_instruction.h"
 
+#include <sup/sequencer/concrete_constraints.h>
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/log_severity.h>
@@ -53,27 +54,22 @@ const std::string SEVERITY_ATTRIBUTE_NAME = "severity";
 
 LogInstruction::LogInstruction()
   : Instruction(Type)
-{}
+{
+  AddAttributeDefinition(MESSAGE_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(INPUT_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddAttributeDefinition(SEVERITY_ATTRIBUTE_NAME, sup::dto::StringType);
+  AddConstraint(MakeConstraint<Or>(MakeConstraint<Exists>(MESSAGE_ATTRIBUTE_NAME),
+                                   MakeConstraint<Exists>(INPUT_ATTRIBUTE_NAME)));
+}
 
 LogInstruction::~LogInstruction() = default;
-
-void LogInstruction::SetupImpl(const Procedure&)
-{
-  if (!HasAttribute(MESSAGE_ATTRIBUTE_NAME) && !HasAttribute(INPUT_ATTRIBUTE_NAME))
-  {
-    std::string error_message = InstructionSetupExceptionProlog(*this) +
-      "instruction requires at least one of the attributes [" + MESSAGE_ATTRIBUTE_NAME + ", " +
-      INPUT_ATTRIBUTE_NAME + "]";
-    throw InstructionSetupException(error_message);
-  }
-}
 
 ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   int severity = log::SUP_SEQ_LOG_INFO;  // Default severity if not explicitly specified
   if (HasAttribute(SEVERITY_ATTRIBUTE_NAME))
   {
-    auto severity_str = GetAttribute(SEVERITY_ATTRIBUTE_NAME);
+    auto severity_str = GetAttributeValue<std::string>(SEVERITY_ATTRIBUTE_NAME);
     severity = SeverityFromString(severity_str);
     if (severity < 0)
     {
@@ -86,7 +82,7 @@ ExecutionStatus LogInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& 
   std::ostringstream oss;
   if (HasAttribute(MESSAGE_ATTRIBUTE_NAME))
   {
-    oss << GetAttribute(MESSAGE_ATTRIBUTE_NAME);
+    oss << GetAttributeValue<std::string>(MESSAGE_ATTRIBUTE_NAME);
   }
   if (HasAttribute(INPUT_ATTRIBUTE_NAME))
   {

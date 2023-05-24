@@ -40,8 +40,6 @@ sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
 
 sup::dto::AnyValue PackIntoStructIfScalar(const sup::dto::AnyValue& value);
 
-double ParseTimeoutString(const std::string& timeout_str);
-
 }  // namespace pv_access_helper
 
 }  // namespace sequencer

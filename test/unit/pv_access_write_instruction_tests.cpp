@@ -140,15 +140,6 @@ TEST_F(PvAccessWriteInstructionTest, Setup)
     EXPECT_NO_THROW(instruction.Setup(proc));
     EXPECT_NO_THROW(instruction.Reset());
   }
-  // write instruction cannot be setup with an empty channel name
-  {
-    PvAccessWriteInstruction instruction{};
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-    EXPECT_TRUE(instruction.AddAttribute("channel", ""));
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-  }
 }
 
 TEST_F(PvAccessWriteInstructionTest, MissingVariable)

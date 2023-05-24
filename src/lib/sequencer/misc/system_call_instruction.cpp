@@ -37,20 +37,17 @@ const std::string COMMAND_ATTRIBUTE_NAME = "command";
 
 SystemCallInstruction::SystemCallInstruction()
   : Instruction(Type)
-{}
+{
+  AddAttributeDefinition(COMMAND_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+}
 
 SystemCallInstruction::~SystemCallInstruction() = default;
-
-void SystemCallInstruction::SetupImpl(const Procedure&)
-{
-  CheckMandatoryAttribute(*this, COMMAND_ATTRIBUTE_NAME);
-}
 
 ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   (void)ui;
   (void)ws;
-  auto command = GetAttribute(COMMAND_ATTRIBUTE_NAME);
+  auto command = GetAttributeValue<std::string>(COMMAND_ATTRIBUTE_NAME);
   auto exit_status = std::system(command.c_str());
   return exit_status == 0 ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE;
 }
