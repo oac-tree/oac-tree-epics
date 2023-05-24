@@ -31,8 +31,6 @@
 #include <sup/sequencer/workspace.h>
 
 #include <sup/dto/anyvalue_helper.h>
-#include <sup/dto/json_type_parser.h>
-#include <sup/dto/json_value_parser.h>
 #include <sup/epics/pv_access_rpc_client.h>
 #include <sup/protocol/protocol_rpc.h>
 
@@ -142,27 +140,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
     }
     return request;
   }
-  auto type_str = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
-  sup::dto::JSONAnyTypeParser type_parser;
-  if (!type_parser.ParseString(type_str, ws.GetTypeRegistry()))
-  {
-    std::string error_message = InstructionErrorProlog(*this) +
-      "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    ui.LogError(error_message);
-    return {};
-  }
-  auto anytype = type_parser.MoveAnyType();
-  auto val_str = GetAttributeValue<std::string>(VALUE_ATTRIBUTE_NAME);
-  sup::dto::JSONAnyValueParser value_parser;
-  if (!value_parser.TypedParseString(anytype, val_str))
-  {
-    std::string error_message = InstructionErrorProlog(*this) +
-      "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
-      "] to type [" + type_str + "]";
-    ui.LogError(error_message);
-    return {};
-  }
-  return value_parser.MoveAnyValue();
+  return ParseAnyValueAttributePair(*this, ws, ui, TYPE_ATTRIBUTE_NAME, VALUE_ATTRIBUTE_NAME);
 }
 
 } // namespace sequencer

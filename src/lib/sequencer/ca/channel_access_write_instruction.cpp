@@ -30,8 +30,6 @@
 
 #include <sup/dto/anyvalue.h>
 #include <sup/dto/anyvalue_helper.h>
-#include <sup/dto/json_type_parser.h>
-#include <sup/dto/json_value_parser.h>
 #include <sup/epics/channel_access_pv.h>
 
 #include <algorithm>
@@ -134,28 +132,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface& ui,
     }
     return result;
   }
-  auto type_str = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
-  sup::dto::JSONAnyTypeParser type_parser;
-  auto registry = ws.GetTypeRegistry();
-  if (!type_parser.ParseString(type_str, registry))
-  {
-    std::string error_message = InstructionErrorProlog(*this) +
-      "could not parse type [" + type_str + "] from attribute [" + TYPE_ATTRIBUTE_NAME + "]";
-    ui.LogError(error_message);
-    return {};
-  }
-  sup::dto::AnyType anytype = type_parser.MoveAnyType();
-  auto val_str = GetAttributeValue<std::string>(VALUE_ATTRIBUTE_NAME);
-  sup::dto::JSONAnyValueParser val_parser;
-  if (!val_parser.TypedParseString(anytype, val_str))
-  {
-    std::string error_message = InstructionErrorProlog(*this) +
-      "could not parse value [" + val_str + "] from attribute [" + VALUE_ATTRIBUTE_NAME +
-      "] to type [" + type_str + "]";
-    ui.LogError(error_message);
-    return {};
-  }
-  return val_parser.MoveAnyValue();
+  return ParseAnyValueAttributePair(*this, ws, ui, TYPE_ATTRIBUTE_NAME, VALUE_ATTRIBUTE_NAME);
 }
 
 } // namespace sequencer
