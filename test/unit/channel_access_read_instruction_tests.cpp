@@ -128,7 +128,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyVariable)
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -157,7 +157,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannelType)
 
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", WRONGSTRUCTTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -187,7 +187,7 @@ TEST_F(ChannelAccessReadInstructionTest, Timeout)
 
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", R"RAW({"type":"bool"})RAW"));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -217,7 +217,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongConnectedType)
 
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", WRONGCONNECTEDTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -248,7 +248,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongTimestampType)
 
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", WRONGTIMESTAMPTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -279,7 +279,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongStatusType)
 
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", WRONGSTATUSTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -310,7 +310,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongSeverityType)
 
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", WRONGSEVERITYTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -338,9 +338,9 @@ TEST_F(ChannelAccessReadInstructionTest, ReadOnlyVariable)
 
   Workspace ws;
   sup::dto::AnyValue val = true;
-  auto variable = new unit_test_helper::ReadOnlyVariable(val);
+  auto variable = std::unique_ptr<Variable>{new unit_test_helper::ReadOnlyVariable(val)};
   ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(ws.AddVariable("var", variable));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");

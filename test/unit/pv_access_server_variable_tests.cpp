@@ -119,13 +119,13 @@ TEST_F(PvAccessServerVariableTest, ServerClientTest)
   auto server_var = GlobalVariableRegistry().Create("PvAccessServer");
   EXPECT_NO_THROW(server_var->AddAttribute("channel", channel));
   EXPECT_NO_THROW(server_var->AddAttribute("type", kDataType));
-  EXPECT_TRUE(ws.AddVariable("server_var", server_var.release()));
+  EXPECT_TRUE(ws.AddVariable("server_var", std::move(server_var)));
 
   // Creating sequencer's PvAccessClientVariable
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
   EXPECT_NO_THROW(variable->AddAttribute("type", kDataType));
-  EXPECT_TRUE(ws.AddVariable("client_var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("client_var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   // setting the value through the server

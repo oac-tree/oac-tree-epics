@@ -169,7 +169,7 @@ TEST_F(PvAccessWriteInstructionTest, MissingVariableField)
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", UINT16_STRUCT_TYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   PvAccessWriteInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
@@ -190,9 +190,9 @@ TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
   Procedure proc;
   Workspace ws;
 
-  auto variable = new unit_test_helper::ReadOnlyVariable({});
+  auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
   EXPECT_NO_THROW(variable->Setup());
-  EXPECT_TRUE(ws.AddVariable("var", variable));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   PvAccessWriteInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
@@ -310,7 +310,7 @@ TEST_F(PvAccessWriteInstructionTest, Success)
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", "seq::write-test::variable"));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 

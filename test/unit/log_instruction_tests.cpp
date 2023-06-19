@@ -175,7 +175,7 @@ TEST_F(LogInstructionTest, VariableCannotBeRead)
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   Procedure proc;
@@ -202,7 +202,7 @@ TEST_F(LogInstructionTest, VariableSuccess)
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", BOOLEANTYPE));
   EXPECT_TRUE(variable->AddAttribute("value", "true"));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   Procedure proc;

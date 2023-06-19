@@ -178,7 +178,7 @@ TEST_F(RPCClientInstructionTest, MissingVariableField)
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", REQUEST_TYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   RPCClientInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("service", "Does_Not_Matter"));
@@ -199,9 +199,9 @@ TEST_F(RPCClientInstructionTest, EmptyVariable)
   Procedure proc;
   Workspace ws;
 
-  auto variable = new unit_test_helper::ReadOnlyVariable({});
+  auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
   EXPECT_NO_THROW(variable->Setup());
-  EXPECT_TRUE(ws.AddVariable("var", variable));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   RPCClientInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("service", "Does_Not_Matter"));
@@ -300,9 +300,9 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
   Procedure proc;
   Workspace ws;
 
-  auto variable = new unit_test_helper::ReadOnlyVariable({});
+  auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
   EXPECT_NO_THROW(variable->Setup());
-  EXPECT_TRUE(ws.AddVariable("var", variable));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   RPCClientInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("service", TEST_SERVICE_NAME));

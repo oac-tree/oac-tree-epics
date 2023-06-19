@@ -130,7 +130,7 @@ TEST_F(PvAccessClientVariableTest, ServerClient)
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
   EXPECT_NO_THROW(variable->AddAttribute("type", kDataType));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   // Reading the value from PvAccessClientVariable
@@ -175,7 +175,7 @@ TEST_F(PvAccessClientVariableTest, ServerClientNoType)
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   // Reading the value from PvAccessClientVariable
@@ -224,7 +224,7 @@ TEST_F(PvAccessClientVariableTest, ScalarClient)
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
   EXPECT_NO_THROW(variable->AddAttribute("type", kFloatType));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   // Reading the value from PvAccessClientVariable

@@ -104,7 +104,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValueSuccess)
   // Access boolean as 'string'
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("type", "{\"type\":\"string\"}"));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
@@ -126,7 +126,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValueConnected)
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("type", BOOLCONNECTEDTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
@@ -150,7 +150,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValueDisconnect)
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL2") &&
               variable->AddAttribute("type", BOOLCONNECTEDTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
@@ -181,7 +181,7 @@ TEST_F(ChannelAccessClientVariableTest, GetValueExtended)
 
   ASSERT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL") &&
               variable->AddAttribute("type", BOOLEXTENDEDTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
@@ -236,7 +236,7 @@ TEST_F(ChannelAccessClientVariableTest, SetValueSuccess)
   // Setup implicit with AddAttribute .. access as 'float32'
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
   EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   // Add channel to CA client reader
@@ -316,7 +316,7 @@ TEST_F(ChannelAccessClientVariableTest, SetValueWrongStruct)
   // Setup implicit with AddAttribute .. access as 'float32'
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:FLOAT"));
   EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 

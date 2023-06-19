@@ -110,7 +110,7 @@ TEST_F(ChannelAccessWriteInstructionTest, EmptyVariable)
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto write_instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
@@ -131,7 +131,7 @@ TEST_F(ChannelAccessWriteInstructionTest, Timeout)
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("type", BOOLEANTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
 
   auto write_instruction = GlobalInstructionRegistry().Create("ChannelAccessWrite");
@@ -187,7 +187,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL"));
   EXPECT_TRUE(variable->AddAttribute("type", BOOLEANTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 
@@ -258,7 +258,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccessStruct)
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:BOOL"));
   EXPECT_TRUE(variable->AddAttribute("type", BOOLEANTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 
@@ -312,7 +312,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(variable->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
   EXPECT_TRUE(variable->AddAttribute("type", UINT32ARRAYTYPE));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
 

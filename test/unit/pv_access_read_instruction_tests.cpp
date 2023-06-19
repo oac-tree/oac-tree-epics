@@ -158,7 +158,7 @@ TEST_F(PvAccessReadInstructionTest, Timeout)
 
   auto variable = GlobalVariableRegistry().Create("Local");
   ASSERT_TRUE(static_cast<bool>(variable));
-  EXPECT_TRUE(ws.AddVariable("var", variable.release()));
+  EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   PvAccessReadInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("channel", "ThisTimeouts"));

@@ -49,7 +49,7 @@ bool WaitForCAChannel(const std::string& channel, const std::string& type_str, d
   }
   variable->AddAttribute("channel", channel);
   variable->AddAttribute("type", type_str);
-  ws.AddVariable("var", variable.release());
+  ws.AddVariable("var", std::move(variable));
   ws.Setup();
 
   return ws.WaitForVariable("var", timeout);
