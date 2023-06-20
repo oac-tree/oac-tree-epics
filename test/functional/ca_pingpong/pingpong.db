@@ -1,0 +1,13 @@
+record(longout, "SEQ-TEST:PING")
+{
+  field(DESC, "Ping")
+  field(VAL, "0")
+  field(PINI, "YES")
+}
+
+record (longout,"SEQ-TEST:PONG")
+{
+  field(DESC, "Pong")
+  field(VAL, "0")
+  field(PINI, "YES")
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Main side of a test that bounces back and forth between two PvAccess servers"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Plugin>libsequencer-ca.so</Plugin>
+    <Sequence>
+        <WaitForVariable varName="num1" timeout="5.0"/>
+        <WaitForVariable varName="num2" timeout="5.0"/>
+        <Listen varNames="num1,num2">
+            <Sequence>
+                <LessThan lhs="num2" rhs="limit"/>
+                <Fallback>
+                    <LessThan lhs="num2" rhs="num1"/>
+                    <Sequence>
+                        <Copy input="num1" output="cache"/>
+                        <Increment varName="cache"/>
+                        <Increment varName="num1"/>
+                        <Output from="cache"/>
+                    </Sequence>
+                </Fallback>
+            </Sequence>
+        </Listen>
+    </Sequence>
+    <Workspace>
+        <ChannelAccessClient name="num1"
+                        channel="SEQ-TEST:PING"
+                        type='{"type":"int32"}'/>
+        <ChannelAccessClient name="num2"
+                        channel="SEQ-TEST:PONG"
+                        type='{"type":"int32"}'/>
+        <Local name="limit"
+               type='{"type":"int32"}'
+               value='10000'/>
+        <Local name="cache"
+               type='{"type":"int32"}'/>
+    </Workspace>
+</Procedure>
