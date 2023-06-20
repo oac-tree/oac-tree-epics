@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="Main side of a test that bounces back and forth between two PvAccess servers"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Plugin>libsequencer-pvxs.so</Plugin>
+    <Listen varNames="num1,num2">
+        <Sequence>
+            <LessThan lhs="num2" rhs="limit"/>
+            <Fallback>
+                <LessThan lhs="num2" rhs="num1"/>
+                <Sequence>
+                    <Increment varName="num1"/>
+                    <Output from="num1"/>
+                </Sequence>
+            </Fallback>
+        </Sequence>
+    </Listen>
+    <Workspace>
+        <PvAccessServer name="num1"
+                        channel="seq::test::bounce_1"
+                        type='{"type":"uint64"}'
+                        value='0'/>
+        <PvAccessServer name="num2"
+                        channel="seq::test::bounce_2"
+                        type='{"type":"uint64"}'
+                        value='0'/>
+        <Local name="limit"
+               type='{"type":"uint64"}'
+               value='10000'/>
+    </Workspace>
+</Procedure>

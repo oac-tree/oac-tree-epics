@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+           name="One side of a test that bounces back and forth between two PvAccess servers"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+    <Plugin>libsequencer-pvxs.so</Plugin>
+    <Sequence>
+        <WaitForVariable varName="num1" timeout="5.0"/>
+        <WaitForVariable varName="num2" timeout="5.0"/>
+        <Listen varNames="num1,num2">
+            <Sequence>
+                <LessThan lhs="num2" rhs="limit"/>
+                <Fallback>
+                    <LessThanOrEqual lhs="num1" rhs="num2"/>
+                    <Sequence>
+                        <Copy input="num2" output="cache"/>
+                        <Increment varName="cache"/>
+                        <Increment varName="num2"/>
+                        <Output from="cache"/>
+                    </Sequence>
+                </Fallback>
+            </Sequence>
+        </Listen>
+    </Sequence>
+    <Workspace>
+        <PvAccessClient name="num1"
+                        channel="seq::test::bounce_1"
+                        type='{"type":"uint64"}'/>
+        <PvAccessClient name="num2"
+                        channel="seq::test::bounce_2"
+                        type='{"type":"uint64"}'/>
+        <Local name="limit"
+               type='{"type":"uint64"}'
+               value='10000'/>
+        <Local name="cache"
+               type='{"type":"uint64"}'/>
+    </Workspace>
+</Procedure>
