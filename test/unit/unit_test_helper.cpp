@@ -64,7 +64,7 @@ ReadOnlyVariable::~ReadOnlyVariable() = default;
 
 bool ReadOnlyVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
-  return sup::dto::TryConvert(value, m_value);
+  return sup::dto::TryAssign(value, m_value);
 }
 
 bool ReadOnlyVariable::SetValueImpl(const sup::dto::AnyValue&)

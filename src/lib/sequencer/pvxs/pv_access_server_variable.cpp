@@ -58,13 +58,13 @@ PvAccessServerVariable::~PvAccessServerVariable() = default;
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
-    m_server->GetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME)), *m_type);
-  return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryConvert(value, converted_val);
+    m_server->GetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME)), m_type);
+  return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
 bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
 {
-  sup::dto::AnyValue copy(*m_type);
+  sup::dto::AnyValue copy(m_type);
   if (!sup::dto::TryConvert(copy, value))
   {
     return false;
@@ -76,7 +76,7 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
 bool PvAccessServerVariable::IsAvailableImpl() const
 {
   auto value = pv_access_helper::ConvertToTypedAnyValue(
-    m_server->GetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME)), *m_type);
+    m_server->GetValue(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME)), m_type);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -90,13 +90,13 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
     throw VariableSetupException(error_message);
   }
-  m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
-  sup::dto::AnyValue val(*m_type);
+  m_type = parser.MoveAnyType();
+  sup::dto::AnyValue val(m_type);
   if (HasAttribute(VALUE_ATTRIBUTE_NAME))
   {
     auto val_str = GetAttributeValue<std::string>(VALUE_ATTRIBUTE_NAME);
     sup::dto::JSONAnyValueParser value_parser;
-    if (!value_parser.TypedParseString(*m_type, val_str))
+    if (!value_parser.TypedParseString(m_type, val_str))
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +
         "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
@@ -105,10 +105,9 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     val = value_parser.MoveAnyValue();
   }
   // Avoid dependence on destruction order of m_server and m_type.
-  sup::dto::AnyType type_copy{*m_type};
-  auto callback = [this, type_copy](const std::string&, const sup::dto::AnyValue& value)
+  auto callback = [this](const std::string&, const sup::dto::AnyValue& value)
   {
-    auto typed_value = pv_access_helper::ConvertToTypedAnyValue(value, type_copy);
+    auto typed_value = pv_access_helper::ConvertToTypedAnyValue(value, m_type);
     Notify(typed_value, true);
     return;
   };
@@ -121,7 +120,7 @@ void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
 void PvAccessServerVariable::ResetImpl()
 {
   m_server.reset();
-  m_type.reset();
+  m_type = sup::dto::EmptyType;
 }
 
 }  // namespace sequencer

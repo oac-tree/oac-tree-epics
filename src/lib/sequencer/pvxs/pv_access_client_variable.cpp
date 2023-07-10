@@ -58,9 +58,10 @@ bool PvAccessClientVariable::GetValueImpl(sup::dto::AnyValue& value) const
   {
     return false;
   }
-  auto converted_val = m_type ? pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type)
-                              : m_pv->GetValue();
-  return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryConvert(value, converted_val);
+  auto converted_val = sup::dto::IsEmptyType(m_type)
+                           ? m_pv->GetValue()
+                           : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_type);
+  return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
 bool PvAccessClientVariable::SetValueImpl(const sup::dto::AnyValue& value)
@@ -70,13 +71,13 @@ bool PvAccessClientVariable::SetValueImpl(const sup::dto::AnyValue& value)
     return false;
   }
   sup::dto::AnyValue copy;
-  if (!m_type)
+  if (sup::dto::IsEmptyType(m_type))
   {
     copy = value;
   }
   else
   {
-    copy = sup::dto::AnyValue(*m_type);
+    copy = sup::dto::AnyValue(m_type);
     if (!sup::dto::TryConvert(copy, value))
     {
       return false;
@@ -91,8 +92,9 @@ bool PvAccessClientVariable::IsAvailableImpl() const
   {
     return false;
   }
-  auto value = m_type ? pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), *m_type)
-                      : m_pv->GetValue();
+  auto value = sup::dto::IsEmptyType(m_type)
+                   ? m_pv->GetValue()
+                   : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_type);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -114,14 +116,14 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
         "could not parse type [" + type_attr + "]";
       throw VariableSetupException(error_message);
     }
-    m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
+    m_type = parser.MoveAnyType();
   }
   // Avoid dependence on destruction order of m_pv and m_type.
-  sup::dto::AnyType type_copy = m_type ? *m_type : sup::dto::EmptyType;
-  auto callback = [this, type_copy](const epics::PvAccessClientPV::ExtendedValue& ext_value)
+  auto callback = [this](const epics::PvAccessClientPV::ExtendedValue& ext_value)
   {
-    auto value = sup::dto::IsEmptyType(type_copy) ? ext_value.value
-                    : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, type_copy);
+    auto value = sup::dto::IsEmptyType(m_type)
+                     ? ext_value.value
+                     : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, m_type);
     Notify(value, ext_value.connected);
     return;
   };
@@ -132,7 +134,7 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
 void PvAccessClientVariable::ResetImpl()
 {
   m_pv.reset();
-  m_type.reset();
+  m_type = sup::dto::EmptyType;
 }
 
 }  // namespace sequencer

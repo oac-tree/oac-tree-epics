@@ -1,3 +1,7 @@
+Changes for 2.1.0:
+
+- Adapt to sup-dto v1.1
+
 Changes for 2.0.0:
 
 - Migrated to new sup-dto

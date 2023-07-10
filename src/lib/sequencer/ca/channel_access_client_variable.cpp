@@ -53,17 +53,17 @@ ChannelAccessClientVariable::~ChannelAccessClientVariable() = default;
 
 bool ChannelAccessClientVariable::GetValueImpl(sup::dto::AnyValue &value) const
 {
-  if (!m_pv || !m_type)
+  if (!m_pv)
   {
     return false;
   }
-  if (!m_type->HasField(channel_access_helper::CONNECTED_FIELD_NAME) && !m_pv->IsConnected())
+  if (!m_type.HasField(channel_access_helper::CONNECTED_FIELD_NAME) && !m_pv->IsConnected())
   {
     return false;
   }
   auto ext_value = m_pv->GetExtendedValue();
-  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, *m_type);
-  return sup::dto::TryConvert(value, result);
+  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
+  return sup::dto::TryAssign(value, result);
 }
 
 bool ChannelAccessClientVariable::SetValueImpl(const sup::dto::AnyValue &value)
@@ -103,18 +103,17 @@ void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
     throw VariableSetupException(error_message);
   }
-  m_type.reset(new sup::dto::AnyType(parser.MoveAnyType()));
-  auto channel_type = channel_access_helper::ChannelType(*m_type);
+  m_type = parser.MoveAnyType();
+  auto channel_type = channel_access_helper::ChannelType(m_type);
   if (sup::dto::IsEmptyType(channel_type))
   {
     std::string error_message = VariableSetupExceptionProlog(*this) +
       "parsed channel type [" + type_attr_val + "] is not supported";
     throw VariableSetupException(error_message);
   }
-  sup::dto::AnyType type_copy = *m_type;
   auto callback =
-    [this, type_copy](const epics::ChannelAccessPV::ExtendedValue& ext_value) {
-      auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, type_copy);
+    [this](const epics::ChannelAccessPV::ExtendedValue& ext_value) {
+      auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
       Notify(value, ext_value.connected);
       return;
     };
@@ -125,7 +124,7 @@ void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
 void ChannelAccessClientVariable::ResetImpl()
 {
   m_pv.reset();
-  m_type.reset();
+  m_type = sup::dto::EmptyType;
 }
 
 } // namespace sequencer

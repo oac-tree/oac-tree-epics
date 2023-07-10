@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(sup-sequencer-plugin-epics VERSION 2.0.0 LANGUAGES CXX)
+project(sup-sequencer-plugin-epics VERSION 2.1.0 LANGUAGES CXX)
 
 option(COVERAGE "Generate unit test coverage information" OFF)
 option(COA_BUILD_TESTS "Build unit tests" ON)

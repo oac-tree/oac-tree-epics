@@ -61,7 +61,7 @@ private:
   void SetupImpl(const sup::dto::AnyTypeRegistry& registry) override;
   void ResetImpl() override;
 
-  std::unique_ptr<sup::dto::AnyType> m_type;
+  sup::dto::AnyType m_type;
   std::unique_ptr<epics::PvAccessClientPV> m_pv;
 };
 

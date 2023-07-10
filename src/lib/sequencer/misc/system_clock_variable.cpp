@@ -67,7 +67,7 @@ bool SystemClockVariable::GetValueImpl(sup::dto::AnyValue& value) const
   {
     return false;
   }
-  return sup::dto::TryConvert(value, result);
+  return sup::dto::TryAssign(value, result);
 }
 
 bool SystemClockVariable::SetValueImpl(const sup::dto::AnyValue&)
