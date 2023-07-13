@@ -222,7 +222,7 @@ TEST_F(LogInstructionTest, ParsedProcedure)
 {
   auto proc = ParseProcedureString(LOGVARIABLEPROCEDURE);
   ASSERT_TRUE(static_cast<bool>(proc));
-  ASSERT_TRUE(proc->Setup());
+  EXPECT_NO_THROW(proc->Setup());
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do

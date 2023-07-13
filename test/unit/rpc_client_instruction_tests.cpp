@@ -324,7 +324,7 @@ TEST_F(RPCClientInstructionTest, Success) // Must be associated to a variable in
 {
   auto proc = sup::sequencer::ParseProcedureString(RPC_CLIENT_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(proc));
-  EXPECT_TRUE(proc->Setup());
+  EXPECT_NO_THROW(proc->Setup());
 
   sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
   do

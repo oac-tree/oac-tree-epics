@@ -20,7 +20,6 @@
  ******************************************************************************/
 
 #include "test_user_interface.h"
-#include "unit_test_helper.h"
 
 #include <sequencer/pvxs/pv_access_read_instruction.h>
 
@@ -180,7 +179,7 @@ TEST_F(PvAccessReadInstructionTest, ProcedureWrongOutputField)
   EXPECT_EQ(ui.m_log_entries.size(), 0);
   auto procedure = ParseProcedureString(PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
-  ASSERT_TRUE(procedure->Setup());
+  EXPECT_NO_THROW(procedure->Setup());
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do
@@ -200,7 +199,7 @@ TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
 {
   auto procedure = ParseProcedureString(PV_ACCESS_READ_SUCCESS_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
-  ASSERT_TRUE(procedure->Setup());
+  EXPECT_NO_THROW(procedure->Setup());
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do

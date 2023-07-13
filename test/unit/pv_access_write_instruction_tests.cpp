@@ -273,7 +273,7 @@ TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
 {
   auto procedure = ParseProcedureString(PV_ACCESS_CHANNEL_MISMATCH_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
-  ASSERT_TRUE(procedure->Setup());
+  EXPECT_NO_THROW(procedure->Setup());
   EXPECT_EQ(ui.m_log_entries.size(), 0);
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
@@ -295,7 +295,7 @@ TEST_F(PvAccessWriteInstructionTest, Success)
 {
   auto procedure = ParseProcedureString(PV_ACCESS_WRITE_SUCCESS_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));
-  ASSERT_TRUE(procedure->Setup());
+  EXPECT_NO_THROW(procedure->Setup());
 
   ExecutionStatus exec = ExecutionStatus::FAILURE;
   do

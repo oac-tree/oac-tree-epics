@@ -365,7 +365,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
   unit_test_helper::NullUserInterface ui;
   auto proc = ParseProcedureString(READBOOLPROCEDURE);
   ASSERT_TRUE(static_cast<bool>(proc));
-  ASSERT_TRUE(proc->Setup());
+  EXPECT_NO_THROW(proc->Setup());
 
   ASSERT_TRUE(unit_test_helper::WaitForCAChannel("SEQ-TEST:BOOL", R"RAW({"type":"bool"})RAW", 5.0));
 
