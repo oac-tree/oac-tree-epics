@@ -11,7 +11,6 @@ set_target_properties(sequencer-misc PROPERTIES
 
 target_sources(sequencer-misc
     PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/log_instruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/system_call_instruction.cpp
         ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable.cpp
 )
