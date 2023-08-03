@@ -1,6 +1,9 @@
 Changes for 2.1.0:
 
 - Adapt to sup-dto v1.1
+- Adapt to attribute system of sequencer v2.1
+- Move 'Log' instruction to sequencer itself
+- Add functional tests
 
 Changes for 2.0.0:
 
