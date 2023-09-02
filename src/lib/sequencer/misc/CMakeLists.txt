@@ -3,16 +3,16 @@ add_library(sequencer-misc SHARED)
 target_compile_features(sequencer-misc PRIVATE cxx_std_11)
 
 set_target_properties(sequencer-misc PROPERTIES
-    EXPORT_NAME sequencer-misc
-    SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
-    VERSION ${SUP_SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
-    LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_RUNTIME_DIRECTORY}
+  EXPORT_NAME sequencer-misc
+  SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
+  VERSION ${SUP_SEQUENCER_PLUGIN_EPICS_BUILDVERSION}
+  LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_RUNTIME_DIRECTORY}
 )
 
 target_sources(sequencer-misc
-    PRIVATE
-        ${CMAKE_CURRENT_LIST_DIR}/system_call_instruction.cpp
-        ${CMAKE_CURRENT_LIST_DIR}/system_clock_variable.cpp
+  PRIVATE
+  system_call_instruction.cpp
+  system_clock_variable.cpp
 )
 
 target_include_directories(sequencer-misc PUBLIC
