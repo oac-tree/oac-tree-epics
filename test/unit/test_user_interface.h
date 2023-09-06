@@ -33,16 +33,9 @@ namespace sequencer {
 
 namespace unit_test_helper {
 
-class NullUserInterface : public UserInterface
-{
-public:
-  NullUserInterface();
-  ~NullUserInterface();
+using NullUserInterface = DefaultUserInterface;
 
-  void UpdateInstructionStatusImpl(const Instruction* instruction) override;
-};
-
-class LogUserInterface : public UserInterface
+class LogUserInterface : public DefaultUserInterface
 {
 public:
   using LogEntry = std::pair<int, std::string>;
@@ -50,8 +43,7 @@ public:
   LogUserInterface();
   ~LogUserInterface();
 
-  void UpdateInstructionStatusImpl(const Instruction* instruction) override;
-  void LogImpl(int severity, const std::string& message) override;
+  void Log(int severity, const std::string& message) override;
 
   std::string GetFullLog() const;
 

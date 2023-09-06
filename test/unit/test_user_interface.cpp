@@ -29,23 +29,13 @@ namespace sequencer {
 
 namespace unit_test_helper {
 
-NullUserInterface::NullUserInterface() = default;
-
-NullUserInterface::~NullUserInterface() = default;
-
-void NullUserInterface::UpdateInstructionStatusImpl(const Instruction*)
-{}
-
 LogUserInterface::LogUserInterface()
   : m_log_entries{}
 {}
 
 LogUserInterface::~LogUserInterface() = default;
 
-void LogUserInterface::UpdateInstructionStatusImpl(const Instruction*)
-{}
-
-void LogUserInterface::LogImpl(int severity, const std::string& message)
+void LogUserInterface::Log(int severity, const std::string& message)
 {
   m_log_entries.emplace_back(severity, message);
 }
