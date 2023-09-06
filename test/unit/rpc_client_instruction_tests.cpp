@@ -77,7 +77,8 @@ public:
 
   sup::dto::AnyValue operator()(const sup::dto::AnyValue& input) override
   {
-    return sup::protocol::utils::CreateRPCReply(sup::protocol::Success, input["query"]);
+    return sup::protocol::utils::CreateRPCReply(sup::protocol::Success, input["query"],
+                                                sup::protocol::PayloadEncoding::kNone);
   }
 };
 
