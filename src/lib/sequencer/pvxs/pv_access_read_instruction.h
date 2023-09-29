@@ -47,7 +47,7 @@ namespace sequencer
      <Sequence>
        <PvAccessRead name="read-pv"
          channel="EPICS::PVA::CHANNEL::BOOLEAN"
-         output="boolean"/>
+         outputVar="boolean"/>
      </Sequence>
      <Workspace>
        <Local name="boolean"

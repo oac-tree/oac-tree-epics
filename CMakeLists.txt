@@ -22,7 +22,7 @@
 #   - CMake 3.13 - CMP0076: relative source file paths are interpreted as being relative to the current source directory
 cmake_minimum_required(VERSION 3.13)
 
-project(sup-sequencer-plugin-epics VERSION 2.1.0 LANGUAGES CXX)
+project(sup-sequencer-plugin-epics VERSION 3.0.0 LANGUAGES CXX)
 
 option(COVERAGE "Generate unit test coverage information" OFF)
 option(COA_BUILD_TESTS "Build unit tests" ON)

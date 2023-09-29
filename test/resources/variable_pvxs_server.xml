@@ -8,8 +8,8 @@
     <Repeat maxCount="10">
         <Sequence>
             <Wait name="wait" timeout="1.0"/>
-            <Copy input="curr-time" output="pvxs-variable.timestamp"/>
-            <Copy input="curr-time" output="pvxs-other.timestamp"/>
+            <Copy inputVar="curr-time" outputVar="pvxs-variable.timestamp"/>
+            <Copy inputVar="curr-time" outputVar="pvxs-other.timestamp"/>
         </Sequence>
     </Repeat>
     <Workspace>

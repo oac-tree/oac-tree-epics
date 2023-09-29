@@ -56,7 +56,7 @@ static const std::string RPC_CLIENT_PROCEDURE = R"RAW(<?xml version="1.0" encodi
         <RPCClient name="rpc-client"
                    service="RPCClientInstructionTest::service"
                    requestVar="request"
-                   output="reply"/>
+                   outputVar="reply"/>
     </Sequence>
     <Workspace>
         <Local name="request"
@@ -284,7 +284,7 @@ TEST_F(RPCClientInstructionTest, MissingOutput)
   EXPECT_TRUE(instruction.AddAttribute("service", TEST_SERVICE_NAME));
   EXPECT_TRUE(instruction.AddAttribute("type", REQUEST_TYPE));
   EXPECT_TRUE(instruction.AddAttribute("value", REQUEST_VALUE));
-  EXPECT_TRUE(instruction.AddAttribute("output", "DoesNotExist"));
+  EXPECT_TRUE(instruction.AddAttribute("outputVar", "DoesNotExist"));
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
@@ -309,7 +309,7 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
   EXPECT_TRUE(instruction.AddAttribute("service", TEST_SERVICE_NAME));
   EXPECT_TRUE(instruction.AddAttribute("type", REQUEST_TYPE));
   EXPECT_TRUE(instruction.AddAttribute("value", REQUEST_VALUE));
-  EXPECT_TRUE(instruction.AddAttribute("output", "var"));
+  EXPECT_TRUE(instruction.AddAttribute("outputVar", "var"));
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);

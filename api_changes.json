@@ -1,0 +1,15 @@
+{
+  "v3.0": {
+    "instr_attributes": {
+      "ChannelAccessRead": {
+        "output" : "outputVar"
+      },
+      "PvAccessRead": {
+        "output" : "outputVar"
+      },
+      "RPCClient": {
+        "output" : "outputVar"
+      }
+    }
+  }
+}

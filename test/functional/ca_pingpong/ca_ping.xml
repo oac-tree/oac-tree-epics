@@ -9,14 +9,14 @@
         <WaitForVariable varName="num2" timeout="5.0"/>
         <Listen varNames="num1,num2">
             <Sequence>
-                <LessThan lhs="num2" rhs="limit"/>
+                <LessThan leftVar="num2" rightVar="limit"/>
                 <Fallback>
-                    <LessThan lhs="num2" rhs="num1"/>
+                    <LessThan leftVar="num2" rightVar="num1"/>
                     <Sequence>
-                        <Copy input="num1" output="cache"/>
+                        <Copy inputVar="num1" outputVar="cache"/>
                         <Increment varName="cache"/>
                         <Increment varName="num1"/>
-                        <Output from="cache"/>
+                        <Output fromVar="cache"/>
                     </Sequence>
                 </Fallback>
             </Sequence>

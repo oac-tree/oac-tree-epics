@@ -6,13 +6,13 @@
     <Plugin>libsequencer-pvxs.so</Plugin>
     <RegisterType jsontype='{"type":"seq::test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <Sequence>
-        <Copy input="old-pvxs-value" output="pvxs-server-variable"/>
-        <Equals lhs="pvxs-server-variable" rhs="old-pvxs-value"/>
+        <Copy inputVar="old-pvxs-value" outputVar="pvxs-server-variable"/>
+        <Equals leftVar="pvxs-server-variable" rightVar="old-pvxs-value"/>
         <Wait timeout="0.5"/>
-        <Equals lhs="pvxs-client-variable" rhs="old-pvxs-value"/>
-        <Copy input="new-pvxs-value" output="pvxs-client-variable"/>
+        <Equals leftVar="pvxs-client-variable" rightVar="old-pvxs-value"/>
+        <Copy inputVar="new-pvxs-value" outputVar="pvxs-client-variable"/>
         <Wait timeout="1.0"/>
-        <Equals lhs="pvxs-server-variable" rhs="new-pvxs-value"/>
+        <Equals leftVar="pvxs-server-variable" rightVar="new-pvxs-value"/>
     </Sequence>
     <Workspace>
         <PvAccessServer name="pvxs-server-variable"

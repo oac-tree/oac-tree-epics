@@ -40,7 +40,7 @@ namespace sequencer {
 const std::string ChannelAccessReadInstruction::Type = "ChannelAccessRead";
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-const std::string OUTPUT_ATTRIBUTE_NAME = "output";
+const std::string OUTPUT_ATTRIBUTE_NAME = "outputVar";
 const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 
 static bool _ca_read_instruction_initialised_flag =

@@ -42,7 +42,7 @@ namespace sequencer {
 const std::string PvAccessReadInstruction::Type = "PvAccessRead";
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-const std::string OUTPUT_ATTRIBUTE_NAME = "output";
+const std::string OUTPUT_ATTRIBUTE_NAME = "outputVar";
 const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 
 static bool _pv_access_read_instruction_initialised_flag =

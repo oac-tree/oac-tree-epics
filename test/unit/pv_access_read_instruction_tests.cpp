@@ -43,7 +43,7 @@ static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml ve
     <RegisterType jsontype='{"type":"seq::wrong-field-test::channel-type","attributes":[{"value":{"type":"uint16"}}]}'/>
     <PvAccessRead name="read from pv"
                   channel="seq::read-test::variable2"
-                  output="pvxs-value.value"
+                  outputVar="pvxs-value.value"
                   timeout="2.0"/>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
@@ -64,9 +64,9 @@ static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version=
     <Sequence>
         <PvAccessRead name="read from pv"
                       channel="seq::read-test::variable"
-                      output="pvxs-value"
+                      outputVar="pvxs-value"
                       timeout="2.0"/>
-        <Equals lhs="pvxs-variable" rhs="pvxs-value"/>
+        <Equals leftVar="pvxs-variable" rightVar="pvxs-value"/>
     </Sequence>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
@@ -106,7 +106,7 @@ TEST_F(PvAccessReadInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-    EXPECT_TRUE(instruction.AddAttribute("output", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("outputVar", "Some_Var_Name"));
     EXPECT_NO_THROW(instruction.Setup(proc));
     EXPECT_NO_THROW(instruction.Reset());
   }
@@ -114,7 +114,7 @@ TEST_F(PvAccessReadInstructionTest, Setup)
   {
     PvAccessReadInstruction instruction{};
     EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
-    EXPECT_TRUE(instruction.AddAttribute("output", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("outputVar", "Some_Var_Name"));
     EXPECT_TRUE(instruction.AddAttribute("timeout", "1s"));
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_NO_THROW(instruction.Reset());
@@ -123,7 +123,7 @@ TEST_F(PvAccessReadInstructionTest, Setup)
   {
     PvAccessReadInstruction instruction{};
     EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
-    EXPECT_TRUE(instruction.AddAttribute("output", "Some_Var_Name"));
+    EXPECT_TRUE(instruction.AddAttribute("outputVar", "Some_Var_Name"));
     EXPECT_TRUE(instruction.AddAttribute("timeout", "-1"));
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_NO_THROW(instruction.Reset());
@@ -138,7 +138,7 @@ TEST_F(PvAccessReadInstructionTest, MissingVariable)
 
   PvAccessReadInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("channel", "seq-plugin-epics-test::missing-var"));
-  EXPECT_TRUE(instruction.AddAttribute("output", "DoesNotExist"));
+  EXPECT_TRUE(instruction.AddAttribute("outputVar", "DoesNotExist"));
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
@@ -161,7 +161,7 @@ TEST_F(PvAccessReadInstructionTest, Timeout)
 
   PvAccessReadInstruction instruction{};
   EXPECT_TRUE(instruction.AddAttribute("channel", "ThisTimeouts"));
-  EXPECT_TRUE(instruction.AddAttribute("output", "var"));
+  EXPECT_TRUE(instruction.AddAttribute("outputVar", "var"));
   EXPECT_TRUE(instruction.AddAttribute("timeout", "0.1"));
   EXPECT_NO_THROW(instruction.Setup(proc));
 

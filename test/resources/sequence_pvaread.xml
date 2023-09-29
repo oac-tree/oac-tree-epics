@@ -9,8 +9,8 @@
         <PvAccessRead name="monitor"
                       channel="seq::test::variable"
                       timeout="5.0"
-                      output="to-write"/>
-        <Output from="to-write"/>
+                      outputVar="to-write"/>
+        <Output fromVar="to-write"/>
     </Sequence>
     <Workspace>
         <PvAccessServer name="pvxs-server"

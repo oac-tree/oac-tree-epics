@@ -13,10 +13,10 @@
             command='/usr/bin/caput -a SEQ-TEST:UIARRAY 8 0 1 2 3 4 5 6 7'/>
         <Wait timeout="1.0"/>
         <Log severity="info" message="Step 3 - Read variables"/>
-        <Log severity="info" input="boolean"/>
-        <Log severity="info" input="string"/>
-        <Log severity="info" input="uint32-array"/>
-        <Log severity="info" input="float32"/>
+        <Log severity="info" inputVar="boolean"/>
+        <Log severity="info" inputVar="string"/>
+        <Log severity="info" inputVar="uint32-array"/>
+        <Log severity="info" inputVar="float32"/>
         <Log severity="info" message="Step 4 - Terminate"/>
     </Sequence>
     <Workspace>

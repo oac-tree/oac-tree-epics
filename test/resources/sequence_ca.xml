@@ -13,38 +13,38 @@
             value='"TRUE"'/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            output="boolean"/>
+            outputVar="boolean"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            output="uint32"/>
+            outputVar="uint32"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            output="string"/>
-        <Log severity="info" input="boolean"/>
-        <Log severity="info" input="uint32"/>
-        <Log severity="info" input="string"/>
+            outputVar="string"/>
+        <Log severity="info" inputVar="boolean"/>
+        <Log severity="info" inputVar="uint32"/>
+        <Log severity="info" inputVar="string"/>
         <ChannelAccessWrite name="put-client"
             channel="SEQ-TEST:FLOAT"
             type='{"type":"string"}'
             value='"0.5"'/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:FLOAT"
-            output="float32"/>
-        <Log severity="info" input="float32"/>
+            outputVar="float32"/>
+        <Log severity="info" inputVar="float32"/>
         <ChannelAccessWrite name="put-client"
             channel="SEQ-TEST:STRING"
             type='{"type":"string"}'
             value='"{value:0}"'/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:STRING"
-            output="string"/>
-        <Log severity="info" input="string"/>
+            outputVar="string"/>
+        <Log severity="info" inputVar="string"/>
         <ChannelAccessWrite name="put-client"
             channel="SEQ-TEST:FLOAT"
-            output="to-write"/>
+            varName="to-write"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:FLOAT"
-            output="to-fetch"/>
+            outputVar="to-fetch"/>
     </Sequence>
     <Workspace>
         <Local name="boolean"

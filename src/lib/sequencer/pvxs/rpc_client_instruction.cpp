@@ -51,7 +51,7 @@ const std::string SERVICE_ATTRIBUTE_NAME = "service";
 const std::string REQUEST_ATTRIBUTE_NAME = "requestVar";
 const std::string TYPE_ATTRIBUTE_NAME = "type";
 const std::string VALUE_ATTRIBUTE_NAME = "value";
-const std::string OUTPUT_ATTRIBUTE_NAME = "output";
+const std::string OUTPUT_ATTRIBUTE_NAME = "outputVar";
 const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
 
 static bool _rpcclient_instruction_initialised_flag =

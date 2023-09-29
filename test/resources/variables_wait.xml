@@ -10,8 +10,8 @@
         <Sequence>
             <ForceSuccess>
                 <Sequence>
-                    <Copy input="pvxs-client-variable" output="local-value"/>
-                    <Output from="local-value"/>
+                    <Copy inputVar="pvxs-client-variable" outputVar="local-value"/>
+                    <Output fromVar="local-value"/>
                 </Sequence>
             </ForceSuccess>
             <Message text="waiting..."/>
