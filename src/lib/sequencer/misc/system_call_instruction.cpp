@@ -45,9 +45,11 @@ SystemCallInstruction::~SystemCallInstruction() = default;
 
 ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
-  (void)ui;
-  (void)ws;
-  auto command = GetAttributeValue<std::string>(COMMAND_ATTRIBUTE_NAME);
+  std::string command;
+  if (!GetVariableAttributeAs(COMMAND_ATTRIBUTE_NAME, ws, ui, command))
+  {
+    return ExecutionStatus::FAILURE;
+  }
   auto exit_status = std::system(command.c_str());
   return exit_status == 0 ? ExecutionStatus::SUCCESS : ExecutionStatus::FAILURE;
 }

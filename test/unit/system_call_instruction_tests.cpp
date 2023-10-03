@@ -20,11 +20,13 @@
  ******************************************************************************/
 
 #include "test_user_interface.h"
+#include "unit_test_helper.h"
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
 #include <sup/sequencer/instruction_registry.h>
 #include <sup/sequencer/procedure.h>
+#include <sup/sequencer/sequence_parser.h>
 #include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
@@ -71,4 +73,51 @@ TEST(SystemCallInstruction, Failure)
   EXPECT_NO_THROW(instruction->Setup(proc));
   EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::FAILURE);
+}
+
+TEST(SystemCallInstruction, VariableCommand)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <SystemCall command="@ls"/>
+  <Workspace>
+    <Local name="ls" type='{"type":"string"}' value='"echo \"Hello\""'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
+TEST(SystemCallInstruction, VariableCommandWrongType)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <SystemCall command="@ls"/>
+  <Workspace>
+    <Local name="ls" type='{"type":"float32"}' value='4.3'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+TEST(SystemCallInstruction, VariableCommandNotPresent)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <SystemCall command="@ls"/>
+  <Workspace>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
 }
