@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include "test_user_interface.h"
+#include "unit_test_helper.h"
 
 #include <sequencer/pvxs/pv_access_read_instruction.h>
 
@@ -119,15 +120,6 @@ TEST_F(PvAccessReadInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_NO_THROW(instruction.Reset());
   }
-  // timeout attribute should be positive
-  {
-    PvAccessReadInstruction instruction{};
-    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
-    EXPECT_TRUE(instruction.AddAttribute("outputVar", "Some_Var_Name"));
-    EXPECT_TRUE(instruction.AddAttribute("timeout", "-1"));
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-    EXPECT_NO_THROW(instruction.Reset());
-  }
 }
 
 TEST_F(PvAccessReadInstructionTest, MissingVariable)
@@ -208,6 +200,80 @@ TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)
     exec = procedure->GetStatus();
   } while ((ExecutionStatus::SUCCESS != exec) && (ExecutionStatus::FAILURE != exec));
   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
+}
+
+TEST_F(PvAccessReadInstructionTest, VariableAttributes)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RegisterType jsontype='{"type":"seq::pva_read_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+  <PvAccessRead channel="@chan" outputVar="pvxs-value" timeout="@mytimeout"/>
+  <Workspace>
+    <PvAccessServer name="pvxs-variable"
+                    channel="seq::read-test::variable"
+                    type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
+                    value='{"value":1.0}'/>
+    <Local name="pvxs-value"
+           type='{"type":"seq::pva_read_test::Type/v1.0"}'
+           value='{"value":0.0}'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::read-test::variable"'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
+TEST_F(PvAccessReadInstructionTest, VariableAttributesWrongType)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RegisterType jsontype='{"type":"seq::pva_read_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+  <PvAccessRead channel="@chan" outputVar="pvxs-value" timeout="@mytimeout"/>
+  <Workspace>
+    <PvAccessServer name="pvxs-variable"
+                    channel="seq::read-test::variable"
+                    type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
+                    value='{"value":1.0}'/>
+    <Local name="pvxs-value"
+           type='{"type":"seq::pva_read_test::Type/v1.0"}'
+           value='{"value":0.0}'/>
+    <Local name="chan" type='{"type":"float32"}' value='4.3'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+TEST_F(PvAccessReadInstructionTest, VariableAttributesNotPresent)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RegisterType jsontype='{"type":"seq::pva_read_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+  <PvAccessRead channel="@chan" outputVar="pvxs-value" timeout="@mytimeout"/>
+  <Workspace>
+    <PvAccessServer name="pvxs-variable"
+                    channel="seq::read-test::variable"
+                    type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
+                    value='{"value":1.0}'/>
+    <Local name="pvxs-value"
+           type='{"type":"seq::pva_read_test::Type/v1.0"}'
+           value='{"value":0.0}'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
 }
 
 PvAccessReadInstructionTest::PvAccessReadInstructionTest()

@@ -123,14 +123,6 @@ TEST_F(PvAccessWriteInstructionTest, Setup)
     EXPECT_TRUE(instruction.AddAttribute("timeout", "Three"));
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
   }
-  // write instruction needs to be able to parse the timeout attribute as a positive double
-  {
-    PvAccessWriteInstruction instruction{};
-    EXPECT_TRUE(instruction.AddAttribute("channel", "Does_Not_Matter"));
-    EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
-    EXPECT_TRUE(instruction.AddAttribute("timeout", "-3.5"));
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-  }
   // write instruction correctly parses the timeout attribute as a positive double
   {
     PvAccessWriteInstruction instruction{};
@@ -322,6 +314,77 @@ TEST_F(PvAccessWriteInstructionTest, Success)
            client_val["value"].GetType() == sup::dto::Float32Type &&
            client_val["value"].As<sup::dto::float32>() == 1.0f;
   }));
+}
+
+TEST_F(PvAccessWriteInstructionTest, VariableAttributes)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+  <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
+  <Workspace>
+    <PvAccessServer name="pvxs-variable"
+                    channel="seq::write-test::variable"
+                    type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
+    <Local name="pvxs-value"
+           type='{"type":"seq::pva_write_test::Type/v1.0"}'
+           value='{"value":1.0}'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::variable"'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
+TEST_F(PvAccessWriteInstructionTest, VariableAttributesWrongType)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+  <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
+  <Workspace>
+    <PvAccessServer name="pvxs-variable"
+                    channel="seq::write-test::variable"
+                    type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
+    <Local name="pvxs-value"
+           type='{"type":"seq::pva_write_test::Type/v1.0"}'
+           value='{"value":1.0}'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::variable"'/>
+    <Local name="mytimeout" type='{"type":"string"}' value='"3.0"'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+TEST_F(PvAccessWriteInstructionTest, VariableAttributesNotPresent)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
+  <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
+  <Workspace>
+    <PvAccessServer name="pvxs-variable"
+                    channel="seq::write-test::variable"
+                    type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
+    <Local name="pvxs-value"
+           type='{"type":"seq::pva_write_test::Type/v1.0"}'
+           value='{"value":1.0}'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::variable"'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
 }
 
 PvAccessWriteInstructionTest::PvAccessWriteInstructionTest()

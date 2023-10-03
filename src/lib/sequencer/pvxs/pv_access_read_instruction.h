@@ -65,12 +65,6 @@ public:
   static const std::string Type;
 
 private:
-  double m_timeout_sec;
-
-  void SetupImpl(const Procedure& proc) override;
-
-  void ResetHook() override;
-
   ExecutionStatus ExecuteSingleImpl(UserInterface& ui, Workspace& ws) override;
 };
 
