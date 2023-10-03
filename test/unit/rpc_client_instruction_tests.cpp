@@ -133,14 +133,6 @@ TEST_F(RPCClientInstructionTest, Setup)
     EXPECT_TRUE(instruction.AddAttribute("timeout", "CannotBeParsed"));
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
   }
-  // rpc client instruction timeout attribute should be positive
-  {
-    RPCClientInstruction instruction{};
-    EXPECT_TRUE(instruction.AddAttribute("service", "Does_Not_Matter"));
-    EXPECT_TRUE(instruction.AddAttribute("requestVar", "Some_Var_Name"));
-    EXPECT_TRUE(instruction.AddAttribute("timeout", "-3.0"));
-    EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-  }
   // rpc client instruction timeout attribute correctly parsed
   {
     RPCClientInstruction instruction{};
@@ -342,6 +334,68 @@ TEST_F(RPCClientInstructionTest, Success) // Must be associated to a variable in
   ASSERT_TRUE(sup::protocol::utils::CheckReplyFormat(reply));
   EXPECT_EQ(reply["result"].As<sup::dto::uint32>(), sup::protocol::Success.GetValue());
   EXPECT_TRUE(reply["reply"].As<sup::dto::boolean>());
+}
+
+TEST_F(RPCClientInstructionTest, VariableAttributes)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RPCClient service="@service_name" requestVar="request" outputVar="reply" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="service_name" type='{"type":"string"}' value='"RPCClientInstructionTest::service"'/>
+    <Local name="request"
+           type='{"type":"sup::RPCRequest/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"query":{"type":"bool"}}]}'
+           value='{"timestamp":0,"query":true}'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+    <Local name="reply"/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
+TEST_F(RPCClientInstructionTest, VariableAttributesWrongType)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RPCClient service="@service_name" requestVar="request" outputVar="reply" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="service_name" type='{"type":"string"}' value='"RPCClientInstructionTest::service"'/>
+    <Local name="request"
+           type='{"type":"sup::RPCRequest/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"query":{"type":"bool"}}]}'
+           value='{"timestamp":0,"query":true}'/>
+    <Local name="mytimeout" type='{"type":"string"}' value='"3.0"'/>
+    <Local name="reply"/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+TEST_F(RPCClientInstructionTest, VariableAttributesNotPresent)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <RPCClient service="@service_name" requestVar="request" outputVar="reply" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="service_name" type='{"type":"string"}' value='"RPCClientInstructionTest::service"'/>
+    <Local name="request"
+           type='{"type":"sup::RPCRequest/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"query":{"type":"bool"}}]}'
+           value='{"timestamp":0,"query":true}'/>
+    <Local name="reply"/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
 }
 
 RPCClientInstructionTest::RPCClientInstructionTest() = default;
