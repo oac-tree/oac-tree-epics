@@ -24,6 +24,7 @@
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction_registry.h>
+#include <sup/sequencer/instruction_utils.h>
 #include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/workspace.h>
 
@@ -48,7 +49,6 @@ static bool _ca_read_instruction_initialised_flag =
 
 ChannelAccessReadInstruction::ChannelAccessReadInstruction()
   : Instruction(ChannelAccessReadInstruction::Type)
-  , m_timeout_sec{channel_access_helper::DEFAULT_TIMEOUT_SEC}
 {
   AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
   AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
@@ -56,27 +56,6 @@ ChannelAccessReadInstruction::ChannelAccessReadInstruction()
 }
 
 ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
-
-void ChannelAccessReadInstruction::SetupImpl(const Procedure&)
-{
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
-  {
-    auto timeout_val = GetAttributeValue<sup::dto::float64>(TIMEOUT_ATTRIBUTE_NAME);
-    if (timeout_val < 0)
-    {
-      std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" +
-        GetAttributeString(TIMEOUT_ATTRIBUTE_NAME) + "] is not positive";
-      throw InstructionSetupException(error_message);
-    }
-    m_timeout_sec = timeout_val;
-  }
-}
-
-void ChannelAccessReadInstruction::ResetHook()
-{
-  m_timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-}
 
 ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
@@ -86,7 +65,11 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
     return ExecutionStatus::FAILURE;
   }
   auto var_field_name = GetAttributeValue<std::string>(OUTPUT_ATTRIBUTE_NAME);
-  auto channel_name = GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME);
+  std::string channel_name;
+  if (!GetVariableAttributeAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  {
+    return ExecutionStatus::FAILURE;
+  }
   auto channel_type = channel_access_helper::ChannelType(value.GetType());
   if (sup::dto::IsEmptyType(channel_type))
   {
@@ -96,7 +79,20 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
     return ExecutionStatus::FAILURE;
   }
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
-  if (!pv.WaitForValidValue(m_timeout_sec))
+  sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
+  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME) &&
+      !GetVariableAttributeAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  {
+    return ExecutionStatus::FAILURE;
+  }
+  if (timeout_sec < 0)
+  {
+    std::string error_message = InstructionSetupExceptionProlog(*this) +
+      "timeout attribute is not positive: " + std::to_string(timeout_sec);
+    ui.LogError(error_message);
+    return ExecutionStatus::FAILURE;
+  }
+  if (!pv.WaitForValidValue(timeout_sec))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";

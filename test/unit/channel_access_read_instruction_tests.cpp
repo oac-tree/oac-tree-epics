@@ -399,6 +399,59 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
   EXPECT_TRUE(string_var == "TRUE");
 }
 
+TEST_F(ChannelAccessReadInstructionTest, VariableAttributes)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <ChannelAccessRead channel="@chan" outputVar="myvar" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="chan" type='{"type":"string"}' value='"SEQ-TEST:BOOL"'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+    <Local name="myvar" type='{"type":"bool"}'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
+TEST_F(ChannelAccessReadInstructionTest, VariableAttributesWrongType)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <ChannelAccessRead channel="@chan" outputVar="myvar" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="chan" type='{"type":"float64"}' value='4.3'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+    <Local name="myvar" type='{"type":"bool"}'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+TEST_F(ChannelAccessReadInstructionTest, VariableAttributesNotPresent)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <ChannelAccessRead channel="@chan" outputVar="myvar" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="chan" type='{"type":"string"}' value='"SEQ-TEST:BOOL"'/>
+    <Local name="myvar" type='{"type":"bool"}'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
 ChannelAccessReadInstructionTest::ChannelAccessReadInstructionTest() = default;
 
 ChannelAccessReadInstructionTest::~ChannelAccessReadInstructionTest() = default;

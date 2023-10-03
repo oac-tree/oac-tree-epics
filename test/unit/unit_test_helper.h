@@ -25,7 +25,11 @@
 #include <functional>
 #include <string>
 
+#include <sup/sequencer/execution_status.h>
+#include <sup/sequencer/procedure.h>
 #include <sup/sequencer/variable.h>
+
+#include <thread>
 
 namespace sup {
 
@@ -45,6 +49,45 @@ private:
   bool GetValueImpl(sup::dto::AnyValue& value) const override;
   bool SetValueImpl(const sup::dto::AnyValue& value) override;
 };
+
+static inline bool TryAndExecute(std::unique_ptr<Procedure>& proc, UserInterface& ui,
+                                 const ExecutionStatus& expect = ExecutionStatus::SUCCESS);
+
+static inline bool TryAndExecuteNoReset(std::unique_ptr<Procedure>& proc, UserInterface& ui,
+                                        const ExecutionStatus& expect)
+{
+  bool status = static_cast<bool>(proc);
+  proc->Setup();
+  if (status)
+  {
+    ExecutionStatus exec = ExecutionStatus::FAILURE;
+    do
+    {
+      if (exec == ExecutionStatus::RUNNING)
+      {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      }
+      proc->ExecuteSingle(ui);
+      exec = proc->GetStatus();
+    } while ((ExecutionStatus::SUCCESS != exec)
+             && (ExecutionStatus::FAILURE != exec));
+    status = (expect == exec);
+  }
+  return status;
+}
+
+static inline bool TryAndExecute(std::unique_ptr<Procedure>& proc, UserInterface& ui,
+                                 const ExecutionStatus& expect)
+{
+  bool status = TryAndExecuteNoReset(proc, ui, expect);
+  if (proc)
+  {
+    proc->Reset();
+  }
+  return status;
+}
+
+std::string CreateProcedureString(const std::string& body);
 
 } // namespace unit_test_helper
 
