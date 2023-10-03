@@ -20,6 +20,7 @@
  ******************************************************************************/
 
 #include "test_user_interface.h"
+#include "unit_test_helper.h"
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/instruction.h>
@@ -366,6 +367,61 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
     std::cout << ui.GetFullLog();
   }
 }
+
+TEST_F(ChannelAccessWriteInstructionTest, VariableAttributes)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <ChannelAccessWrite channel="@chan" varName="myvar" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="chan" type='{"type":"string"}' value='"SEQ-TEST:BOOL"'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+    <Local name="myvar" type='{"type":"bool"}'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
+TEST_F(ChannelAccessWriteInstructionTest, VariableAttributesWrongType)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <ChannelAccessWrite channel="@chan" varName="myvar" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="chan" type='{"type":"float64"}' value='4.3'/>
+    <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
+    <Local name="myvar" type='{"type":"bool"}'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+TEST_F(ChannelAccessWriteInstructionTest, VariableAttributesNotPresent)
+{
+  DefaultUserInterface ui;
+  const std::string procedure_body{
+R"RAW(
+  <ChannelAccessWrite channel="@chan" varName="myvar" timeout="@mytimeout"/>
+  <Workspace>
+    <Local name="chan" type='{"type":"string"}' value='"SEQ-TEST:BOOL"'/>
+    <Local name="myvar" type='{"type":"bool"}'/>
+  </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::FAILURE));
+}
+
+
 
 ChannelAccessWriteInstructionTest::ChannelAccessWriteInstructionTest() = default;
 

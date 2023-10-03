@@ -52,7 +52,6 @@ static bool _ca_write_instruction_initialised_flag =
 
 ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()
   : Instruction(ChannelAccessWriteInstruction::Type)
-  , m_timeout_sec{channel_access_helper::DEFAULT_TIMEOUT_SEC}
 {
   AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
   AddAttributeDefinition(VARIABLE_NAME_ATTRIBUTE_NAME, sup::dto::StringType);
@@ -67,27 +66,6 @@ ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()
 
 ChannelAccessWriteInstruction::~ChannelAccessWriteInstruction() = default;
 
-void ChannelAccessWriteInstruction::SetupImpl(const Procedure&)
-{
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
-  {
-    auto timeout_val = GetAttributeValue<sup::dto::float64>(TIMEOUT_ATTRIBUTE_NAME);
-    if (timeout_val < 0)
-    {
-      std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "attribute [" + TIMEOUT_ATTRIBUTE_NAME + "] with value [" +
-        GetAttributeString(TIMEOUT_ATTRIBUTE_NAME) + "] is not positive";
-      throw InstructionSetupException(error_message);
-    }
-    m_timeout_sec = timeout_val;
-  }
-}
-
-void ChannelAccessWriteInstruction::ResetHook()
-{
-  m_timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-}
-
 ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   (void)ui;
@@ -99,10 +77,27 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
     ui.LogWarning(warning_message);
     return ExecutionStatus::FAILURE;
   }
-  auto channel_name = GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME);
+  std::string channel_name;
+  if (!GetVariableAttributeAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  {
+    return ExecutionStatus::FAILURE;
+  }
   auto channel_type = value.GetType();
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
-  if (!pv.WaitForConnected(m_timeout_sec))
+  sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
+  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME) &&
+      !GetVariableAttributeAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  {
+    return ExecutionStatus::FAILURE;
+  }
+  if (timeout_sec < 0)
+  {
+    std::string error_message = InstructionSetupExceptionProlog(*this) +
+      "timeout attribute is not positive: " + std::to_string(timeout_sec);
+    ui.LogError(error_message);
+    return ExecutionStatus::FAILURE;
+  }
+  if (!pv.WaitForConnected(timeout_sec))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
