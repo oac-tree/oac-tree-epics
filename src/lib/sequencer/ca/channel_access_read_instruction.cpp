@@ -50,9 +50,12 @@ static bool _ca_read_instruction_initialised_flag =
 ChannelAccessReadInstruction::ChannelAccessReadInstruction()
   : Instruction(ChannelAccessReadInstruction::Type)
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kBoth).SetMandatory();
+  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kVariableName).SetMandatory();
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+    .SetCategory(AttributeCategory::kBoth);
 }
 
 ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
@@ -60,13 +63,13 @@ ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
 ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   sup::dto::AnyValue value;
-  if (!GetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, value))
+  if (!GetAttributeValue(OUTPUT_ATTRIBUTE_NAME, ws, ui, value))
   {
     return ExecutionStatus::FAILURE;
   }
-  auto var_field_name = GetAttributeValue<std::string>(OUTPUT_ATTRIBUTE_NAME);
+  auto var_field_name = GetAttributeString(OUTPUT_ATTRIBUTE_NAME);
   std::string channel_name;
-  if (!GetVariableAttributeAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  if (!GetAttributeValueAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
   {
     return ExecutionStatus::FAILURE;
   }
@@ -80,8 +83,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
   }
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME) &&
-      !GetVariableAttributeAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }

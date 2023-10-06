@@ -53,11 +53,14 @@ static bool _ca_write_instruction_initialised_flag =
 ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()
   : Instruction(ChannelAccessWriteInstruction::Type)
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(VARIABLE_NAME_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kBoth).SetMandatory();
+  AddAttributeDefinition(VARIABLE_NAME_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kVariableName);
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+    .SetCategory(AttributeCategory::kBoth);
   AddConstraint(MakeConstraint<Xor>(
     MakeConstraint<Exists>(VARIABLE_NAME_ATTRIBUTE_NAME),
     MakeConstraint<And>(MakeConstraint<Exists>(TYPE_ATTRIBUTE_NAME),
@@ -78,15 +81,14 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
     return ExecutionStatus::FAILURE;
   }
   std::string channel_name;
-  if (!GetVariableAttributeAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  if (!GetAttributeValueAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
   {
     return ExecutionStatus::FAILURE;
   }
   auto channel_type = value.GetType();
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME) &&
-      !GetVariableAttributeAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }
@@ -121,7 +123,7 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface& ui,
   if (HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
   {
     sup::dto::AnyValue result;
-    if (!GetValueFromAttributeName(*this, ws, ui, VARIABLE_NAME_ATTRIBUTE_NAME, result))
+    if (!GetAttributeValue(VARIABLE_NAME_ATTRIBUTE_NAME, ws, ui, result))
     {
       return {};
     }
