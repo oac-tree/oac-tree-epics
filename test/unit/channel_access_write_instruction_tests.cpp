@@ -338,6 +338,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   // }));
 
   // Set array back to zero
+  EXPECT_NO_THROW(instruction->Reset());
   EXPECT_TRUE(instruction->SetAttribute("value", "[0, 0, 0, 0, 0, 0, 0, 0]"));
   EXPECT_NO_THROW(instruction->Setup(proc));
   EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
