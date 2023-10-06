@@ -38,7 +38,8 @@ const std::string COMMAND_ATTRIBUTE_NAME = "command";
 SystemCallInstruction::SystemCallInstruction()
   : Instruction(Type)
 {
-  AddAttributeDefinition(COMMAND_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  AddAttributeDefinition(COMMAND_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kBoth).SetMandatory();
 }
 
 SystemCallInstruction::~SystemCallInstruction() = default;
@@ -46,7 +47,7 @@ SystemCallInstruction::~SystemCallInstruction() = default;
 ExecutionStatus SystemCallInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   std::string command;
-  if (!GetVariableAttributeAs(COMMAND_ATTRIBUTE_NAME, ws, ui, command))
+  if (!GetAttributeValueAs(COMMAND_ATTRIBUTE_NAME, ws, ui, command))
   {
     return ExecutionStatus::FAILURE;
   }

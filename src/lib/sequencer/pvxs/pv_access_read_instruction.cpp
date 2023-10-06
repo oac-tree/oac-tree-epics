@@ -51,9 +51,12 @@ static bool _pv_access_read_instruction_initialised_flag =
 PvAccessReadInstruction::PvAccessReadInstruction()
   : Instruction(PvAccessReadInstruction::Type)
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kBoth).SetMandatory();
+  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kVariableName).SetMandatory();
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+    .SetCategory(AttributeCategory::kBoth);
 }
 
 PvAccessReadInstruction::~PvAccessReadInstruction() = default;
@@ -61,14 +64,13 @@ PvAccessReadInstruction::~PvAccessReadInstruction() = default;
 ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   std::string channel_name;
-  if (!GetVariableAttributeAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  if (!GetAttributeValueAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
   {
     return ExecutionStatus::FAILURE;
   }
   sup::epics::PvAccessClientPV pv(channel_name);
   sup::dto::float64 timeout_sec = pv_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME) &&
-      !GetVariableAttributeAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }

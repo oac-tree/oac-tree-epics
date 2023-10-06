@@ -60,12 +60,16 @@ static bool _rpcclient_instruction_initialised_flag =
 RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
 {
-  AddAttributeDefinition(SERVICE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(REQUEST_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME, sup::dto::StringType);
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type);
+  AddAttributeDefinition(SERVICE_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kBoth).SetMandatory();
+  AddAttributeDefinition(REQUEST_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kVariableName);
+  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME)
+    .SetCategory(AttributeCategory::kVariableName);
+  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+    .SetCategory(AttributeCategory::kBoth);
   AddConstraint(MakeConstraint<Xor>(
     MakeConstraint<Exists>(REQUEST_ATTRIBUTE_NAME),
     MakeConstraint<And>(MakeConstraint<Exists>(TYPE_ATTRIBUTE_NAME),
@@ -83,30 +87,24 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
     return ExecutionStatus::FAILURE;
   }
   std::string service_name;
-  if (!GetVariableAttributeAs(SERVICE_ATTRIBUTE_NAME, ws, ui, service_name))
+  if (!GetAttributeValueAs(SERVICE_ATTRIBUTE_NAME, ws, ui, service_name))
   {
     return ExecutionStatus::FAILURE;
   }
   auto client_config = sup::epics::GetDefaultRPCClientConfig(service_name);
-  sup::dto::float64 timeout_sec = -1.0;
-  if (HasAttribute(TIMEOUT_ATTRIBUTE_NAME))
+  sup::dto::float64 timeout_sec = client_config.timeout;
+  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
-    if (!GetVariableAttributeAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
-    {
-      return ExecutionStatus::FAILURE;
-    }
-    if (timeout_sec < 0)
-    {
-      std::string error_message = InstructionSetupExceptionProlog(*this) +
-        "timeout attribute is not positive: " + std::to_string(timeout_sec);
-      ui.LogError(error_message);
-      return ExecutionStatus::FAILURE;
-    }
+    return ExecutionStatus::FAILURE;
   }
-  if (timeout_sec >= 0.0)
+  if (timeout_sec < 0)
   {
-    client_config.timeout = timeout_sec;
+    std::string error_message = InstructionSetupExceptionProlog(*this) +
+      "timeout attribute is not positive: " + std::to_string(timeout_sec);
+    ui.LogError(error_message);
+    return ExecutionStatus::FAILURE;
   }
+  client_config.timeout = timeout_sec;
   sup::epics::PvAccessRPCClient rpc_client(client_config);
 
   auto reply = rpc_client(request);
@@ -126,7 +124,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
   if (HasAttribute(REQUEST_ATTRIBUTE_NAME))
   {
     sup::dto::AnyValue request;
-    if (!GetValueFromAttributeName(*this, ws, ui, REQUEST_ATTRIBUTE_NAME, request))
+    if (!GetAttributeValue(REQUEST_ATTRIBUTE_NAME, ws, ui, request))
     {
       return {};
     }
