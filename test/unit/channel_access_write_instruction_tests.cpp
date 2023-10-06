@@ -343,7 +343,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction->GetStatus(), ExecutionStatus::SUCCESS);
 
-  // TODO: the next code block is only a replacement for the commented out chech just after.
+  // TODO: the next code block is only a replacement for the commented out check just after.
   // This needs to be changed when a solution is found for the EPICS callback issue (see sup-epics).
   {
     auto check_var = GlobalVariableRegistry().Create("ChannelAccessClient");
