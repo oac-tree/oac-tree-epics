@@ -131,7 +131,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
     if (sup::dto::IsEmptyValue(request))
     {
       std::string warning_message = InstructionWarningProlog(*this) +
-        "value from field [" + GetAttributeValue<std::string>(REQUEST_ATTRIBUTE_NAME) + "] is empty";
+        "value from field [" + GetAttributeString(REQUEST_ATTRIBUTE_NAME) + "] is empty";
       ui.LogWarning(warning_message);
     }
     return request;

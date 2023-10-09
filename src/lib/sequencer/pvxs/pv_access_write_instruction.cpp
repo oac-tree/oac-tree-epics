@@ -127,7 +127,7 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Work
     {
       std::string warning_message =
         InstructionWarningProlog(*this) + "value from field [" +
-        GetAttributeValue<std::string>(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
+        GetAttributeString(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
       ui.LogWarning(warning_message);
     }
     return result;
