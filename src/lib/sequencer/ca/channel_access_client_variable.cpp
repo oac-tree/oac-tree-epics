@@ -96,7 +96,7 @@ bool ChannelAccessClientVariable::IsAvailableImpl() const
 void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
 {
   sup::dto::JSONAnyTypeParser parser;
-  auto type_attr_val = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
+  auto type_attr_val = GetAttributeString(TYPE_ATTRIBUTE_NAME);
   if (!parser.ParseString(type_attr_val, &registry))
   {
     std::string error_message = VariableSetupExceptionProlog(*this) +
@@ -117,7 +117,7 @@ void ChannelAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& reg
       Notify(value, ext_value.connected);
       return;
     };
-  m_pv.reset(new epics::ChannelAccessPV(GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME),
+  m_pv.reset(new epics::ChannelAccessPV(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
                                         channel_type, callback));
 }
 

@@ -79,7 +79,7 @@ void SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
 {
   if (HasAttribute(TIMEFORMAT_ATTRIBUTE_NAME))
   {
-    auto time_format = GetAttributeValue<std::string>(TIMEFORMAT_ATTRIBUTE_NAME);
+    auto time_format = GetAttributeString(TIMEFORMAT_ATTRIBUTE_NAME);
     if (!IsSupportedTimeFormat(time_format))
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +

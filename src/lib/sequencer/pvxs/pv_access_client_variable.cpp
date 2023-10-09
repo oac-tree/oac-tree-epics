@@ -102,7 +102,7 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
 {
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
-    auto type_attr = GetAttributeValue<std::string>(TYPE_ATTRIBUTE_NAME);
+    auto type_attr = GetAttributeString(TYPE_ATTRIBUTE_NAME);
     if (type_attr.empty())
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +
@@ -128,7 +128,7 @@ void PvAccessClientVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry
     return;
   };
   m_pv.reset(new epics::PvAccessClientPV(
-    GetAttributeValue<std::string>(CHANNEL_ATTRIBUTE_NAME), callback));
+    GetAttributeString(CHANNEL_ATTRIBUTE_NAME), callback));
 }
 
 void PvAccessClientVariable::ResetImpl()
