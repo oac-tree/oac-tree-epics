@@ -62,14 +62,14 @@ static const std::string READBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding=
             outputVar="boolean"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
-            outputVar="uint32"/>
+            outputVar="int32"/>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"
             outputVar="string"/>
     </Sequence>
     <Workspace>
         <Local name="boolean" type='{"type":"bool"}'/>
-        <Local name="uint32" type='{"type":"uint32"}'/>
+        <Local name="int32" type='{"type":"int32"}'/>
         <Local name="string" type='{"type":"string"}'/>
     </Workspace>
 </Procedure>)RAW";
@@ -390,8 +390,8 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
 
   // test boolean variable
   sup::dto::AnyValue uint32_var;
-  EXPECT_TRUE(ws->GetValue("uint32", uint32_var));
-  EXPECT_TRUE(uint32_var == 1u);
+  EXPECT_TRUE(ws->GetValue("int32", uint32_var));
+  EXPECT_TRUE(uint32_var == 1);
 
   // test boolean variable
   sup::dto::AnyValue string_var;
