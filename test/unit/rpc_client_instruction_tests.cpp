@@ -193,7 +193,7 @@ TEST_F(RPCClientInstructionTest, EmptyVariable)
   Workspace ws;
 
   auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_NO_THROW(variable->Setup(ws));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   RPCClientInstruction instruction{};
@@ -294,7 +294,7 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
   Workspace ws;
 
   auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_NO_THROW(variable->Setup(ws));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   RPCClientInstruction instruction{};

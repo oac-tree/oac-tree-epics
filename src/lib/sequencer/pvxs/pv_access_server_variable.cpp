@@ -25,6 +25,7 @@
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable_registry.h>
+#include <sup/sequencer/workspace.h>
 
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/dto/json_type_parser.h>
@@ -80,11 +81,12 @@ bool PvAccessServerVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(value);
 }
 
-void PvAccessServerVariable::SetupImpl(const sup::dto::AnyTypeRegistry& registry)
+void PvAccessServerVariable::SetupImpl(const Workspace& ws)
 {
   sup::dto::JSONAnyTypeParser parser;
   auto type_attr_val = GetAttributeString(TYPE_ATTRIBUTE_NAME);
-  if (!parser.ParseString(type_attr_val, &registry))
+  const auto& registry = ws.GetTypeRegistry();
+  if (!parser.ParseString(type_attr_val, std::addressof(registry)))
   {
     std::string error_message = VariableSetupExceptionProlog(*this) +
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";

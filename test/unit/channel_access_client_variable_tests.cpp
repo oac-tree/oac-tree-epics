@@ -66,32 +66,33 @@ protected:
 
 TEST_F(ChannelAccessClientVariableTest, Setup)
 {
+  Workspace ws;
   // Missing attributes or parse error
   auto var_1 = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(var_1));
-  EXPECT_THROW(var_1->Setup(), VariableSetupException);
+  EXPECT_THROW(var_1->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_1->AddAttribute("channel", "DOESNT-MATTER"));
-  EXPECT_THROW(var_1->Setup(), VariableSetupException);
+  EXPECT_THROW(var_1->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_1->AddAttribute("type", "Cannot parse this as a type"));
-  EXPECT_THROW(var_1->Setup(), VariableSetupException);
+  EXPECT_THROW(var_1->Setup(ws), VariableSetupException);
 
   // Missing attributes or wrong type
   auto var_2 = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(var_2));
-  EXPECT_THROW(var_2->Setup(), VariableSetupException);
+  EXPECT_THROW(var_2->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_2->AddAttribute("channel", "DOESNT-MATTER"));
-  EXPECT_THROW(var_2->Setup(), VariableSetupException);
+  EXPECT_THROW(var_2->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_2->AddAttribute("type", R"RAW({"type":"empty"})RAW"));
-  EXPECT_THROW(var_2->Setup(), VariableSetupException);
+  EXPECT_THROW(var_2->Setup(ws), VariableSetupException);
 
   // Successful setup
   auto var_3 = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(var_3));
-  EXPECT_THROW(var_3->Setup(), VariableSetupException);
+  EXPECT_THROW(var_3->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_3->AddAttribute("channel", "DOESNT-MATTER"));
-  EXPECT_THROW(var_3->Setup(), VariableSetupException);
+  EXPECT_THROW(var_3->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_3->AddAttribute("type", R"RAW({"type":"bool"})RAW"));
-  EXPECT_NO_THROW(var_3->Setup());
+  EXPECT_NO_THROW(var_3->Setup(ws));
   EXPECT_NO_THROW(var_3->Reset());
 }
 
@@ -212,12 +213,13 @@ TEST_F(ChannelAccessClientVariableTest, GetValueExtended)
 
 TEST_F(ChannelAccessClientVariableTest, GetValueError)
 {
+  Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   // Missing mandatory attribute
   EXPECT_TRUE(variable->AddAttribute("irrelevant", "undefined"));
-  EXPECT_THROW(variable->Setup(), VariableSetupException);
+  EXPECT_THROW(variable->Setup(ws), VariableSetupException);
 
   sup::dto::AnyValue value;
 
@@ -278,12 +280,13 @@ TEST_F(ChannelAccessClientVariableTest, SetValueSuccess)
 
 TEST_F(ChannelAccessClientVariableTest, SetValueBadSetup)
 {
+  Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   // Missing mandatory attribute
   EXPECT_TRUE(variable->AddAttribute("irrelevant", "undefined"));
-  EXPECT_THROW(variable->Setup(), VariableSetupException);
+  EXPECT_THROW(variable->Setup(ws), VariableSetupException);
 
   sup::dto::AnyValue value = 2;
 
@@ -292,13 +295,14 @@ TEST_F(ChannelAccessClientVariableTest, SetValueBadSetup)
 
 TEST_F(ChannelAccessClientVariableTest, SetValueUnconnected)
 {
+  Workspace ws;
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
 
   // Missing mandatory attribute
   EXPECT_TRUE(variable->AddAttribute("channel", "DOESNOTEXIST"));
   EXPECT_TRUE(variable->AddAttribute("type", FLOATTYPE));
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_NO_THROW(variable->Setup(ws));
 
   sup::dto::AnyValue value = 2;
 

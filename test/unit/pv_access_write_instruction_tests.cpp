@@ -183,7 +183,7 @@ TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
   Workspace ws;
 
   auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
-  EXPECT_NO_THROW(variable->Setup());
+  EXPECT_NO_THROW(variable->Setup(ws));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
   PvAccessWriteInstruction instruction{};

@@ -209,7 +209,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
     ASSERT_TRUE(static_cast<bool>(check_var));
     EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:BOOL"));
     EXPECT_TRUE(check_var->AddAttribute("type", BOOLEANTYPE));
-    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_NO_THROW(check_var->Setup(ws));
     EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&check_var]{
       sup::dto::AnyValue tmp;
       return check_var->GetValue(tmp) && tmp.As<bool>();
@@ -235,7 +235,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
     ASSERT_TRUE(static_cast<bool>(check_var));
     EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:BOOL"));
     EXPECT_TRUE(check_var->AddAttribute("type", BOOLEANTYPE));
-    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_NO_THROW(check_var->Setup(ws));
     EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&check_var]{
       sup::dto::AnyValue tmp;
       return check_var->GetValue(tmp) && !tmp.As<bool>();
@@ -279,7 +279,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccessStruct)
     ASSERT_TRUE(static_cast<bool>(check_var));
     EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:BOOL"));
     EXPECT_TRUE(check_var->AddAttribute("type", BOOLEANTYPE));
-    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_NO_THROW(check_var->Setup(ws));
     EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&check_var]{
       sup::dto::AnyValue tmp;
       return check_var->GetValue(tmp) && tmp.As<bool>();
@@ -324,7 +324,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
     ASSERT_TRUE(static_cast<bool>(check_var));
     EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
     EXPECT_TRUE(check_var->AddAttribute("type", UINT32ARRAYTYPE));
-    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_NO_THROW(check_var->Setup(ws));
     EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&check_var]{
       sup::dto::AnyValue tmp;
       return check_var->GetValue(tmp) && sup::dto::IsArrayValue(tmp) && tmp[3] == 4;
@@ -351,7 +351,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
     ASSERT_TRUE(static_cast<bool>(check_var));
     EXPECT_TRUE(check_var->AddAttribute("channel", "SEQ-TEST:UIARRAY"));
     EXPECT_TRUE(check_var->AddAttribute("type", UINT32ARRAYTYPE));
-    EXPECT_NO_THROW(check_var->Setup());
+    EXPECT_NO_THROW(check_var->Setup(ws));
     EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&check_var]{
       sup::dto::AnyValue tmp;
       return check_var->GetValue(tmp) && sup::dto::IsArrayValue(tmp) && tmp[3] == 0;

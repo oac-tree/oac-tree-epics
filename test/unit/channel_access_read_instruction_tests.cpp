@@ -381,21 +381,21 @@ TEST_F(ChannelAccessReadInstructionTest, ReadBoolean)
 
   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 
-  auto ws = proc->GetWorkspace();
+  auto& ws = proc->GetWorkspace();
 
   // test boolean variable
   sup::dto::AnyValue bool_var;
-  EXPECT_TRUE(ws->GetValue("boolean", bool_var));
+  EXPECT_TRUE(ws.GetValue("boolean", bool_var));
   EXPECT_TRUE(bool_var == true);
 
   // test boolean variable
   sup::dto::AnyValue uint32_var;
-  EXPECT_TRUE(ws->GetValue("int32", uint32_var));
+  EXPECT_TRUE(ws.GetValue("int32", uint32_var));
   EXPECT_TRUE(uint32_var == 1);
 
   // test boolean variable
   sup::dto::AnyValue string_var;
-  EXPECT_TRUE(ws->GetValue("string", string_var));
+  EXPECT_TRUE(ws.GetValue("string", string_var));
   EXPECT_TRUE(string_var == "TRUE");
 }
 

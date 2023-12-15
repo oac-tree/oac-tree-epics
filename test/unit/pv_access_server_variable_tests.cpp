@@ -57,43 +57,45 @@ TEST_F(PvAccessServerVariableTest, VariableRegistration)
 
 TEST_F(PvAccessServerVariableTest, Setup)
 {
+  Workspace ws;
   // channel and type attribute is mandatory
   {
     PvAccessServerVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "pvaccess-server-var-test::setup"));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("type", UINT16_STRUCT_TYPE));
-    EXPECT_NO_THROW(variable.Setup());
+    EXPECT_NO_THROW(variable.Setup(ws));
     EXPECT_NO_THROW(variable.Reset());
   }
   // type attribute must be parsed correctly
   {
     PvAccessServerVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "pvaccess-server-var-test::setup"));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("type", "cannot_be_parsed"));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
   }
   // value attribute must be parsed correctly
   {
     PvAccessServerVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "pvaccess-server-var-test::setup"));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("type", UINT16_STRUCT_TYPE));
     EXPECT_TRUE(variable.AddAttribute("value", UINT16_STRUCT_WRONG_VALUE));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
   }
 }
 
 TEST_F(PvAccessServerVariableTest, ScalarSetup)
 {
+  Workspace ws;
   PvAccessServerVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "pvaccess-server-var-test::scalar-setup"));
   EXPECT_NO_THROW(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
-  EXPECT_NO_THROW(variable.Setup());
+  EXPECT_NO_THROW(variable.Setup(ws));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(variable.GetValue(value));

@@ -53,47 +53,49 @@ TEST_F(PvAccessClientVariableTest, VariableRegistration)
 
 TEST_F(PvAccessClientVariableTest, Setup)
 {
+  Workspace ws;
   // channel attribute is mandatory
   {
     PvAccessClientVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "Not_Relevant"));
-    EXPECT_NO_THROW(variable.Setup());
+    EXPECT_NO_THROW(variable.Setup(ws));
     EXPECT_NO_THROW(variable.Reset());
   }
   // type attribute should be non empty
   {
     PvAccessClientVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "Not_Relevant"));
     EXPECT_TRUE(variable.AddAttribute("type", ""));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
   }
   // type attribute should be a json representation of an AnyType
   {
     PvAccessClientVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "Not_Relevant"));
     EXPECT_TRUE(variable.AddAttribute("type", "cannot_be_parsed"));
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
   }
   // valid type attribute
   {
     PvAccessClientVariable variable;
-    EXPECT_THROW(variable.Setup(), VariableSetupException);
+    EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "Not_Relevant"));
     EXPECT_TRUE(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
-    EXPECT_NO_THROW(variable.Setup());
+    EXPECT_NO_THROW(variable.Setup(ws));
     EXPECT_NO_THROW(variable.Reset());
   }
 }
 
 TEST_F(PvAccessClientVariableTest, NonExistingChannel)
 {
+  Workspace ws;
   PvAccessClientVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "Does_Not_Exist"));
   EXPECT_NO_THROW(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
-  EXPECT_NO_THROW(variable.Setup());
+  EXPECT_NO_THROW(variable.Setup(ws));
 
   sup::dto::AnyValue value;
   EXPECT_FALSE(variable.GetValue(value));

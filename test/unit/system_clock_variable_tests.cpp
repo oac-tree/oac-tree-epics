@@ -24,6 +24,7 @@
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
+#include <sup/sequencer/workspace.h>
 
 #include <gtest/gtest.h>
 
@@ -38,33 +39,35 @@ protected:
 
 TEST_F(SystemClockVariableTest, Setup)
 {
+  Workspace ws;
   {
     auto variable = GlobalVariableRegistry().Create("SystemClock");
     ASSERT_TRUE(static_cast<bool>(variable));
-    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_NO_THROW(variable->Setup(ws));
     EXPECT_TRUE(variable->AddAttribute("format", "BAD_FORMAT"));
-    EXPECT_THROW(variable->Setup(), VariableSetupException);
+    EXPECT_THROW(variable->Setup(ws), VariableSetupException);
   }
   {
     auto variable = GlobalVariableRegistry().Create("SystemClock");
     ASSERT_TRUE(static_cast<bool>(variable));
-    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_NO_THROW(variable->Setup(ws));
     EXPECT_TRUE(variable->AddAttribute("format", "uint64"));
-    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_NO_THROW(variable->Setup(ws));
   }
   {
     auto variable = GlobalVariableRegistry().Create("SystemClock");
     ASSERT_TRUE(static_cast<bool>(variable));
-    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_NO_THROW(variable->Setup(ws));
     EXPECT_TRUE(variable->AddAttribute("format", "ISO8601"));
-    EXPECT_NO_THROW(variable->Setup());
+    EXPECT_NO_THROW(variable->Setup(ws));
   }
 }
 
 TEST_F(SystemClockVariableTest, DefaultConstructed)
 {
+  Workspace ws;
   SystemClockVariable clock_var{};
-  EXPECT_NO_THROW(clock_var.Setup());
+  EXPECT_NO_THROW(clock_var.Setup(ws));
   EXPECT_EQ(clock_var.GetType(), "SystemClock");
   EXPECT_TRUE(clock_var.GetName().empty());
 
@@ -81,9 +84,10 @@ TEST_F(SystemClockVariableTest, DefaultConstructed)
 
 TEST_F(SystemClockVariableTest, TimestampFormat)
 {
+  Workspace ws;
   SystemClockVariable clock_var{};
   EXPECT_TRUE(clock_var.AddAttribute("format", "uint64"));
-  EXPECT_NO_THROW(clock_var.Setup());
+  EXPECT_NO_THROW(clock_var.Setup(ws));
   EXPECT_EQ(clock_var.GetType(), "SystemClock");
   EXPECT_TRUE(clock_var.GetName().empty());
 
@@ -100,9 +104,10 @@ TEST_F(SystemClockVariableTest, TimestampFormat)
 
 TEST_F(SystemClockVariableTest, ISO8601Format)
 {
+  Workspace ws;
   SystemClockVariable clock_var{};
   EXPECT_TRUE(clock_var.AddAttribute("format", "ISO8601"));
-  EXPECT_NO_THROW(clock_var.Setup());
+  EXPECT_NO_THROW(clock_var.Setup(ws));
   EXPECT_EQ(clock_var.GetType(), "SystemClock");
   EXPECT_TRUE(clock_var.GetName().empty());
 
@@ -127,9 +132,10 @@ TEST_F(SystemClockVariableTest, ISO8601Format)
 
 TEST_F(SystemClockVariableTest, UnknownFormat)
 {
+  Workspace ws;
   SystemClockVariable clock_var{};
   EXPECT_TRUE(clock_var.AddAttribute("format", "unknown"));
-  EXPECT_THROW(clock_var.Setup(), VariableSetupException);
+  EXPECT_THROW(clock_var.Setup(ws), VariableSetupException);
   EXPECT_EQ(clock_var.GetType(), "SystemClock");
   EXPECT_TRUE(clock_var.GetName().empty());
 

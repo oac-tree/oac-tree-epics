@@ -75,7 +75,7 @@ bool SystemClockVariable::SetValueImpl(const sup::dto::AnyValue&)
   return false;
 }
 
-void SystemClockVariable::SetupImpl(const sup::dto::AnyTypeRegistry&)
+void SystemClockVariable::SetupImpl(const Workspace&)
 {
   if (HasAttribute(TIMEFORMAT_ATTRIBUTE_NAME))
   {
