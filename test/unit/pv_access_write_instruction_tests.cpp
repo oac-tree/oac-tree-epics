@@ -101,7 +101,7 @@ TEST_F(PvAccessWriteInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
   // write instruction can be setup with channel, type and value attribute
   {
@@ -113,7 +113,7 @@ TEST_F(PvAccessWriteInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_TRUE(instruction.AddAttribute("value", "Some_Value"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
   // write instruction needs to be able to parse the timeout attribute as a double
   {
@@ -130,7 +130,7 @@ TEST_F(PvAccessWriteInstructionTest, Setup)
     EXPECT_TRUE(instruction.AddAttribute("varName", "Some_Var_Name"));
     EXPECT_TRUE(instruction.AddAttribute("timeout", "5.0"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
 }
 

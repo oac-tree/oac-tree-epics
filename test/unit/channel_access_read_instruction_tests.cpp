@@ -83,6 +83,7 @@ protected:
 
 TEST_F(ChannelAccessReadInstructionTest, Setup)
 {
+  unit_test_helper::NullUserInterface ui;
   Procedure proc;
 
   auto read_instruction = GlobalInstructionRegistry().Create("ChannelAccessRead");
@@ -96,7 +97,7 @@ TEST_F(ChannelAccessReadInstructionTest, Setup)
   EXPECT_THROW(read_instruction->Setup(proc), InstructionSetupException);
   EXPECT_TRUE(read_instruction->SetAttribute("timeout", "30.0"));
   EXPECT_NO_THROW(read_instruction->Setup(proc));
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 }
 
 TEST_F(ChannelAccessReadInstructionTest, ExecuteMissingVariable)
@@ -117,7 +118,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteMissingVariable)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 }
 
 TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyVariable)
@@ -141,7 +142,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyVariable)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_FALSE(ws.GetValue("var", value));
@@ -170,7 +171,7 @@ TEST_F(ChannelAccessReadInstructionTest, ExecuteEmptyChannelType)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));
@@ -200,7 +201,7 @@ TEST_F(ChannelAccessReadInstructionTest, Timeout)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));
@@ -230,7 +231,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongConnectedType)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));
@@ -261,7 +262,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongTimestampType)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));
@@ -292,7 +293,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongStatusType)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));
@@ -323,7 +324,7 @@ TEST_F(ChannelAccessReadInstructionTest, WrongSeverityType)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));
@@ -353,7 +354,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadOnlyVariable)
   EXPECT_NO_THROW(read_instruction->Setup(proc));
   EXPECT_NO_THROW(read_instruction->ExecuteSingle(ui, ws));
   EXPECT_EQ(read_instruction->GetStatus(), ExecutionStatus::FAILURE);
-  EXPECT_NO_THROW(read_instruction->Reset());
+  EXPECT_NO_THROW(read_instruction->Reset(ui));
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(ws.GetValue("var", value));

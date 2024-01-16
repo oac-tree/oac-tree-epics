@@ -222,7 +222,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteSuccess)
   // }));
 
   // Reset instruction and change value to false
-  EXPECT_NO_THROW(write_instruction->Reset());
+  EXPECT_NO_THROW(write_instruction->Reset(ui));
   EXPECT_TRUE(write_instruction->SetAttribute("value", "false"));
   EXPECT_NO_THROW(write_instruction->Setup(proc));
   EXPECT_NO_THROW(write_instruction->ExecuteSingle(ui, ws));
@@ -338,7 +338,7 @@ TEST_F(ChannelAccessWriteInstructionTest, WriteArray)
   // }));
 
   // Set array back to zero
-  EXPECT_NO_THROW(instruction->Reset());
+  EXPECT_NO_THROW(instruction->Reset(ui));
   EXPECT_TRUE(instruction->SetAttribute("value", "[0, 0, 0, 0, 0, 0, 0, 0]"));
   EXPECT_NO_THROW(instruction->Setup(proc));
   EXPECT_NO_THROW(instruction->ExecuteSingle(ui, ws));

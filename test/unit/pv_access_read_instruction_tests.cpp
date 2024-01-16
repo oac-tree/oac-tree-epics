@@ -109,7 +109,7 @@ TEST_F(PvAccessReadInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_TRUE(instruction.AddAttribute("outputVar", "Some_Var_Name"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
   // timeout attribute should be parsed to double
   {
@@ -118,7 +118,7 @@ TEST_F(PvAccessReadInstructionTest, Setup)
     EXPECT_TRUE(instruction.AddAttribute("outputVar", "Some_Var_Name"));
     EXPECT_TRUE(instruction.AddAttribute("timeout", "1s"));
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
 }
 

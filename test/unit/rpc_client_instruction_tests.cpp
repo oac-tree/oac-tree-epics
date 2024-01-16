@@ -111,7 +111,7 @@ TEST_F(RPCClientInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_TRUE(instruction.AddAttribute("requestVar", "Some_Var_Name"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
   // or a channel and a request type/value attribute
   {
@@ -123,7 +123,7 @@ TEST_F(RPCClientInstructionTest, Setup)
     EXPECT_THROW(instruction.Setup(proc), InstructionSetupException);
     EXPECT_TRUE(instruction.AddAttribute("value", "Some_Value"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
   // rpc client instruction timeout attribute cannot be parsed
   {
@@ -140,7 +140,7 @@ TEST_F(RPCClientInstructionTest, Setup)
     EXPECT_TRUE(instruction.AddAttribute("requestVar", "Some_Var_Name"));
     EXPECT_TRUE(instruction.AddAttribute("timeout", "3.0"));
     EXPECT_NO_THROW(instruction.Setup(proc));
-    EXPECT_NO_THROW(instruction.Reset());
+    EXPECT_NO_THROW(instruction.Reset(ui));
   }
 }
 
