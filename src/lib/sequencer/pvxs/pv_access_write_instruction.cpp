@@ -93,14 +93,14 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
   {
     std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    ui.LogError(error_message);
+    LogError(ui, error_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.WaitForConnected(timeout_sec))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.SetValue(value))
@@ -108,7 +108,7 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
     std::string warning_message = InstructionWarningProlog(*this) +
       "could not write value [" + json_value + "] to channel [" + channel_name + "]";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;
@@ -128,7 +128,7 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Work
       std::string warning_message =
         InstructionWarningProlog(*this) + "value from field [" +
         GetAttributeString(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
-      ui.LogWarning(warning_message);
+      LogWarning(ui, warning_message);
     }
     return result;
   }

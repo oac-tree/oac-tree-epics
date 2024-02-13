@@ -78,14 +78,14 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Wo
   {
     std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    ui.LogError(error_message);
+    LogError(ui, error_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.WaitForValidValue(timeout_sec))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   auto value = pv.GetValue();
@@ -93,7 +93,7 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Wo
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "value retrieved from channel [" + channel_name + "] is empty";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!SetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, value))

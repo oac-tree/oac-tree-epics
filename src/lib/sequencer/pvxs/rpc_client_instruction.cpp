@@ -101,7 +101,7 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
   {
     std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    ui.LogError(error_message);
+    LogError(ui, error_message);
     return ExecutionStatus::FAILURE;
   }
   client_config.timeout = timeout_sec;
@@ -132,7 +132,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
     {
       std::string warning_message = InstructionWarningProlog(*this) +
         "value from field [" + GetAttributeString(REQUEST_ATTRIBUTE_NAME) + "] is empty";
-      ui.LogWarning(warning_message);
+      LogWarning(ui, warning_message);
     }
     return request;
   }

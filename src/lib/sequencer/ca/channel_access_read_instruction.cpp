@@ -78,7 +78,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "type of variable field with name [" + var_field_name + "] is Empty";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
@@ -91,14 +91,14 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
   {
     std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    ui.LogError(error_message);
+    LogError(ui, error_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.WaitForValidValue(timeout_sec))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   auto ext_val = pv.GetExtendedValue();
@@ -108,7 +108,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
     std::string warning_message = InstructionWarningProlog(*this) +
       "could not convert value from channel [" + channel_name +
       "] to type of variable field with name [" + var_field_name + "]";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!SetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, var_val))

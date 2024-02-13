@@ -77,7 +77,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "value to write is Empty";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   std::string channel_name;
@@ -96,14 +96,14 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
   {
     std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    ui.LogError(error_message);
+    LogError(ui, error_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.WaitForConnected(timeout_sec))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + channel_name + "] timed out";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   if (!pv.SetValue(value))
@@ -111,7 +111,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
     std::string warning_message = InstructionWarningProlog(*this) +
       "could not write value [" + json_value + "] to channel [" + channel_name + "]";
-    ui.LogWarning(warning_message);
+    LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;
