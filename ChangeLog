@@ -1,3 +1,8 @@
+Changes for 3.1.0:
+
+- Adapt API changes of sequencer v3.1
+- Update cmake configuration
+
 Changes for 3.0.0:
 
 - Adapt to attribute system of sequencer v3.0
