@@ -61,13 +61,13 @@ SystemClockVariable::~SystemClockVariable() = default;
 
 bool SystemClockVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
-  unsigned long timestamp = utils::GetNanosecsSinceEpoch();
-  sup::dto::AnyValue result = GetFormattedTime(timestamp, m_time_format);
-  if (sup::dto::IsEmptyValue(result))
+  auto time_av = ReadCurrentTime();
+  if (!time_av)
   {
     return false;
   }
-  return sup::dto::TryAssign(value, result);
+  Notify(*time_av, true);
+  return sup::dto::TryAssign(value, *time_av);
 }
 
 bool SystemClockVariable::SetValueImpl(const sup::dto::AnyValue&)
@@ -93,11 +93,32 @@ void SystemClockVariable::SetupImpl(const Workspace&)
   {
     m_time_format = DEFAULT_TIME_FORMAT;
   }
+  auto time_av = ReadCurrentTime();
+  if (!time_av)
+  {
+    Notify({}, false);
+  }
+  else
+  {
+    Notify(*time_av, true);
+  }
 }
 
 void SystemClockVariable::ResetImpl()
 {
   m_time_format.clear();
+}
+
+std::unique_ptr<sup::dto::AnyValue> SystemClockVariable::ReadCurrentTime() const
+{
+  std::unique_ptr<sup::dto::AnyValue> result;
+  unsigned long timestamp = utils::GetNanosecsSinceEpoch();
+  sup::dto::AnyValue time_av = GetFormattedTime(timestamp, m_time_format);
+  if (!sup::dto::IsEmptyValue(time_av))
+  {
+    result.reset(new sup::dto::AnyValue(std::move(time_av)));
+  }
+  return result;
 }
 
 } // namespace sequencer

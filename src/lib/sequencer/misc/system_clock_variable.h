@@ -48,6 +48,8 @@ private:
   void SetupImpl(const Workspace& ws) override;
   void ResetImpl() override;
   std::string m_time_format;
+
+  std::unique_ptr<sup::dto::AnyValue> ReadCurrentTime() const;
 };
 
 }  // namespace sequencer

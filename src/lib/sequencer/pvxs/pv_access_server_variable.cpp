@@ -117,6 +117,7 @@ void PvAccessServerVariable::SetupImpl(const Workspace& ws)
   auto start_value = pv_access_helper::PackIntoStructIfScalar(val);
   m_server->AddVariable(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), start_value);
   m_server->Start();
+  Notify(start_value, true);
 }
 
 void PvAccessServerVariable::ResetImpl()
