@@ -70,6 +70,14 @@ sup::dto::AnyValue ConvertToTypedAnyValue(
     return ext_value.value;
   }
   sup::dto::AnyValue result(anytype);
+  if (!ext_value.connected)
+  {
+    if (!PopulateExtraFields(result, ext_value))
+    {
+      return {};
+    }
+    return result;
+  }
   if (!anytype.HasField(VALUE_FIELD_NAME) ||
       !sup::dto::TryConvert(result[VALUE_FIELD_NAME], ext_value.value))
   {
