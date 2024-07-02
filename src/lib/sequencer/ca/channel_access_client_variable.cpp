@@ -123,7 +123,7 @@ void ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
                                         channel_type, callback));
 }
 
-void ChannelAccessClientVariable::ResetImpl()
+void ChannelAccessClientVariable::TeardownImpl()
 {
   m_pv.reset();
   m_type = sup::dto::EmptyType;

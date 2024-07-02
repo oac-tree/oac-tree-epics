@@ -66,7 +66,7 @@ TEST_F(PvAccessServerVariableTest, Setup)
     EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("type", UINT16_STRUCT_TYPE));
     EXPECT_NO_THROW(variable.Setup(ws));
-    EXPECT_NO_THROW(variable.Reset());
+    EXPECT_NO_THROW(variable.Teardown());
   }
   // type attribute must be parsed correctly
   {

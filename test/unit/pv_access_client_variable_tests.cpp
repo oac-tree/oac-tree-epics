@@ -60,7 +60,7 @@ TEST_F(PvAccessClientVariableTest, Setup)
     EXPECT_THROW(variable.Setup(ws), VariableSetupException);
     EXPECT_TRUE(variable.AddAttribute("channel", "Not_Relevant"));
     EXPECT_NO_THROW(variable.Setup(ws));
-    EXPECT_NO_THROW(variable.Reset());
+    EXPECT_NO_THROW(variable.Teardown());
   }
   // type attribute should be non empty
   {
@@ -85,7 +85,7 @@ TEST_F(PvAccessClientVariableTest, Setup)
     EXPECT_TRUE(variable.AddAttribute("channel", "Not_Relevant"));
     EXPECT_TRUE(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
     EXPECT_NO_THROW(variable.Setup(ws));
-    EXPECT_NO_THROW(variable.Reset());
+    EXPECT_NO_THROW(variable.Teardown());
   }
 }
 
@@ -102,7 +102,7 @@ TEST_F(PvAccessClientVariableTest, NonExistingChannel)
   EXPECT_TRUE(sup::dto::IsEmptyValue(value));
   value = 5;
   EXPECT_FALSE(variable.SetValue(value));
-  EXPECT_NO_THROW(variable.Reset());
+  EXPECT_NO_THROW(variable.Teardown());
 }
 
 //! Server creates a structure with the value.

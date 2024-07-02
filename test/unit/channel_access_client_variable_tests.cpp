@@ -93,7 +93,7 @@ TEST_F(ChannelAccessClientVariableTest, Setup)
   EXPECT_THROW(var_3->Setup(ws), VariableSetupException);
   EXPECT_TRUE(var_3->AddAttribute("type", R"RAW({"type":"bool"})RAW"));
   EXPECT_NO_THROW(var_3->Setup(ws));
-  EXPECT_NO_THROW(var_3->Reset());
+  EXPECT_NO_THROW(var_3->Teardown());
 }
 
 TEST_F(ChannelAccessClientVariableTest, GetValueSuccess)

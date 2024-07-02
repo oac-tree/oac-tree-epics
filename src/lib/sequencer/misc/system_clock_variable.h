@@ -46,7 +46,7 @@ private:
   bool GetValueImpl(sup::dto::AnyValue& value) const override;
   bool SetValueImpl(const sup::dto::AnyValue& value) override;
   void SetupImpl(const Workspace& ws) override;
-  void ResetImpl() override;
+  void TeardownImpl() override;
   std::string m_time_format;
 
   std::unique_ptr<sup::dto::AnyValue> ReadCurrentTime() const;

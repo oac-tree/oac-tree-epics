@@ -133,7 +133,7 @@ void PvAccessClientVariable::SetupImpl(const Workspace& ws)
     GetAttributeString(CHANNEL_ATTRIBUTE_NAME), callback));
 }
 
-void PvAccessClientVariable::ResetImpl()
+void PvAccessClientVariable::TeardownImpl()
 {
   m_pv.reset();
   m_type = sup::dto::EmptyType;

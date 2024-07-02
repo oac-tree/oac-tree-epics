@@ -120,7 +120,7 @@ void PvAccessServerVariable::SetupImpl(const Workspace& ws)
   Notify(start_value, true);
 }
 
-void PvAccessServerVariable::ResetImpl()
+void PvAccessServerVariable::TeardownImpl()
 {
   m_server.reset();
   m_type = sup::dto::EmptyType;

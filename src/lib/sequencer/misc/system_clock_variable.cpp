@@ -104,7 +104,7 @@ void SystemClockVariable::SetupImpl(const Workspace&)
   }
 }
 
-void SystemClockVariable::ResetImpl()
+void SystemClockVariable::TeardownImpl()
 {
   m_time_format.clear();
 }
