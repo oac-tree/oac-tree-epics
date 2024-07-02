@@ -60,10 +60,10 @@ private:
   bool SetValueImpl(const sup::dto::AnyValue &value) override;
   bool IsAvailableImpl() const override;
   void SetupImpl(const Workspace& ws) override;
+  void ResetImpl(const Workspace& ws) override;
   void TeardownImpl() override;
 
   sup::dto::AnyType m_type;
-  std::unique_ptr<epics::PvAccessServer> m_server;
 };
 
 }  // namespace sequencer

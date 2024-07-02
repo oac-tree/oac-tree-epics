@@ -31,7 +31,6 @@
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/dto/json_type_parser.h>
 #include <sup/dto/json_value_parser.h>
-#include <sup/epics/pv_access_server.h>
 
 namespace sup
 {
@@ -54,7 +53,6 @@ const std::string VALUE_ATTRIBUTE_NAME = "value";
 PvAccessServerVariable::PvAccessServerVariable()
   : Variable(PvAccessServerVariable::Type)
   , m_type{}
-  , m_server{}
 {
   AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
   AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
@@ -66,7 +64,7 @@ PvAccessServerVariable::~PvAccessServerVariable() = default;
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
-    m_server->GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
+    GetSharedPvAccessServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
@@ -77,14 +75,14 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
   {
     return false;
   }
-  return m_server->SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
-                            pv_access_helper::PackIntoStructIfScalar(copy));
+  return GetSharedPvAccessServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
+                                            pv_access_helper::PackIntoStructIfScalar(copy));
 }
 
 bool PvAccessServerVariable::IsAvailableImpl() const
 {
   auto value = pv_access_helper::ConvertToTypedAnyValue(
-    m_server->GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
+    GetSharedPvAccessServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -114,22 +112,32 @@ void PvAccessServerVariable::SetupImpl(const Workspace& ws)
     val = value_parser.MoveAnyValue();
   }
   // Avoid dependence on destruction order of m_server and m_type.
-  auto callback = [this](const std::string&, const sup::dto::AnyValue& value)
+  auto callback = [this](const sup::dto::AnyValue& value)
   {
     auto typed_value = pv_access_helper::ConvertToTypedAnyValue(value, m_type);
     Notify(typed_value, true);
     return;
   };
-  m_server.reset(new epics::PvAccessServer(callback));
   auto start_value = pv_access_helper::PackIntoStructIfScalar(val);
-  m_server->AddVariable(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), start_value);
-  m_server->Start();
+  GetSharedPvAccessServer().AddVariable(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), start_value,
+                                        callback);
+  ws.RegisterSetupFunction(PvAccessServerVariable::Type, []() {
+    GetSharedPvAccessServer().Setup();
+  });
+  ws.RegisterTeardownFunction(PvAccessServerVariable::Type, []() {
+    GetSharedPvAccessServer().Teardown();
+  });
   Notify(start_value, true);
+}
+
+void PvAccessServerVariable::ResetImpl(const Workspace& ws)
+{
+  (void)ws;
+  // TODO: reset value to initial value;
 }
 
 void PvAccessServerVariable::TeardownImpl()
 {
-  m_server.reset();
   m_type = sup::dto::EmptyType;
 }
 
