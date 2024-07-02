@@ -65,21 +65,17 @@ sup::dto::AnyValue ExtractChannelValue(const sup::dto::AnyValue& value)
 sup::dto::AnyValue ConvertToTypedAnyValue(
   const sup::epics::ChannelAccessPV::ExtendedValue& ext_value, const sup::dto::AnyType& anytype)
 {
+  if (!anytype.HasField(CONNECTED_FIELD_NAME) && !ext_value.connected)
+  {
+    return {};
+  }
   if (ext_value.value.GetType() == anytype)
   {
     return ext_value.value;
   }
   sup::dto::AnyValue result(anytype);
-  if (!ext_value.connected)
-  {
-    if (!PopulateExtraFields(result, ext_value))
-    {
-      return {};
-    }
-    return result;
-  }
-  if (!anytype.HasField(VALUE_FIELD_NAME) ||
-      !sup::dto::TryConvert(result[VALUE_FIELD_NAME], ext_value.value))
+  if (anytype.HasField(VALUE_FIELD_NAME) &&
+      !sup::dto::TryAssign(result[VALUE_FIELD_NAME], ext_value.value))
   {
     return {};
   }

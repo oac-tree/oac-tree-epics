@@ -58,12 +58,12 @@ bool ChannelAccessClientVariable::GetValueImpl(sup::dto::AnyValue &value) const
   {
     return false;
   }
-  if (!m_type.HasField(channel_access_helper::CONNECTED_FIELD_NAME) && !m_pv->IsConnected())
+  auto ext_value = m_pv->GetExtendedValue();
+  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
+  if (sup::dto::IsEmptyValue(result))
   {
     return false;
   }
-  auto ext_value = m_pv->GetExtendedValue();
-  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
   return sup::dto::TryAssign(value, result);
 }
 
