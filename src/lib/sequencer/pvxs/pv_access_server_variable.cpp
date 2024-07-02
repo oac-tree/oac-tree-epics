@@ -61,6 +61,24 @@ PvAccessServerVariable::PvAccessServerVariable()
 
 PvAccessServerVariable::~PvAccessServerVariable() = default;
 
+sup::dto::AnyValue PvAccessServerVariable::GetInitialValue(const sup::dto::AnyType& val_type) const
+{
+  sup::dto::AnyValue val(val_type);
+  if (HasAttribute(VALUE_ATTRIBUTE_NAME))
+  {
+    auto val_str = GetAttributeString(VALUE_ATTRIBUTE_NAME);
+    sup::dto::JSONAnyValueParser value_parser;
+    if (!value_parser.TypedParseString(m_type, val_str))
+    {
+      std::string error_message = VariableSetupExceptionProlog(*this) +
+        "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
+      throw VariableSetupException(error_message);
+    }
+    val = value_parser.MoveAnyValue();
+  }
+  return val;
+}
+
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
@@ -98,19 +116,7 @@ void PvAccessServerVariable::SetupImpl(const Workspace& ws)
     throw VariableSetupException(error_message);
   }
   m_type = parser.MoveAnyType();
-  sup::dto::AnyValue val(m_type);
-  if (HasAttribute(VALUE_ATTRIBUTE_NAME))
-  {
-    auto val_str = GetAttributeString(VALUE_ATTRIBUTE_NAME);
-    sup::dto::JSONAnyValueParser value_parser;
-    if (!value_parser.TypedParseString(m_type, val_str))
-    {
-      std::string error_message = VariableSetupExceptionProlog(*this) +
-        "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
-      throw VariableSetupException(error_message);
-    }
-    val = value_parser.MoveAnyValue();
-  }
+  auto val = GetInitialValue(m_type);
   // Avoid dependence on destruction order of m_server and m_type.
   auto callback = [this](const sup::dto::AnyValue& value)
   {
@@ -133,7 +139,13 @@ void PvAccessServerVariable::SetupImpl(const Workspace& ws)
 void PvAccessServerVariable::ResetImpl(const Workspace& ws)
 {
   (void)ws;
-  // TODO: reset value to initial value;
+  if (sup::dto::IsEmptyType(m_type))
+  {
+    return;
+  }
+  auto val = GetInitialValue(m_type);
+  GetSharedPvAccessServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
+                                     pv_access_helper::PackIntoStructIfScalar(val));
 }
 
 void PvAccessServerVariable::TeardownImpl()
