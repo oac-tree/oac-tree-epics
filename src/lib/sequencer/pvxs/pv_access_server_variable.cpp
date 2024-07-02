@@ -22,6 +22,7 @@
 #include "pv_access_server_variable.h"
 
 #include "pv_access_helper.h"
+#include "pv_access_shared_server.h"
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/variable_registry.h>
@@ -39,6 +40,12 @@ namespace sequencer
 const std::string PvAccessServerVariable::Type = "PvAccessServer";
 static bool PvAccessServerVariable_initialised_flag =
   RegisterGlobalVariable<PvAccessServerVariable>();
+
+PvAccessSharedServer& GetSharedPvAccessServer()
+{
+  static PvAccessSharedServer shared_server{};
+  return shared_server;
+}
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
 const std::string TYPE_ATTRIBUTE_NAME = "type";

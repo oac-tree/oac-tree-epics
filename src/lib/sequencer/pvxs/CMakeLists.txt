@@ -15,6 +15,7 @@ target_sources(sequencer-pvxs
   pv_access_helper.cpp
   pv_access_read_instruction.cpp
   pv_access_server_variable.cpp
+  pv_access_shared_server.cpp
   pv_access_write_instruction.cpp
   rpc_client_instruction.cpp
 )
