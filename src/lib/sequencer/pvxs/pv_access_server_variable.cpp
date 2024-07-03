@@ -104,7 +104,7 @@ bool PvAccessServerVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(value);
 }
 
-void PvAccessServerVariable::SetupImpl(const Workspace& ws)
+SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
 {
   sup::dto::JSONAnyTypeParser parser;
   auto type_attr_val = GetAttributeString(TYPE_ATTRIBUTE_NAME);
@@ -127,13 +127,13 @@ void PvAccessServerVariable::SetupImpl(const Workspace& ws)
   auto start_value = pv_access_helper::PackIntoStructIfScalar(val);
   GetSharedPvAccessServer().AddVariable(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), start_value,
                                         callback);
-  ws.RegisterSetupFunction(PvAccessServerVariable::Type, []() {
-    GetSharedPvAccessServer().Setup();
-  });
-  ws.RegisterTeardownFunction(PvAccessServerVariable::Type, []() {
-    GetSharedPvAccessServer().Teardown();
-  });
+  SetupTeardownActions actions{
+    PvAccessServerVariable::Type,
+    []() { GetSharedPvAccessServer().Setup(); },
+    []() { GetSharedPvAccessServer().Teardown(); }
+  };
   Notify(start_value, true);
+  return actions;
 }
 
 void PvAccessServerVariable::ResetImpl(const Workspace& ws)

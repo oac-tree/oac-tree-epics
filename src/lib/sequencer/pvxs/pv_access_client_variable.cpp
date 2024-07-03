@@ -99,7 +99,7 @@ bool PvAccessClientVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(value);
 }
 
-void PvAccessClientVariable::SetupImpl(const Workspace& ws)
+SetupTeardownActions PvAccessClientVariable::SetupImpl(const Workspace& ws)
 {
   if (HasAttribute(TYPE_ATTRIBUTE_NAME))
   {
@@ -131,6 +131,7 @@ void PvAccessClientVariable::SetupImpl(const Workspace& ws)
   };
   m_pv.reset(new epics::PvAccessClientPV(
     GetAttributeString(CHANNEL_ATTRIBUTE_NAME), callback));
+  return {};
 }
 
 void PvAccessClientVariable::TeardownImpl()

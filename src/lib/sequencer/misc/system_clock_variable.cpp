@@ -75,7 +75,7 @@ bool SystemClockVariable::SetValueImpl(const sup::dto::AnyValue&)
   return false;
 }
 
-void SystemClockVariable::SetupImpl(const Workspace&)
+SetupTeardownActions SystemClockVariable::SetupImpl(const Workspace&)
 {
   if (HasAttribute(TIMEFORMAT_ATTRIBUTE_NAME))
   {
@@ -102,6 +102,7 @@ void SystemClockVariable::SetupImpl(const Workspace&)
   {
     Notify(*time_av, true);
   }
+  return {};
 }
 
 void SystemClockVariable::TeardownImpl()

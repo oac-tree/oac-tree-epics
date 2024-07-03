@@ -94,7 +94,7 @@ bool ChannelAccessClientVariable::IsAvailableImpl() const
   return !sup::dto::IsEmptyValue(ext_value.value);
 }
 
-void ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
+SetupTeardownActions ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
 {
   sup::dto::JSONAnyTypeParser parser;
   auto type_attr_val = GetAttributeString(TYPE_ATTRIBUTE_NAME);
@@ -121,6 +121,7 @@ void ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
     };
   m_pv.reset(new epics::ChannelAccessPV(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
                                         channel_type, callback));
+  return {};
 }
 
 void ChannelAccessClientVariable::TeardownImpl()
