@@ -1,6 +1,8 @@
+
 Changes for 3.2.0:
 
 - Adapt API changes of sequencer v3.2
+- Fix CA variable behaviour when disconnected
 
 Changes for 3.1.0:
 

@@ -20,8 +20,11 @@
  ******************************************************************************/
 
 #include <sup/epics-test/unit_test_helper.h>
+#include "unit_test_helper.h"
 
 #include <sup/sequencer/exceptions.h>
+#include <sup/sequencer/sequence_parser.h>
+#include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
@@ -50,6 +53,15 @@ record (bo,"SEQ-TEST:BOOL2")
     field(ZSV,"NO_ALARM")
     field(VAL,"0")
     field(PINI, "YES")
+}
+)RAW";
+
+static const std::string LONG_RECORD_DB_CONTENT = R"RAW(
+record (longout,"SEQ-TEST:LONG")
+{
+    field(DESC,"Some EPICSv3 record")
+    field(VAL,"4")
+    field(PINI,"YES")
 }
 )RAW";
 
@@ -172,6 +184,64 @@ TEST_F(ChannelAccessClientVariableTest, GetValueDisconnect)
   ASSERT_TRUE(ws.GetValue("var.connected", connected));
   EXPECT_EQ(connected.GetType(), sup::dto::BooleanType);
   EXPECT_FALSE(connected.As<bool>());
+}
+
+TEST_F(ChannelAccessClientVariableTest, CopyValueDisconnect)
+{
+  DefaultUserInterface ui;
+  std::string procedure_body{
+      R"RAW(
+  <ParallelSequence isRoot="true" successThreshold="1" failureThreshold="1">
+    <Repeat maxCount="-1">
+      <ForceSuccess>
+        <Copy inputVar="CA1" outputVar="var1"/>
+      </ForceSuccess>
+    </Repeat>
+    <ForceSuccess>
+      <Wait timeout="10.0"/>
+    </ForceSuccess>
+    <ForceSuccess>
+      <Repeat maxCount="-1">
+        <Inverter>
+          <Equals leftVar="True" rightVar="var1.connected"/>
+        </Inverter>
+      </Repeat>
+    </ForceSuccess>
+  </ParallelSequence>
+  <Workspace>
+    <ChannelAccessClient channel="SEQ-TEST:LONG" name="CA1" type='{"type":"struct","attributes":[{"connected":{"type":"bool"}},{"value":{"type":"int64"}}]}'/>
+    <Local dynamicType="true" name="var1" type='{"type":"bool"}' value="false"/>
+    <Local name="True" type='{"type":"bool"}' value="true"/>
+    <Local name="False" type='{"type":"bool"}' value="false"/>
+  </Workspace>
+)RAW"};
+
+  m_softioc_runner.Start(LONG_RECORD_DB_CONTENT);
+  // read variable when server is online
+  ASSERT_TRUE(m_softioc_runner.IsActive());
+  const auto procedure_string_true = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string_true);
+  EXPECT_TRUE(unit_test_helper::TryAndExecuteNoReset(proc, ui, ExecutionStatus::SUCCESS));
+  Workspace &ws = proc->GetWorkspace();
+  sup::dto::AnyValue connected_var;
+  EXPECT_TRUE(ws.GetValue("var1", connected_var));
+  EXPECT_TRUE(connected_var["connected"].As<bool>());
+  proc->Teardown(ui);
+
+  // turn off the server
+  m_softioc_runner.Stop();
+
+  // change the procedure to expect the connected field to be false
+  std::string sub_true = "leftVar=\"True\"";
+  std::string sub_false = "leftVar=\"False\"";
+  procedure_body.replace(procedure_body.find(sub_true), sub_true.size(), sub_false);
+  const auto procedure_string_false = unit_test_helper::CreateProcedureString(procedure_body);
+  proc = ParseProcedureString(procedure_string_false);
+  EXPECT_TRUE(unit_test_helper::TryAndExecuteNoReset(proc, ui, ExecutionStatus::SUCCESS));
+  sup::dto::AnyValue connected_var2;
+  Workspace &ws2 = proc->GetWorkspace();
+  EXPECT_TRUE(ws2.GetValue("var1", connected_var2));
+  EXPECT_FALSE(connected_var2["connected"].As<bool>());
 }
 
 TEST_F(ChannelAccessClientVariableTest, GetValueExtended)
