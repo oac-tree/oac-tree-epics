@@ -23,6 +23,7 @@
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/sequence_parser.h>
+#include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/variable.h>
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
@@ -31,6 +32,7 @@
 
 #include <gtest/gtest.h>
 #include <sup/epics-test/unit_test_helper.h>
+#include "unit_test_helper.h"
 
 using namespace sup::sequencer;
 
@@ -101,6 +103,28 @@ TEST_F(PvAccessServerVariableTest, ScalarSetup)
   EXPECT_TRUE(variable.GetValue(value));
   EXPECT_EQ(value.GetType(), sup::dto::UnsignedInteger64Type);
   EXPECT_TRUE(variable.IsAvailable());
+}
+
+TEST_F(PvAccessServerVariableTest, MultipleScalarSetup)
+{
+  DefaultUserInterface ui;
+
+  std::string procedure_body{
+      R"RAW(
+  <ForceSuccess isRoot="true">
+    <Equals leftVar="True" rightVar="num1"/>
+  </ForceSuccess>
+  <Workspace>
+    <PvAccessServer channel="test::var1" name="num1" type='{"type":"bool"}' value="true"/>
+    <PvAccessServer channel="test::var2" name="num2" type='{"type":"uint64"}' value="0"/>
+    <Local name="True" type='{"type":"bool"}' value="true"/>
+  </Workspace>
+)RAW"};
+
+  // read variable when server is online
+  const auto procedure_string_true = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string_true);
+  EXPECT_TRUE(unit_test_helper::TryAndExecuteNoReset(proc, ui, ExecutionStatus::SUCCESS));
 }
 
 //! Server creates a structure with the value.
