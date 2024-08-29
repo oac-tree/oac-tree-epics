@@ -192,20 +192,18 @@ TEST_F(ChannelAccessClientVariableTest, CopyValueDisconnect)
   std::string procedure_body{
       R"RAW(
   <ParallelSequence isRoot="true" successThreshold="1" failureThreshold="1">
-    <Repeat maxCount="-1">
-      <ForceSuccess>
-        <Copy inputVar="CA1" outputVar="var1"/>
-      </ForceSuccess>
-    </Repeat>
     <ForceSuccess>
       <Wait timeout="10.0"/>
     </ForceSuccess>
     <ForceSuccess>
-      <Repeat maxCount="-1">
+      <Listen varNames="CA1">
         <Inverter>
-          <Equals leftVar="True" rightVar="var1.connected"/>
+          <Sequence>
+            <Copy inputVar="CA1" outputVar="var1"/>
+            <Equals leftVar="True" rightVar="var1.connected"/>
+          </Sequence>
         </Inverter>
-      </Repeat>
+      </Listen>
     </ForceSuccess>
   </ParallelSequence>
   <Workspace>
