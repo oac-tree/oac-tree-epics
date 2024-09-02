@@ -132,7 +132,7 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
     []() { GetSharedPvAccessServer().Setup(); },
     []() { GetSharedPvAccessServer().Teardown(); }
   };
-  Notify(start_value, true);
+  Notify(val, true);
   return actions;
 }
 

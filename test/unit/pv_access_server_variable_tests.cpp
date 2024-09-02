@@ -97,7 +97,17 @@ TEST_F(PvAccessServerVariableTest, ScalarSetup)
   PvAccessServerVariable variable;
   EXPECT_NO_THROW(variable.AddAttribute("channel", "pvaccess-server-var-test::scalar-setup"));
   EXPECT_NO_THROW(variable.AddAttribute("type", R"RAW({"type":"uint64"})RAW"));
+  // Add callback:
+  bool val_ok = false;
+  auto cb = [&val_ok](const sup::dto::AnyValue& val, bool connected) {
+    if (connected && val.GetType() == sup::dto::UnsignedInteger64Type)
+    {
+      val_ok = true;
+    }
+  };
+  EXPECT_NO_THROW(variable.SetNotifyCallback(cb));
   EXPECT_NO_THROW(variable.Setup(ws));
+  EXPECT_TRUE(val_ok);
 
   sup::dto::AnyValue value;
   EXPECT_TRUE(variable.GetValue(value));
