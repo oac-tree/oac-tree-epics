@@ -20,9 +20,11 @@
  ******************************************************************************/
 
 #include <sequencer/pvxs/pv_access_client_variable.h>
+#include "unit_test_helper.h"
 
 #include <sup/sequencer/exceptions.h>
 #include <sup/sequencer/sequence_parser.h>
+#include <sup/sequencer/user_interface.h>
 #include <sup/sequencer/variable_registry.h>
 #include <sup/sequencer/workspace.h>
 
@@ -246,6 +248,34 @@ TEST_F(PvAccessClientVariableTest, ScalarClient)
     auto server_val = server.GetValue(channel);
     return server_val.HasField("value") && server_val["value"] == new_value;
   }));
+}
+
+TEST_F(PvAccessClientVariableTest, WriteIndexFieldAsBool)
+{
+  DefaultUserInterface ui;
+  std::string procedure_body{
+      R"RAW(
+    <RegisterType jsontype='{"type":"enum_t","attributes":[{"index":{"type":"int32"}},{"choices":{"type":"","element":{"type":"string"},"multiplicity":2}}]}'/>
+    <RegisterType jsontype='{"type":"NTEnum","attributes":[{"value":{"type":"enum_t"}}]}'/>
+    <Sequence>
+        <WaitForVariables varType="PvAccessClient" timeout="5.0"/>
+        <Copy inputVar="b_on" outputVar="enum_local.value.index"/>
+        <Copy inputVar="b_on" outputVar="enum_client.value.index"/>
+        <Equals leftVar="enum_client" rightVar="enum_local"/>
+    </Sequence>
+    <Workspace>
+        <PvAccessServer name="enum_server" channel="seq::test::enum_test" type='{"type":"NTEnum"}'/>
+        <PvAccessClient name="enum_client" channel="seq::test::enum_test"/>
+        <Local name="enum_local" type='{"type":"NTEnum"}'
+               value='{"value":{"index":0,"choices":["OFF","ON"]}}'/>
+        <Local name="b_on" type='{"type":"bool"}' value='true'/>
+    </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  ASSERT_TRUE(proc);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::SUCCESS));
 }
 
 PvAccessClientVariableTest::PvAccessClientVariableTest() = default;
