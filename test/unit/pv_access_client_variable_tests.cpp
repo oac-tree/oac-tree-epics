@@ -261,10 +261,10 @@ TEST_F(PvAccessClientVariableTest, WriteIndexFieldAsBool)
         <WaitForVariables varType="PvAccessClient" timeout="5.0"/>
         <Copy inputVar="b_on" outputVar="enum_local.value.index"/>
         <Copy inputVar="b_on" outputVar="enum_client.value.index"/>
-        <Equals leftVar="enum_client" rightVar="enum_local"/>
     </Sequence>
     <Workspace>
-        <PvAccessServer name="enum_server" channel="seq::test::enum_test" type='{"type":"NTEnum"}'/>
+        <PvAccessServer name="enum_server" channel="seq::test::enum_test" type='{"type":"NTEnum"}'
+               value='{"value":{"index":0,"choices":["OFF","ON"]}}'/>
         <PvAccessClient name="enum_client" channel="seq::test::enum_test"/>
         <Local name="enum_local" type='{"type":"NTEnum"}'
                value='{"value":{"index":0,"choices":["OFF","ON"]}}'/>
@@ -275,7 +275,21 @@ TEST_F(PvAccessClientVariableTest, WriteIndexFieldAsBool)
   const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
   auto proc = ParseProcedureString(procedure_string);
   ASSERT_TRUE(proc);
-  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui, ExecutionStatus::SUCCESS));
+  EXPECT_TRUE(unit_test_helper::TryAndExecuteNoReset(proc, ui, ExecutionStatus::SUCCESS));
+  auto choices = sup::dto::ArrayValue({ "OFF", "ON" });
+  sup::dto::AnyValue expected_enum = {{
+      { "index", { sup::dto::SignedInteger32Type, 1 } },
+      { "choices", choices }
+    }, "enum_t" };
+  sup::dto::AnyValue expected{{
+    { "value", expected_enum }
+  }, "NTEnum"};
+  Workspace &ws = proc->GetWorkspace();
+  EXPECT_TRUE(sup::epics::test::BusyWaitFor(2.0, [&ws, expected]{
+    sup::dto::AnyValue read_back;
+    (void)ws.GetValue("enum_client", read_back);
+    return read_back == expected;
+  }));
 }
 
 PvAccessClientVariableTest::PvAccessClientVariableTest() = default;
