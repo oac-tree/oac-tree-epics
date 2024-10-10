@@ -1,7 +1,5 @@
 add_library(sequencer-ca SHARED)
 
-target_compile_features(sequencer-ca PRIVATE cxx_std_11)
-
 set_target_properties(sequencer-ca PROPERTIES
   EXPORT_NAME sequencer-ca
   SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}

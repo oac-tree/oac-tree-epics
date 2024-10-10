@@ -1,7 +1,5 @@
 add_library(sequencer-pvxs SHARED)
 
-target_compile_features(sequencer-pvxs PRIVATE cxx_std_11)
-
 set_target_properties(sequencer-pvxs PROPERTIES
   EXPORT_NAME sequencer-pvxs
   SOVERSION ${SUP_SEQUENCER_PLUGIN_EPICS_SOVERSION}
