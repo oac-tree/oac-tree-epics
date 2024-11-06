@@ -43,12 +43,12 @@ static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml ve
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <RegisterType jsontype='{"type":"seq::wrong-field-test::channel-type","attributes":[{"value":{"type":"uint16"}}]}'/>
     <PvAccessRead name="read from pv"
-                  channel="seq::read-test::variable2"
+                  channel="pva-read-instr-test::variable2"
                   outputVar="pvxs-value.value"
                   timeout="2.0"/>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
-                        channel="seq::read-test::variable2"
+                        channel="pva-read-instr-test::variable2"
                         type='{"type":"seq::wrong-field-test::channel-type"}'/>
                         value='{"value":1.0}'/>
         <Local name="pvxs-value"
@@ -64,14 +64,14 @@ static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version=
     <RegisterType jsontype='{"type":"seq::pva_read_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <Sequence>
         <PvAccessRead name="read from pv"
-                      channel="seq::read-test::variable"
+                      channel="pva-read-instr-test::variable"
                       outputVar="pvxs-value"
                       timeout="2.0"/>
         <Equals leftVar="pvxs-variable" rightVar="pvxs-value"/>
     </Sequence>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
-                        channel="seq::read-test::variable"
+                        channel="pva-read-instr-test::variable"
                         type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
                         value='{"value":1.0}'/>
         <Local name="pvxs-value"
@@ -211,13 +211,13 @@ R"RAW(
   <PvAccessRead channel="@chan" outputVar="pvxs-value" timeout="@mytimeout"/>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
-                    channel="seq::read-test::variable"
+                    channel="pva-read-instr-test::variable3"
                     type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
                     value='{"value":1.0}'/>
     <Local name="pvxs-value"
            type='{"type":"seq::pva_read_test::Type/v1.0"}'
            value='{"value":0.0}'/>
-    <Local name="chan" type='{"type":"string"}' value='"seq::read-test::variable"'/>
+    <Local name="chan" type='{"type":"string"}' value='"pva-read-instr-test::variable3"'/>
     <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
   </Workspace>
 )RAW"};
@@ -236,7 +236,7 @@ R"RAW(
   <PvAccessRead channel="@chan" outputVar="pvxs-value" timeout="@mytimeout"/>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
-                    channel="seq::read-test::variable"
+                    channel="pva-read-instr-test::variable4"
                     type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
                     value='{"value":1.0}'/>
     <Local name="pvxs-value"
@@ -261,7 +261,7 @@ R"RAW(
   <PvAccessRead channel="@chan" outputVar="pvxs-value" timeout="@mytimeout"/>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
-                    channel="seq::read-test::variable"
+                    channel="pva-read-instr-test::variable5"
                     type='{"type":"seq::pva_read_test::Type/v1.0"}'/>
                     value='{"value":1.0}'/>
     <Local name="pvxs-value"
