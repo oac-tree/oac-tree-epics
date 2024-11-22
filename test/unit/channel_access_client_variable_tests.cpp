@@ -224,7 +224,7 @@ TEST_F(ChannelAccessClientVariableTest, CopyValueDisconnect)
   sup::dto::AnyValue connected_var;
   EXPECT_TRUE(ws.GetValue("var1", connected_var));
   EXPECT_TRUE(connected_var["connected"].As<bool>());
-  proc->Teardown(ui);
+  proc->Reset(ui);
 
   // turn off the server
   m_softioc_runner.Stop();
