@@ -57,6 +57,48 @@ Before being able to use this plugin in a procedure, the user have it installed 
 
 The user is then able to use all instructions and variables provided by this plugin.
 
+Instructions
+------------
+
+ChannelAccessRead
+^^^^^^^^^^^^^^^^^
+
+The `ChannelAccessRead` instruction tries to read an EPICS ChannelAccess process variable on the network and writes its value to a workspace variable if successful. When the process variable cannot be found on the network, or copying the value to a workspace variable fails, e.g. due to incompatible types, the instruction will return `FAILURE`.
+
+.. list-table::
+   :widths: 25 25 15 50
+   :header-rows: 1
+
+   * - Attribute name
+     - Attribute type
+     - Mandatory
+     - Description
+   * - channel
+     - StringType
+     - yes
+     - name of the EPICS ChannelAccess channel of the process variable
+   * - outputVar
+     - StringType
+     - yes
+     - name of the workspace variable (or field thereof) where to write the read value
+   * - timeout
+     - Float64Type
+     - no
+     - timeout in seconds to wait for a successful channel connection (default: 2.0)
+
+.. _ca_read_example:
+
+**Example**
+
+This procedure will try to connect to an EPICS ChannelAccess process variable with a maximum timeout of 5 seconds. Then it will read its value and copy it to the local workspace variable. If successful, the local variable with name `to-write` will contain the value of the ChannelAccess process variable. Only on successful completion of the reading and write operation will the instruction return `SUCCESS`. In all other cases, the instruction returns `FAILURE`.
+
+.. code-block:: xml
+
+    <PvAccessRead channel="seq::test::variable" timeout="5.0" outputVar="to-write"/>
+    <Workspace>
+        <Local name="to-write"/>
+    </Workspace>
+
 Indices and tables
 ==================
 
