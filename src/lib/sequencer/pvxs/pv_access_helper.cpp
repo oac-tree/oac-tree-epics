@@ -23,9 +23,6 @@
 
 #include <sup/dto/anyvalue_helper.h>
 
-static const std::vector<std::string> EXPECTED_FIELD_NAMES_SCALAR_STRUCT(
-  {sup::sequencer::pv_access_helper::VALUE_FIELD_NAME});
-
 namespace sup
 {
 namespace sequencer
@@ -37,8 +34,7 @@ sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
                                           const sup::dto::AnyType& anytype)
 {
   sup::dto::AnyValue result{anytype};
-  if (sup::dto::IsScalarType(anytype) &&
-      value.MemberNames() == EXPECTED_FIELD_NAMES_SCALAR_STRUCT)
+  if (sup::dto::IsScalarType(anytype) && value.HasField(VALUE_FIELD_NAME))
   {
     if (sup::dto::TryConvert(result, value[VALUE_FIELD_NAME]))
     {
