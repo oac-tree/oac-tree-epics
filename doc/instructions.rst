@@ -74,6 +74,10 @@ The ``ChannelAccessWrite`` instruction tries to write a value to an EPICS Channe
      - no
      - timeout in seconds to wait for a successful channel connection (default: 2.0)
 
+.. note::
+
+   The user must provide either the ``varName`` attribute or both the ``type`` and ``value`` attributes.
+
 .. _ca_write_example:
 
 **Example**
@@ -158,6 +162,10 @@ The ``PvAccessWrite`` instruction tries to write a value to an EPICS PvAccess pr
      - no
      - timeout in seconds to wait for a successful channel connection (default: 2.0)
 
+.. note::
+
+   The user must provide either the ``varName`` attribute or both the ``type`` and ``value`` attributes.
+
 .. _pva_write_example:
 
 **Example**
@@ -207,6 +215,10 @@ The ``RPCClient`` executes a Remote Procedure Call on an EPICS PvAccess RPC serv
      - Float64Type
      - no
      - timeout in seconds to wait for a successful connection (default: 5.0)
+
+.. note::
+
+   The user must provide either the ``requestVar`` attribute or both the ``type`` and ``value`` attributes.
 
 .. _rpc_client_example:
 

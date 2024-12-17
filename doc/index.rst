@@ -10,3 +10,4 @@ Welcome to sequencer-plugin-epics's documentation!
    overview
    usage
    instructions
+   variables
