@@ -175,8 +175,8 @@ This procedure will try to write the struct with floating point member value ``3
 .. code-block:: xml
 
     <PvAccessWrite channel="seq::test::variable" timeout="5.0"
-                        type='{"type":"myFloat","attributes":[{"value":{"type":"float32"}}]}'
-                        value='{"value":3.14}'/>
+                   type='{"type":"myFloat","attributes":[{"value":{"type":"float32"}}]}'
+                   value='{"value":3.14}'/>
 
 RPCClient
 ^^^^^^^^^
