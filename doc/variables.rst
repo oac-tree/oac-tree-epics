@@ -4,7 +4,7 @@ Variables
 ChannelAccessClient
 ^^^^^^^^^^^^^^^^^^^
 
-``ChannelAccessClient`` is a workspace variable type that connects as a client to an EPICS ChannelAccess process variable. Read and write operations to this variables will result in reading and writing the process variables on the network.
+``ChannelAccessClient`` is a workspace variable type that connects as a client to an EPICS ChannelAccess process variable. Read and write operations to these variables will result in reading and writing the process variables on the network.
 
 .. list-table::
    :widths: 25 25 15 50
@@ -55,7 +55,7 @@ This procedure contains a ``ChannelAccessClient`` workspace variable that will c
 PvAccessClient
 ^^^^^^^^^^^^^^
 
-``PvAccessClient`` is a workspace variable type that connects as a client to an EPICS PvAccess process variable. Read and write operations to this variables will result in reading and writing the process variables on the network.
+``PvAccessClient`` is a workspace variable type that connects as a client to an EPICS PvAccess process variable. Read and write operations to these variables will result in reading and writing the process variables on the network.
 
 .. list-table::
    :widths: 25 25 15 50
