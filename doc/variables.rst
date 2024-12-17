@@ -21,7 +21,7 @@ ChannelAccessClient
    * - type
      - StringType
      - yes
-     - JSON representation of the type of the input value
+     - JSON representation of the type of the variable
 
 .. note::
 
@@ -72,13 +72,13 @@ PvAccessClient
    * - type
      - StringType
      - no
-     - JSON representation of the type of the input value
+     - JSON representation of the type of the variable
 
 .. note::
 
    The ``type`` attribute is used to define the type of the process variable's value. If it is a scalar type, the EPICS PvAccess process variable has to be a structured value with a scalar ``value`` member field, whose value will be cached in the workspace variable. If it is a structured type, the type of the process variable has to be convertible to it. This implies the exact same fields in the structure and the convertibility of all of its leaf values. For structured types, it is more convenient to not define this ``type`` attribute at all, so that the type will be an exact copy of the process variable's type.
 
-.. _pv_client_example:
+.. _pva_client_example:
 
 **Example**
 
@@ -94,4 +94,61 @@ This procedure contains a ``PvAccessClient`` workspace variable that will connec
         <PvAccessClient name="pva_pv" channel='EXAMPLE:SETPOINT' type='{"type":"float64"}'/>
         <Local name="cache">
         <Local name="threshold" type='{"type":"float64"}' value='4000.0'>
+    </Workspace>
+
+PvAccessServer
+^^^^^^^^^^^^^^
+
+``PvAccessServer`` is a workspace variable type that acts as a server for a EPICS PvAccess process variable. Its value be published to PvAccess clients on the network.
+
+.. list-table::
+   :widths: 25 25 15 50
+   :header-rows: 1
+
+   * - Attribute name
+     - Attribute type
+     - Mandatory
+     - Description
+   * - channel
+     - StringType
+     - yes
+     - name of EPICS PvAccess channel
+   * - type
+     - StringType
+     - yes
+     - JSON representation of the type of the variable
+   * - value
+     - StringType
+     - no
+     - JSON representation of the initial value of the variable
+
+.. note::
+
+   The ``type`` attribute is used to define the type of the process variable's value. If it is a scalar type, the underlying EPICS PvAccess process variable will be a structured value with a single scalar ``value`` member field of that type. If it is a structured type, it will be used directly as the type of the underlying process variable.
+
+.. warning::
+
+   The implementation is based on the ``PVXS`` library, which provides some restrictions to the possible types that can be used. In particular, the following restriction apply:
+
+   * Scalar nodes (inside a structure or array) of the type ``char8`` will be converted to ``uint8``;
+   * Arrays of structures are not supported;
+   * Arrays, both when top level or as members of a struct, cannot be named.
+
+.. _pva_server_example:
+
+**Example**
+
+This procedure contains a ``PvAccessServer`` workspace variable that will publish an EPICS PvAccess process variable with a structured type that has a single integer field with name ``value``. The procedure will perform a loop of 10 iterations, each iteration consisting of the increment of the published value and a one second waiting instruction. At the end of the procedure, the EPICS PvAccess process variable will contain the value 10.
+
+.. code-block:: xml
+
+    <Repeat maxCount="10">
+        <Sequence>
+            <Increment varName="pva_pv"/>
+            <Wait name="wait" timeout="1.0"/>
+        </Sequence>
+    </Repeat>
+    <Workspace>
+        <PvAccessServer name="pva_pv" channel="EXAMPLE:COUNTER"
+                        type='{"type":"uint64"}' value='0'/>
     </Workspace>
