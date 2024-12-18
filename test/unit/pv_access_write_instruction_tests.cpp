@@ -322,11 +322,15 @@ TEST_F(PvAccessWriteInstructionTest, VariableAttributes)
   const std::string procedure_body{
 R"RAW(
   <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
-  <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
+  <Sequence>
+    <WaitForVariable varName="pvxs-client" timeout="3.0"/>
+    <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
+  </Sequence>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
                     channel="seq::write-test::variable"
                     type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
+    <PvAccessClient name="pvxs-client" channel="seq::write-test::variable"/>
     <Local name="pvxs-value"
            type='{"type":"seq::pva_write_test::Type/v1.0"}'
            value='{"value":1.0}'/>
