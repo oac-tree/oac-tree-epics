@@ -48,11 +48,11 @@ static const std::string PV_ACCESS_CHANNEL_MISMATCH_PROCEDURE = R"RAW(<?xml vers
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <PvAccessWrite name="write to pv"
-                   channel="seq::write-test::variable"
+                   channel="seq::write-test::var_1"
                    varName="pvxs-value"/>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
-                        channel="seq::write-test::variable"
+                        channel="seq::write-test::var_1"
                         type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
         <Local name="pvxs-value"
                type='{"type":"string"}'
@@ -67,11 +67,11 @@ static const std::string PV_ACCESS_WRITE_SUCCESS_PROCEDURE = R"RAW(<?xml version
            xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
     <RegisterType jsontype='{"type":"seq::pva_write_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <PvAccessWrite name="write to pv"
-                   channel="seq::write-test::variable"
+                   channel="seq::write-test::var_2"
                    varName="pvxs-value"/>
     <Workspace>
         <PvAccessServer name="pvxs-variable"
-                        channel="seq::write-test::variable"
+                        channel="seq::write-test::var_2"
                         type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
         <Local name="pvxs-value"
                type='{"type":"seq::pva_write_test::Type/v1.0"}'
@@ -279,7 +279,7 @@ TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto last_log_entry = ui.m_log_entries.back();
   EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("seq::write-test::variable"), std::string::npos);
+  EXPECT_NE(last_log_entry.second.find("seq::write-test::var_1"), std::string::npos);
   EXPECT_NE(last_log_entry.second.find("my_string"), std::string::npos);
 }
 
@@ -301,7 +301,7 @@ TEST_F(PvAccessWriteInstructionTest, Success)
     // Creating sequencer's PvAccessClientVariable
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
-  EXPECT_NO_THROW(variable->AddAttribute("channel", "seq::write-test::variable"));
+  EXPECT_NO_THROW(variable->AddAttribute("channel", "seq::write-test::var_2"));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());
   EXPECT_TRUE(ws.WaitForVariable("var", 5.0));
@@ -328,13 +328,13 @@ R"RAW(
   </Sequence>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
-                    channel="seq::write-test::variable"
+                    channel="seq::write-test::var_3"
                     type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
-    <PvAccessClient name="pvxs-client" channel="seq::write-test::variable"/>
+    <PvAccessClient name="pvxs-client" channel="seq::write-test::var_3"/>
     <Local name="pvxs-value"
            type='{"type":"seq::pva_write_test::Type/v1.0"}'
            value='{"value":1.0}'/>
-    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::variable"'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::var_3"'/>
     <Local name="mytimeout" type='{"type":"float64"}' value='3.0'/>
   </Workspace>
 )RAW"};
@@ -353,12 +353,12 @@ R"RAW(
   <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
-                    channel="seq::write-test::variable"
+                    channel="seq::write-test::var_4"
                     type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
     <Local name="pvxs-value"
            type='{"type":"seq::pva_write_test::Type/v1.0"}'
            value='{"value":1.0}'/>
-    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::variable"'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::var_4"'/>
     <Local name="mytimeout" type='{"type":"string"}' value='"3.0"'/>
   </Workspace>
 )RAW"};
@@ -377,12 +377,12 @@ R"RAW(
   <PvAccessWrite channel="@chan" varName="pvxs-value" timeout="@mytimeout"/>
   <Workspace>
     <PvAccessServer name="pvxs-variable"
-                    channel="seq::write-test::variable"
+                    channel="seq::write-test::var_5"
                     type='{"type":"seq::pva_write_test::Type/v1.0"}'/>
     <Local name="pvxs-value"
            type='{"type":"seq::pva_write_test::Type/v1.0"}'
            value='{"value":1.0}'/>
-    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::variable"'/>
+    <Local name="chan" type='{"type":"string"}' value='"seq::write-test::var_5"'/>
   </Workspace>
 )RAW"};
 
