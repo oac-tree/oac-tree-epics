@@ -3,6 +3,7 @@ Changes for 3.3.0:
 - Relax conditions on PvAccessClient variable with scalar type
 - Sphinx documentation
 - Add unit tests
+- Changed C++ standard to C++17
 
 Changes for 3.2.0:
 
