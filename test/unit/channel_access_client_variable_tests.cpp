@@ -380,7 +380,6 @@ TEST_F(ChannelAccessClientVariableTest, SetValueUnconnected)
 TEST_F(ChannelAccessClientVariableTest, SetValueWrongStruct)
 {
   Workspace ws;
-  sup::epics::ChannelAccessClient ca_client;
 
   auto variable = GlobalVariableRegistry().Create("ChannelAccessClient");
   ASSERT_TRUE(static_cast<bool>(variable));
