@@ -43,8 +43,8 @@ const std::string TYPE_ATTRIBUTE_NAME = "type";
 
 ChannelAccessClientVariable::ChannelAccessClientVariable()
   : Variable(ChannelAccessClientVariable::Type)
-  , m_pv{}
   , m_type{}
+  , m_pv{}
 {
   AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
   AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
