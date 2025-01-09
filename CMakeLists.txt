@@ -17,7 +17,7 @@
 cmake_minimum_required(VERSION 3.13...3.31)
 project(sup-sequencer-plugin-epics VERSION 3.3.0 LANGUAGES CXX)
 
-option(COVERAGE "Generate unit test coverage information" OFF)
+option(COA_COVERAGE "Generate unit test coverage information" OFF)
 option(COA_BUILD_TESTS "Build unit tests" ON)
 option(COA_BUILD_DOCUMENTATION "Build documentation" OFF)
 option(COA_NO_CODAC "Don't look for the presence of CODAC environment" OFF)
