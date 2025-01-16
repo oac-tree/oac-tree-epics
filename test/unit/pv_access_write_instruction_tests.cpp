@@ -148,9 +148,9 @@ TEST_F(PvAccessWriteInstructionTest, MissingVariable)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("DoesNotExist"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("DoesNotExist"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, MissingVariableField)
@@ -172,9 +172,9 @@ TEST_F(PvAccessWriteInstructionTest, MissingVariableField)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("var.val"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("var.val"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
@@ -195,9 +195,9 @@ TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("var"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("var"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, TypeParseError)
@@ -215,9 +215,9 @@ TEST_F(PvAccessWriteInstructionTest, TypeParseError)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("TypeCannotBeParsed"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("TypeCannotBeParsed"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, ValueParseError)
@@ -235,9 +235,9 @@ TEST_F(PvAccessWriteInstructionTest, ValueParseError)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("ValueCannotBeParsed"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("ValueCannotBeParsed"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
@@ -256,9 +256,9 @@ TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("Does_Not_Exist"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("Does_Not_Exist"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
@@ -277,10 +277,10 @@ TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
            (ExecutionStatus::FAILURE != exec));
   EXPECT_EQ(exec, ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("seq::write-test::var_1"), std::string::npos);
-  EXPECT_NE(last_log_entry.second.find("my_string"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("seq::write-test::var_1"), std::string::npos);
+  EXPECT_NE(message.find("my_string"), std::string::npos);
 }
 
 TEST_F(PvAccessWriteInstructionTest, Success)

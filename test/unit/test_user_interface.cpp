@@ -43,9 +43,9 @@ void LogUserInterface::Log(int severity, const std::string& message)
 std::string LogUserInterface::GetFullLog() const
 {
   std::ostringstream oss;
-  for (const auto& log_entry : m_log_entries)
+  for (const auto& [severity, message] : m_log_entries)
   {
-    oss << "Severity(" << log_entry.first << "): " << log_entry.second << std::endl;
+    oss << "Severity(" << severity << "): " << message << std::endl;
   }
   return oss.str();
 }

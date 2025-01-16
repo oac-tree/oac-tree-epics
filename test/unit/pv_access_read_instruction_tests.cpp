@@ -137,9 +137,9 @@ TEST_F(PvAccessReadInstructionTest, MissingVariable)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("DoesNotExist"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("DoesNotExist"), std::string::npos);
 }
 
 TEST_F(PvAccessReadInstructionTest, Timeout)
@@ -161,9 +161,9 @@ TEST_F(PvAccessReadInstructionTest, Timeout)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("ThisTimeouts"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("ThisTimeouts"), std::string::npos);
 }
 
 TEST_F(PvAccessReadInstructionTest, ProcedureWrongOutputField)
@@ -182,9 +182,9 @@ TEST_F(PvAccessReadInstructionTest, ProcedureWrongOutputField)
            (ExecutionStatus::FAILURE != exec));
   EXPECT_EQ(exec, ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("pvxs-value.value"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("pvxs-value.value"), std::string::npos);
 }
 
 TEST_F(PvAccessReadInstructionTest, ProcedureSuccess)

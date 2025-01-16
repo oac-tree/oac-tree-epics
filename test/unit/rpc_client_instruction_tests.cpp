@@ -158,9 +158,9 @@ TEST_F(RPCClientInstructionTest, MissingVariable)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("DoesNotExist"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("DoesNotExist"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, MissingVariableField)
@@ -182,9 +182,9 @@ TEST_F(RPCClientInstructionTest, MissingVariableField)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("var.val"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("var.val"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, EmptyVariable)
@@ -205,9 +205,9 @@ TEST_F(RPCClientInstructionTest, EmptyVariable)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("var"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("var"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, TypeParseError)
@@ -225,9 +225,9 @@ TEST_F(RPCClientInstructionTest, TypeParseError)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("TypeCannotBeParsed"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("TypeCannotBeParsed"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, ValueParseError)
@@ -245,9 +245,9 @@ TEST_F(RPCClientInstructionTest, ValueParseError)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("ValueCannotBeParsed"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("ValueCannotBeParsed"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, ServiceTimeout)
@@ -283,9 +283,9 @@ TEST_F(RPCClientInstructionTest, MissingOutput)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_ERR);
-  EXPECT_NE(last_log_entry.second.find("DoesNotExist"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_ERR);
+  EXPECT_NE(message.find("DoesNotExist"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
@@ -308,9 +308,9 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
   EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
-  auto last_log_entry = ui.m_log_entries.back();
-  EXPECT_EQ(last_log_entry.first, log::SUP_SEQ_LOG_WARNING);
-  EXPECT_NE(last_log_entry.second.find("var"), std::string::npos);
+  auto [severity, message] = ui.m_log_entries.back();
+  EXPECT_EQ(severity, log::SUP_SEQ_LOG_WARNING);
+  EXPECT_NE(message.find("var"), std::string::npos);
 }
 
 TEST_F(RPCClientInstructionTest, Success) // Must be associated to a variable in the workspace
