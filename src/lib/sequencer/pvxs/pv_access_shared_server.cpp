@@ -70,7 +70,7 @@ void PvAccessSharedServer::EnsureServer()
     auto callback = [this](const std::string& name, const sup::dto::AnyValue& value) {
       DelegateCallbacks(name, value);
     };
-    m_server.reset(new epics::PvAccessServer(callback));
+    m_server = std::make_unique<epics::PvAccessServer>(callback);
   }
 }
 

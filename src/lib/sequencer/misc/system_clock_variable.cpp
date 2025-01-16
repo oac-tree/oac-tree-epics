@@ -117,7 +117,7 @@ std::unique_ptr<sup::dto::AnyValue> SystemClockVariable::ReadCurrentTime() const
   sup::dto::AnyValue time_av = GetFormattedTime(timestamp, m_time_format);
   if (!sup::dto::IsEmptyValue(time_av))
   {
-    result.reset(new sup::dto::AnyValue(std::move(time_av)));
+    result = std::make_unique<sup::dto::AnyValue>(std::move(time_av));
   }
   return result;
 }

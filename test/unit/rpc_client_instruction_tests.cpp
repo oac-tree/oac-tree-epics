@@ -192,7 +192,7 @@ TEST_F(RPCClientInstructionTest, EmptyVariable)
   Procedure proc;
   Workspace ws;
 
-  auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
+  auto variable = std::make_unique<unit_test_helper::ReadOnlyVariable>(sup::dto::AnyValue{});
   EXPECT_NO_THROW(variable->Setup(ws));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
@@ -293,7 +293,7 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
   Procedure proc;
   Workspace ws;
 
-  auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
+  auto variable = std::make_unique<unit_test_helper::ReadOnlyVariable>(sup::dto::AnyValue{});
   EXPECT_NO_THROW(variable->Setup(ws));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 
@@ -404,7 +404,7 @@ RPCClientInstructionTest::~RPCClientInstructionTest() = default;
 void RPCClientInstructionTest::SetUpTestCase()
 {
   auto config = sup::epics::GetDefaultRPCServerConfig(TEST_SERVICE_NAME);
-  server.reset(new sup::epics::PvAccessRPCServer(config, m_handler));
+  server = std::make_unique<sup::epics::PvAccessRPCServer>(config, m_handler);
 }
 
 void RPCClientInstructionTest::TearDownTestCase()

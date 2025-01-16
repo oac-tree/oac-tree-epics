@@ -129,8 +129,8 @@ SetupTeardownActions PvAccessClientVariable::SetupImpl(const Workspace& ws)
     Notify(value, ext_value.connected);
     return;
   };
-  m_pv.reset(new epics::PvAccessClientPV(
-    GetAttributeString(CHANNEL_ATTRIBUTE_NAME), callback));
+  m_pv = std::make_unique<epics::PvAccessClientPV>(
+    GetAttributeString(CHANNEL_ATTRIBUTE_NAME), callback);
   return {};
 }
 

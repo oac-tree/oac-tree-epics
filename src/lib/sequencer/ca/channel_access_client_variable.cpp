@@ -119,14 +119,14 @@ SetupTeardownActions ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
       Notify(value, ext_value.connected);
       return;
     };
-  m_pv.reset(new epics::ChannelAccessPV(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
-                                        channel_type, callback));
+  m_pv = std::make_unique<epics::ChannelAccessPV>(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
+                                        channel_type, callback);
   return {};
 }
 
 void ChannelAccessClientVariable::TeardownImpl()
 {
-  m_pv.reset();
+  m_pv = nullptr;
   m_type = sup::dto::EmptyType;
 }
 

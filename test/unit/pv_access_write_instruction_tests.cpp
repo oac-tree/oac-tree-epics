@@ -182,7 +182,7 @@ TEST_F(PvAccessWriteInstructionTest, EmptyVariable)
   Procedure proc;
   Workspace ws;
 
-  auto variable = std::unique_ptr<Variable>{ new unit_test_helper::ReadOnlyVariable({}) };
+  auto variable = std::make_unique<unit_test_helper::ReadOnlyVariable>(sup::dto::AnyValue{});
   EXPECT_NO_THROW(variable->Setup(ws));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
 

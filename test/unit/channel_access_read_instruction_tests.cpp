@@ -339,7 +339,7 @@ TEST_F(ChannelAccessReadInstructionTest, ReadOnlyVariable)
 
   Workspace ws;
   sup::dto::AnyValue val = true;
-  auto variable = std::unique_ptr<Variable>{new unit_test_helper::ReadOnlyVariable(val)};
+  auto variable = std::make_unique<unit_test_helper::ReadOnlyVariable>(val);
   ASSERT_TRUE(static_cast<bool>(variable));
   EXPECT_TRUE(ws.AddVariable("var", std::move(variable)));
   EXPECT_NO_THROW(ws.Setup());

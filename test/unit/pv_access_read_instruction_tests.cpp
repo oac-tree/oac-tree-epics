@@ -285,7 +285,7 @@ PvAccessReadInstructionTest::~PvAccessReadInstructionTest() = default;
 
 void PvAccessReadInstructionTest::SetUpTestCase()
 {
-  server.reset(new sup::epics::PvAccessServer{});
+  server = std::make_unique<sup::epics::PvAccessServer>();
   sup::dto::AnyValue value = {
     { "enabled", { sup::dto::BooleanType, true }}
   };
