@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -22,25 +22,25 @@
 #include "test_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <sequencer/pvxs/pv_access_read_instruction.h>
+#include <oac-tree/pvxs/pv_access_read_instruction.h>
 
 #include <sup/epics/pv_access_server.h>
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/instruction.h>
-#include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/log_severity.h>
-#include <sup/sequencer/procedure.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/instruction.h>
+#include <sup/oac-tree/instruction_registry.h>
+#include <sup/oac-tree/log_severity.h>
+#include <sup/oac-tree/procedure.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <gtest/gtest.h>
 
 static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
     <RegisterType jsontype='{"type":"seq::wrong-field-test::channel-type","attributes":[{"value":{"type":"uint16"}}]}'/>
     <PvAccessRead name="read from pv"
                   channel="pva-read-instr-test::variable2"
@@ -57,10 +57,10 @@ static const std::string PV_ACCESS_WRONG_OUTPUT_FIELD_PROCEDURE = R"RAW(<?xml ve
 </Procedure>)RAW";
 
 static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
     <RegisterType jsontype='{"type":"seq::pva_read_test::Type/v1.0","attributes":[{"value":{"type":"float32"}}]}'/>
     <Sequence>
         <PvAccessRead name="read from pv"
@@ -80,7 +80,7 @@ static const std::string PV_ACCESS_READ_SUCCESS_PROCEDURE = R"RAW(<?xml version=
     </Workspace>
 </Procedure>)RAW";
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 class PvAccessReadInstructionTest : public ::testing::Test
 {

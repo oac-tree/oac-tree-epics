@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : CODAC Supervision and Automation (SUP) Sequencer component
+ * Project       : CODAC Supervision and Automation (SUP) oac-tree component
  *
  * Description   : UserInterface implementation
  *
@@ -19,17 +19,17 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef SUP_SEQUENCER_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
-#define SUP_SEQUENCER_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
+#ifndef SUP_OAC_TREE_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
+#define SUP_OAC_TREE_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
 
-#include <sup/sequencer/user_interface.h>
+#include <sup/oac-tree/user_interface.h>
 
 #include <utility>
 #include <vector>
 
 namespace sup {
 
-namespace sequencer {
+namespace oac_tree {
 
 namespace unit_test_helper {
 
@@ -52,9 +52,8 @@ public:
 
 } // namespace unit_test_helper
 
-} // namespace sequencer
+} // namespace oac_tree
 
 } // namespace sup
 
-#endif // SUP_SEQUENCER_PLUGIN_EPICS_TEST_USER_INTERFACE_H_
-
+#endif // SUP_OAC_TREE_PLUGIN_EPICS_TEST_USER_INTERFACE_H_

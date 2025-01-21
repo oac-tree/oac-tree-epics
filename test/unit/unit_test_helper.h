@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : CODAC Supervision and Automation (SUP) Sequencer component
+ * Project       : CODAC Supervision and Automation (SUP) oac-tree component
  *
  * Description   : UserInterface implementation
  *
@@ -19,21 +19,21 @@
  * of the distribution package.
 ******************************************************************************/
 
-#ifndef SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
-#define SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
+#ifndef SUP_OAC_TREE_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
+#define SUP_OAC_TREE_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
 
 #include <functional>
 #include <string>
 
-#include <sup/sequencer/execution_status.h>
-#include <sup/sequencer/procedure.h>
-#include <sup/sequencer/variable.h>
+#include <sup/oac-tree/execution_status.h>
+#include <sup/oac-tree/procedure.h>
+#include <sup/oac-tree/variable.h>
 
 #include <thread>
 
 namespace sup {
 
-namespace sequencer {
+namespace oac_tree {
 
 namespace unit_test_helper {
 
@@ -91,9 +91,8 @@ std::string CreateProcedureString(const std::string& body);
 
 } // namespace unit_test_helper
 
-} // namespace sequencer
+} // namespace oac_tree
 
 } // namespace sup
 
-#endif // SUP_SEQUENCER_PLUGIN_EPICS_UNIT_TEST_HELPER_H_
-
+#endif // SUP_OAC_TREE_PLUGIN_EPICS_UNIT_TEST_HELPER_H_

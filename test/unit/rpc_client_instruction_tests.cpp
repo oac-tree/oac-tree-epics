@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -22,15 +22,15 @@
 #include "test_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <sequencer/pvxs/rpc_client_instruction.h>
+#include <oac-tree/pvxs/rpc_client_instruction.h>
 
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/instruction.h>
-#include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/log_severity.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/instruction.h>
+#include <sup/oac-tree/instruction_registry.h>
+#include <sup/oac-tree/log_severity.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <sup/epics/pv_access_rpc_server.h>
 
@@ -48,10 +48,10 @@ static const std::string REQUEST_VALUE = R"RAW({"timestamp":0,"query":42})RAW";
 static const std::string TEST_SERVICE_NAME = "RPCClientInstructionTest::service";
 
 static const std::string RPC_CLIENT_PROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
     <Sequence>
         <RPCClient name="rpc-client"
                    service="RPCClientInstructionTest::service"
@@ -67,7 +67,7 @@ static const std::string RPC_CLIENT_PROCEDURE = R"RAW(<?xml version="1.0" encodi
 </Procedure>)RAW";
 
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 class RPCTestHandler : public sup::dto::AnyFunctor
 {
@@ -315,18 +315,18 @@ TEST_F(RPCClientInstructionTest, ReadOnlyOutput)
 
 TEST_F(RPCClientInstructionTest, Success) // Must be associated to a variable in the workspace
 {
-  auto proc = sup::sequencer::ParseProcedureString(RPC_CLIENT_PROCEDURE);
+  auto proc = sup::oac_tree::ParseProcedureString(RPC_CLIENT_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(proc));
   EXPECT_NO_THROW(proc->Setup());
 
-  sup::sequencer::ExecutionStatus exec = sup::sequencer::ExecutionStatus::FAILURE;
+  sup::oac_tree::ExecutionStatus exec = sup::oac_tree::ExecutionStatus::FAILURE;
   do
   {
     proc->ExecuteSingle(ui);
     exec = proc->GetStatus();
   }
-  while ((sup::sequencer::ExecutionStatus::SUCCESS != exec) &&
-         (sup::sequencer::ExecutionStatus::FAILURE != exec));
+  while ((sup::oac_tree::ExecutionStatus::SUCCESS != exec) &&
+         (sup::oac_tree::ExecutionStatus::FAILURE != exec));
   EXPECT_EQ(exec, ExecutionStatus::SUCCESS);
 
   sup::dto::AnyValue reply;

@@ -9,12 +9,12 @@ echo "Launch softIoc"
 sleep 2
 
 echo "Launch procedure 1 in background"
-/usr/bin/screen -d -m -S EpicsPluginFTest_ca_pingpong /opt/codac/bin/sequencer-cli -f ca_ping.xml
+/usr/bin/screen -d -m -S EpicsPluginFTest_ca_pingpong /opt/codac/bin/oac-tree-cli -f ca_ping.xml
 
 sleep 2
 
 echo "Launch procedure 2 in foreground"
-time /opt/codac/bin/sequencer-cli -f ca_pong.xml
+time /opt/codac/bin/oac-tree-cli -f ca_pong.xml
 
 echo "Quit softIOC"
 /usr/bin/screen -XS EpicsPluginFTest_pingpong_ioc quit

@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -22,19 +22,19 @@
 #include "test_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/instruction.h>
-#include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/procedure.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/variable.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/instruction.h>
+#include <sup/oac-tree/instruction_registry.h>
+#include <sup/oac-tree/procedure.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/variable.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <gtest/gtest.h>
 #include <sup/epics-test/unit_test_helper.h>
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 static const std::string BOOLEANTYPE = R"RAW({"type":"bool"})RAW";
 static const std::string BOOLEANVALUE = "true";

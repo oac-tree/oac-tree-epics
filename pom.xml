@@ -2,9 +2,9 @@
  $HeadURL: $
  $Id: $
 
- Project       : Supervision and Automation - Sequencer
+ Project       : Supervision and Automation - oac-tree
 
- Description   : SUP sequencer EPICS plugin module
+ Description   : SUP oac-tree EPICS plugin module
 
  Authors       : CODAC Operation Applications Team
 
@@ -23,12 +23,12 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.iter.codac.units</groupId>
-    <artifactId>sequencer-plugin-epics</artifactId>
+    <artifactId>oac-tree-plugin-epics</artifactId>
     <packaging>codac</packaging>
     <!-- See ChangeLog file for details -->
     <version>3.3.0</version>
-    <name>SUP sequencer EPICS plugin module</name>
-    <description>SUP sequencer EPICS plugin module</description>
+    <name>SUP oac-tree EPICS plugin module</name>
+    <description>SUP oac-tree EPICS plugin module</description>
     <url>http://www.iter.org/</url>
 
     <!-- Project properties -->
@@ -114,18 +114,18 @@
                     <packaging>
                         <package>
                         <!-- Plugin libraries -->
-                        <include type="file" source="lib/sequencer/plugins" target="lib/sequencer/plugins">
+                        <include type="file" source="lib/oac-tree/plugins" target="lib/oac-tree/plugins">
                             <include>*.so*</include>
                         </include>
                         <!-- Package dependencies -->
                         <requires codac="true">sup-dto</requires>
                         <requires codac="true">sup-protocol</requires>
                         <requires codac="true">sup-epics</requires>
-                        <requires codac="true">sequencer</requires>
+                        <requires codac="true">oac-tree</requires>
                         <requires codac="true" buildOnly="true">sup-dto-devel</requires>
                         <requires codac="true" buildOnly="true">sup-protocol-devel</requires>
                         <requires codac="true" buildOnly="true">sup-epics-devel</requires>
-                        <requires codac="true" buildOnly="true">sequencer-devel</requires>
+                        <requires codac="true" buildOnly="true">oac-tree-devel</requires>
                         <requires codac="true" buildOnly="true">gtest-1.12.1-devel</requires>
                         <requires version="current" buildOnly="true">cmake</requires>
                         <!-- RPM scriptlet -->

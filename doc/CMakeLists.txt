@@ -35,7 +35,7 @@ if(COA_BUILD_DOCUMENTATION)
     message(WARNING "Sphinx theme RTD not found, building documentation with default theme")
   endif()
 
-  doxygen_add_docs(doxygen-doc ${PROJECT_SOURCE_DIR}/src/lib/sequencer COMMENT
+  doxygen_add_docs(doxygen-doc ${PROJECT_SOURCE_DIR}/src/lib/oac-tree COMMENT
     "Generating API documentation with Doxygen")
 
   configure_file(${CMAKE_CONFIG_PATH}/sphinx-conf.py.in ${CMAKE_CURRENT_BINARY_DIR}/conf.py @ONLY)

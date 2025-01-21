@@ -2,7 +2,7 @@
 * $HeadURL: $
 * $Id: $
 *
-* Project       : CODAC Supervision and Automation (SUP) Sequencer component
+* Project       : CODAC Supervision and Automation (SUP) oac-tree component
 *
 * Description   : UserInterface implementation
 *
@@ -21,10 +21,10 @@
 
 #include "unit_test_helper.h"
 
-#include <sup/sequencer/generic_utils.h>
-#include <sup/sequencer/variable.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/generic_utils.h>
+#include <sup/oac-tree/variable.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <sup/dto/anyvalue_helper.h>
 
@@ -35,7 +35,7 @@
 
 namespace sup {
 
-namespace sequencer {
+namespace oac_tree {
 
 namespace unit_test_helper {
 
@@ -76,10 +76,10 @@ std::string CreateProcedureString(const std::string &body)
 {
   static const std::string header{
       R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">)RAW"};
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">)RAW"};
 
   static const std::string footer{R"RAW(</Procedure>)RAW"};
 
@@ -88,6 +88,6 @@ std::string CreateProcedureString(const std::string &body)
 
 } // namespace unit_test_helper
 
-} // namespace sequencer
+} // namespace oac_tree
 
 } // namespace sup

@@ -24,7 +24,7 @@ target_include_directories(unit-tests
 
 find_package(GTest REQUIRED)
 
-target_link_libraries(unit-tests PUBLIC GTest::GTest GTest::Main sequencer-ca sequencer-misc sequencer-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
+target_link_libraries(unit-tests PUBLIC GTest::GTest GTest::Main oac-tree-ca oac-tree-misc oac-tree-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
 
 set_target_properties(unit-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
 

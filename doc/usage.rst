@@ -5,6 +5,6 @@ Before being able to use this plugin in a procedure, the user have it installed 
 
 .. code-block:: xml
 
-  <Plugin>libsequencer-epics.so</Plugin>
+  <Plugin>liboac-tree-epics.so</Plugin>
 
 The user is then able to use all instructions and variables provided by this plugin.

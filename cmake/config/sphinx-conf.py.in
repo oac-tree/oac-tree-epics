@@ -1,15 +1,15 @@
 extensions = [ "breathe" ]
-breathe_projects = { "sequencer-plugin-epics": "@CMAKE_CURRENT_BINARY_DIR@/xml" }
-breathe_default_project = "sequencer-plugin-epics"
+breathe_projects = { "oac-tree-plugin-epics": "@CMAKE_CURRENT_BINARY_DIR@/xml" }
+breathe_default_project = "oac-tree-plugin-epics"
 
-project = "sequencer-plugin-epics"
+project = "oac-tree-plugin-epics"
 author = "Walter Van Herck"
 copyright = "ITER Organization"
 version = "@PROJECT_VERSION@"
 release = "@PROJECT_VERSION@"
 
 # Set link name generated in the top bar.
-html_title = 'SEQUENCER PLUGIN EPICS'
+html_title = 'OAC-TREE PLUGIN EPICS'
 
 try:
     import sphinx_rtd_theme

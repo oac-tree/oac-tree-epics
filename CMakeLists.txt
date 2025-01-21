@@ -1,6 +1,6 @@
-# Project       : SUP - Sequencer
+# Project       : SUP - oac-tree
 #
-# Description   : Sequencer for operational procedures
+# Description   : oac-tree for operational procedures
 #
 # Author        : Walter Van Herck (IO)
 #
@@ -15,7 +15,7 @@
 # of the distribution package.
 
 cmake_minimum_required(VERSION 3.13...3.31)
-project(sup-sequencer-plugin-epics VERSION 3.3.0 LANGUAGES CXX)
+project(sup-oac-tree-plugin-epics VERSION 3.3.0 LANGUAGES CXX)
 
 option(COA_COVERAGE "Generate unit test coverage information" OFF)
 option(COA_BUILD_TESTS "Build unit tests" ON)

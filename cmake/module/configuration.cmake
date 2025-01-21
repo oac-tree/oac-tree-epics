@@ -27,7 +27,7 @@ set(LIBSOVERSION ${CMAKE_PROJECT_VERSION_MAJOR}.${CMAKE_PROJECT_VERSION_MINOR})
 # Directories
 # -----------------------------------------------------------------------------
 if (NOT DEFINED PLUGIN_PATH)
-  set(PLUGIN_PATH lib/sequencer/plugins)
+  set(PLUGIN_PATH lib/oac-tree/plugins)
 endif()
 message(DEBUG "PLUGIN_PATH: ${PLUGIN_PATH}")
 
@@ -47,5 +47,5 @@ file(MAKE_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
 # -----------------------------------------------------------------------------
 find_package(sup-dto REQUIRED)
 find_package(sup-protocol REQUIRED)
-find_package(sequencer REQUIRED)
+find_package(oac-tree REQUIRED)
 find_package(sup-epics REQUIRED)

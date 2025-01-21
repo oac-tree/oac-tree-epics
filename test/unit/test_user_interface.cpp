@@ -2,7 +2,7 @@
 * $HeadURL: $
 * $Id: $
 *
-* Project       : CODAC Supervision and Automation (SUP) Sequencer component
+* Project       : CODAC Supervision and Automation (SUP) oac-tree component
 *
 * Description   : UserInterface implementation
 *
@@ -25,7 +25,7 @@
 
 namespace sup {
 
-namespace sequencer {
+namespace oac_tree {
 
 namespace unit_test_helper {
 
@@ -52,6 +52,6 @@ std::string LogUserInterface::GetFullLog() const
 
 } // namespace unit_test_helper
 
-} // namespace sequencer
+} // namespace oac_tree
 
 } // namespace sup

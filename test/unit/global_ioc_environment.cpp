@@ -2,7 +2,7 @@
 * $HeadURL: $
 * $Id: $
 *
-* Project       : CODAC Supervision and Automation (SUP) Sequencer component
+* Project       : CODAC Supervision and Automation (SUP) oac-tree component
 *
 * Description   : UserInterface implementation
 *

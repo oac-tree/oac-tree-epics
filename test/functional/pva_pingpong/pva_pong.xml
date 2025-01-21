@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
            name="One side of a test that bounces back and forth between two PvAccess servers"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
-    <Plugin>libsequencer-pvxs.so</Plugin>
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
+    <Plugin>liboac-tree-pvxs.so</Plugin>
     <Sequence>
         <WaitForVariable varName="num1" timeout="5.0"/>
         <WaitForVariable varName="num2" timeout="5.0"/>

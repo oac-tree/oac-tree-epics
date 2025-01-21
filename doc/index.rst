@@ -1,7 +1,7 @@
-Welcome to sequencer-plugin-epics's documentation!
+Welcome to oac-tree-plugin-epics's documentation!
 ==================================================
 
-``sequencer-plugin-epics`` is a sequencer plugin that provides instructions and variables to interface with EPICSv7 process variables. It supports both ChannelAccess and PvAccess.
+``oac-tree-plugin-epics`` is a oac-tree plugin that provides instructions and variables to interface with EPICSv7 process variables. It supports both ChannelAccess and PvAccess.
 
 .. toctree::
    :maxdepth: 2

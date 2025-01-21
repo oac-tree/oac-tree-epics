@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -19,14 +19,14 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include <sequencer/pvxs/pv_access_client_variable.h>
+#include <oac-tree/pvxs/pv_access_client_variable.h>
 #include "unit_test_helper.h"
 
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/user_interface.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/user_interface.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <sup/dto/json_type_parser.h>
 #include <sup/epics/pv_access_server.h>
@@ -36,7 +36,7 @@
 
 #include <algorithm>
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 class PvAccessClientVariableTest : public ::testing::Test
 {
@@ -47,7 +47,7 @@ protected:
 
 TEST_F(PvAccessClientVariableTest, VariableRegistration)
 {
-  auto registry = sup::sequencer::GlobalVariableRegistry();
+  auto registry = sup::oac_tree::GlobalVariableRegistry();
   auto names = registry.RegisteredVariableNames();
   ASSERT_TRUE(std::find(names.begin(), names.end(), PvAccessClientVariable::Type) != names.end());
   ASSERT_TRUE(dynamic_cast<PvAccessClientVariable*>(registry.Create(PvAccessClientVariable::Type).get()));
@@ -129,7 +129,7 @@ TEST_F(PvAccessClientVariableTest, ServerClient)
   pv_val["value"] = 42.1f;
   EXPECT_TRUE(server.SetValue(channel, pv_val));
 
-  // Creating sequencer's PvAccessClientVariable
+  // Creating oac-tree's PvAccessClientVariable
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
@@ -175,7 +175,7 @@ TEST_F(PvAccessClientVariableTest, ServerClientNoType)
   pv_val["value"] = 42.1f;
   EXPECT_TRUE(server.SetValue(channel, pv_val));
 
-  // Creating sequencer's PvAccessClientVariable
+  // Creating oac-tree's PvAccessClientVariable
   Workspace ws;
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
@@ -222,7 +222,7 @@ TEST_F(PvAccessClientVariableTest, ScalarClient)
   pv_val["value"] = 42.1f;
   EXPECT_TRUE(server.SetValue(channel, pv_val));
 
-  // Creating sequencer's PvAccessClientVariable
+  // Creating oac-tree's PvAccessClientVariable
   Workspace ws;
   const std::string kFloatType = R"({"type":"float32"})";
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");

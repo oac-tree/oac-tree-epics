@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -22,19 +22,19 @@
 #include "test_user_interface.h"
 #include "unit_test_helper.h"
 
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/instruction.h>
-#include <sup/sequencer/instruction_registry.h>
-#include <sup/sequencer/procedure.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/variable.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/instruction.h>
+#include <sup/oac-tree/instruction_registry.h>
+#include <sup/oac-tree/procedure.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/variable.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <gtest/gtest.h>
 #include <sup/epics-test/softioc_utils.h>
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 static const std::string WRONGSTRUCTTYPE =
   R"RAW({"type":"wrongstruct","attributes":[{"flag":{"type":"bool"}}]})RAW";
@@ -52,10 +52,10 @@ static const std::string WRONGSEVERITYTYPE =
   R"RAW({"type":"wrongextrafield","attributes":[{"value":{"type":"bool"}},{"severity":{"type":"string"}}]})RAW";
 
 static const std::string READBOOLPROCEDURE = R"RAW(<?xml version="1.0" encoding="UTF-8"?>
-<Procedure xmlns="http://codac.iter.org/sup/sequencer" version="1.0"
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
-           xs:schemaLocation="http://codac.iter.org/sup/sequencer sequencer.xsd">
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
     <Sequence>
         <ChannelAccessRead name="get-client"
             channel="SEQ-TEST:BOOL"

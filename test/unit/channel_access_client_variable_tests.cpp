@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -22,12 +22,12 @@
 #include <sup/epics-test/unit_test_helper.h>
 #include "unit_test_helper.h"
 
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/user_interface.h>
-#include <sup/sequencer/variable.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/user_interface.h>
+#include <sup/oac-tree/variable.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 #include <sup/epics-test/softioc_runner.h>
 
 #include <sup/epics/channel_access_client.h>
@@ -65,7 +65,7 @@ record (longout,"SEQ-TEST:LONG")
 }
 )RAW";
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 class ChannelAccessClientVariableTest : public ::testing::Test
 {

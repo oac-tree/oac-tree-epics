@@ -2,7 +2,7 @@
  * $HeadURL: $
  * $Id: $
  *
- * Project       : SUP Sequencer
+ * Project       : SUP oac-tree
  *
  * Description   : Unit test code
  *
@@ -19,14 +19,14 @@
  * of the distribution package.
  ******************************************************************************/
 
-#include <sequencer/pvxs/pv_access_server_variable.h>
+#include <oac-tree/pvxs/pv_access_server_variable.h>
 
-#include <sup/sequencer/exceptions.h>
-#include <sup/sequencer/sequence_parser.h>
-#include <sup/sequencer/user_interface.h>
-#include <sup/sequencer/variable.h>
-#include <sup/sequencer/variable_registry.h>
-#include <sup/sequencer/workspace.h>
+#include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/sequence_parser.h>
+#include <sup/oac-tree/user_interface.h>
+#include <sup/oac-tree/variable.h>
+#include <sup/oac-tree/variable_registry.h>
+#include <sup/oac-tree/workspace.h>
 
 #include <sup/dto/json_type_parser.h>
 
@@ -34,7 +34,7 @@
 #include <sup/epics-test/unit_test_helper.h>
 #include "unit_test_helper.h"
 
-using namespace sup::sequencer;
+using namespace sup::oac_tree;
 
 static const std::string UINT16_STRUCT_TYPE =
   R"RAW({"type":"seq-test::uint16-struct-type","attributes":[{"value":{"type":"uint16"}}]})RAW";
@@ -157,7 +157,7 @@ TEST_F(PvAccessServerVariableTest, ServerClientTest)
   EXPECT_NO_THROW(server_var->AddAttribute("type", kDataType));
   EXPECT_TRUE(ws.AddVariable("server_var", std::move(server_var)));
 
-  // Creating sequencer's PvAccessClientVariable
+  // Creating oac-tree's PvAccessClientVariable
   auto variable = GlobalVariableRegistry().Create("PvAccessClient");
   EXPECT_NO_THROW(variable->AddAttribute("channel", channel));
   EXPECT_NO_THROW(variable->AddAttribute("type", kDataType));
