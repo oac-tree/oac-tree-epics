@@ -121,11 +121,11 @@
                         <requires codac="true">sup-dto</requires>
                         <requires codac="true">sup-protocol</requires>
                         <requires codac="true">sup-epics</requires>
-                        <requires codac="true">oac-tree</requires>
+                        <requires codac="true">sequencer</requires>
                         <requires codac="true" buildOnly="true">sup-dto-devel</requires>
                         <requires codac="true" buildOnly="true">sup-protocol-devel</requires>
                         <requires codac="true" buildOnly="true">sup-epics-devel</requires>
-                        <requires codac="true" buildOnly="true">oac-tree-devel</requires>
+                        <requires codac="true" buildOnly="true">sequencer-devel</requires>
                         <requires codac="true" buildOnly="true">gtest-1.12.1-devel</requires>
                         <requires version="current" buildOnly="true">cmake</requires>
                         <!-- RPM scriptlet -->
