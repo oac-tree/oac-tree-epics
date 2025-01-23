@@ -26,7 +26,7 @@
     <artifactId>oac-tree-plugin-epics</artifactId>
     <packaging>codac</packaging>
     <!-- See ChangeLog file for details -->
-    <version>3.3.0</version>
+    <version>4.0.0</version>
     <name>SUP oac-tree EPICS plugin module</name>
     <description>SUP oac-tree EPICS plugin module</description>
     <url>http://www.iter.org/</url>

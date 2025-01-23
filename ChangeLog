@@ -1,3 +1,7 @@
+Changes for 4.0.0:
+
+- Project renamed from sequencer-plugin-epics to oac-tree-plugin-epics
+
 Changes for 3.3.0:
 
 - Relax conditions on PvAccessClient variable with scalar type
