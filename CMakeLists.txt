@@ -21,6 +21,7 @@ option(COA_COVERAGE "Generate unit test coverage information" OFF)
 option(COA_BUILD_TESTS "Build unit tests" ON)
 option(COA_BUILD_DOCUMENTATION "Build documentation" OFF)
 option(COA_NO_CODAC "Don't look for the presence of CODAC environment" OFF)
+option(COA_CODAC_BACKWARD_COMPATIBILITY "Create libraries with old names for backward compatibility" OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/module)
 set(CMAKE_CONFIG_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake/config)

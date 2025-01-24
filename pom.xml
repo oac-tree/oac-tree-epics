@@ -132,11 +132,7 @@
                         <scriptlet type="posttrans">
                             <![CDATA[ ldconfig ]]>
                         </scriptlet>
-                        <!-- Symlinks -->
-                        <include type="symlink" link="/lib/sequencer/plugins/libsequencer-ca.so" target="/lib/oac-tree/plugins/liboac-tree-ca.so" linkroot="CODAC_ROOT" targetroot="CODAC_ROOT" />
-                        <include type="symlink" link="/lib/sequencer/plugins/libsequencer-misc.so" target="/lib/oac-tree/plugins/liboac-tree-misc.so" linkroot="CODAC_ROOT" targetroot="CODAC_ROOT" />
-                        <include type="symlink" link="/lib/sequencer/plugins/libsequencer-pvxs.so" target="/lib/oac-tree/plugins/liboac-tree-pvxs.so" linkroot="CODAC_ROOT" targetroot="CODAC_ROOT" />
-                        </package>
+                    </package>
                     <package name="docs">
                         <!--  Public API headers  -->
                         <include type="file" source="doc/${project.artifactId}" target="doc/${project.artifactId}"/>
@@ -171,6 +167,7 @@
                                 <argument>-DCMAKE_INSTALL_DOCDIR=doc/${project.artifactId}</argument>
                                 <argument>-DTEST_OUTPUT_DIRECTORY=${project.build.directory}/test</argument>
                                 <argument>-DCOA_COVERAGE=${coverage}</argument>
+                                <argument>-DCOA_CODAC_BACKWARD_COMPATIBILITY=ON</argument>
                                 <argument>${project.build.directory}/SOURCE</argument>
                             </arguments>
                         </configuration>
