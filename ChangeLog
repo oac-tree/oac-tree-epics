@@ -1,3 +1,7 @@
+Changes for 4.1.0:
+
+- Update pom for CODAC 7.3
+
 Changes for 4.0.0:
 
 - Project renamed from sequencer-plugin-epics to oac-tree-plugin-epics
