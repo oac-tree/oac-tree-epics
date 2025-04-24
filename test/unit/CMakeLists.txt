@@ -1,6 +1,11 @@
-add_executable(unit-tests)
+set(unit-tests oac-tree-epics-unit-tests)
 
-target_sources(unit-tests
+add_executable(${unit-tests})
+
+set_target_properties(${unit-tests} PROPERTIES OUTPUT_NAME "unit-tests")
+set_target_properties(${unit-tests} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
+
+target_sources(${unit-tests}
   PRIVATE
   channel_access_client_variable_tests.cpp
   channel_access_read_instruction_tests.cpp
@@ -17,15 +22,13 @@ target_sources(unit-tests
   unit_test_helper.cpp
 )
 
-target_include_directories(unit-tests
+target_include_directories(${unit-tests}
   PRIVATE
   ${CMAKE_CURRENT_LIST_DIR}
 )
 
 find_package(GTest REQUIRED)
 
-target_link_libraries(unit-tests PUBLIC GTest::GTest GTest::Main oac-tree-ca oac-tree-misc oac-tree-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
+target_link_libraries(${unit-tests} PUBLIC GTest::GTest GTest::Main oac-tree-ca oac-tree-misc oac-tree-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
 
-set_target_properties(unit-tests PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${TEST_OUTPUT_DIRECTORY})
-
-gtest_discover_tests(unit-tests)
+gtest_discover_tests(${unit-tests})

@@ -1,5 +1,6 @@
 Changes for 4.1.0:
 
+- CMake changes to allow for pulling sup-protocol as a github dependency
 - Update pom for CODAC 7.3
 
 Changes for 4.0.0:
