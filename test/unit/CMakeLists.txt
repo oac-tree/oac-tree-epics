@@ -31,4 +31,4 @@ find_package(GTest REQUIRED)
 
 target_link_libraries(${unit-tests} PUBLIC GTest::GTest GTest::Main oac-tree-ca oac-tree-misc oac-tree-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
 
-gtest_discover_tests(${unit-tests})
+gtest_discover_tests(${unit-tests} DISCOVERY_MODE PRE_TEST)
