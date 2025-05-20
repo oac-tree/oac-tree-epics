@@ -23,7 +23,7 @@
 #include "pv_access_server_variable.h"
 
 #include "pv_access_helper.h"
-#include "pv_access_shared_server.h"
+#include "pv_access_shared_server_registry.h"
 
 #include <sup/oac-tree/exceptions.h>
 #include <sup/oac-tree/variable_registry.h>
@@ -41,10 +41,10 @@ const std::string PvAccessServerVariable::Type = "PvAccessServer";
 static bool PvAccessServerVariable_initialised_flag =
   RegisterGlobalVariable<PvAccessServerVariable>();
 
-PvAccessSharedServer& GetSharedPvAccessServer()
+PvAccessSharedServerRegistry& GetSharedPvAccessServerRegistry()
 {
-  static PvAccessSharedServer shared_server{};
-  return shared_server;
+  static PvAccessSharedServerRegistry shared_registry{};
+  return shared_registry;
 }
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
@@ -54,6 +54,7 @@ const std::string VALUE_ATTRIBUTE_NAME = "value";
 PvAccessServerVariable::PvAccessServerVariable()
   : Variable(PvAccessServerVariable::Type)
   , m_type{}
+  , m_workspace{}
 {
   AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
   AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
@@ -61,6 +62,16 @@ PvAccessServerVariable::PvAccessServerVariable()
 }
 
 PvAccessServerVariable::~PvAccessServerVariable() = default;
+
+PvAccessSharedServer& PvAccessServerVariable::GetSharedServer() const
+{
+  if (m_workspace == nullptr)
+  {
+    throw InvalidOperationException(
+      "PvAccessServerVariable::GetSharedServer(): Workspace is not set");
+  }
+  return GetSharedPvAccessServerRegistry().GetServer(m_workspace);
+}
 
 sup::dto::AnyValue PvAccessServerVariable::GetInitialValue(const sup::dto::AnyType& val_type) const
 {
@@ -83,7 +94,7 @@ sup::dto::AnyValue PvAccessServerVariable::GetInitialValue(const sup::dto::AnyTy
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
-    GetSharedPvAccessServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
+    GetSharedServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
@@ -94,19 +105,20 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
   {
     return false;
   }
-  return GetSharedPvAccessServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
+  return GetSharedServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
                                             pv_access_helper::PackIntoStructIfScalar(copy));
 }
 
 bool PvAccessServerVariable::IsAvailableImpl() const
 {
   auto value = pv_access_helper::ConvertToTypedAnyValue(
-    GetSharedPvAccessServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
+    GetSharedServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
   return !sup::dto::IsEmptyValue(value);
 }
 
 SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
 {
+  m_workspace = std::addressof(ws);
   sup::dto::JSONAnyTypeParser parser;
   auto type_attr_val = GetAttributeString(TYPE_ATTRIBUTE_NAME);
   const auto& registry = ws.GetTypeRegistry();
@@ -126,12 +138,12 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
     return;
   };
   auto start_value = pv_access_helper::PackIntoStructIfScalar(val);
-  GetSharedPvAccessServer().AddVariable(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), start_value,
-                                        callback);
+  GetSharedServer().AddVariable(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), start_value,
+                                callback);
   SetupTeardownActions actions{
     PvAccessServerVariable::Type,
-    []() { GetSharedPvAccessServer().Setup(); },
-    []() { GetSharedPvAccessServer().Teardown(); }
+    [ws = m_workspace]() { GetSharedPvAccessServerRegistry().Setup(ws); },
+    [ws = m_workspace]() { GetSharedPvAccessServerRegistry().Teardown(ws); }
   };
   Notify(val, true);
   return actions;
@@ -145,13 +157,15 @@ void PvAccessServerVariable::ResetImpl(const Workspace& ws)
     return;
   }
   auto val = GetInitialValue(m_type);
-  GetSharedPvAccessServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
-                                     pv_access_helper::PackIntoStructIfScalar(val));
+  GetSharedPvAccessServerRegistry().GetServer(m_workspace)
+    .SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
+              pv_access_helper::PackIntoStructIfScalar(val));
 }
 
 void PvAccessServerVariable::TeardownImpl()
 {
   m_type = sup::dto::EmptyType;
+  m_workspace = nullptr;
 }
 
 }  // namespace oac_tree

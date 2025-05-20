@@ -23,6 +23,8 @@
 #ifndef SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_SERVER_VARIABLE_H_
 #define SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_SERVER_VARIABLE_H_
 
+#include "pv_access_shared_server.h"
+
 #include <sup/oac-tree/variable.h>
 
 #include <memory>
@@ -57,6 +59,7 @@ public:
   static const std::string Type;
 
 private:
+  PvAccessSharedServer& GetSharedServer() const;
   sup::dto::AnyValue GetInitialValue(const sup::dto::AnyType& val_type) const;
   bool GetValueImpl(sup::dto::AnyValue &value) const override;
   bool SetValueImpl(const sup::dto::AnyValue &value) override;
@@ -66,6 +69,7 @@ private:
   void TeardownImpl() override;
 
   sup::dto::AnyType m_type;
+  const Workspace* m_workspace;
 };
 
 }  // namespace oac_tree
