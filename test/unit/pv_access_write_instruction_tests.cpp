@@ -254,7 +254,10 @@ TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
   EXPECT_NO_THROW(instruction.Setup(proc));
 
   EXPECT_EQ(ui.m_log_entries.size(), 0);
-  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
+  while (!IsFinishedStatus(instruction.GetStatus()))
+  {
+    EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
+  }
   EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
   ASSERT_EQ(ui.m_log_entries.size(), 1);
   auto [severity, message] = ui.m_log_entries.back();

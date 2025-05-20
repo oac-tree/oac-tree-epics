@@ -27,7 +27,9 @@
 #include <sup/oac-tree/constants.h>
 #include <sup/oac-tree/concrete_constraints.h>
 #include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/generic_utils.h>
 #include <sup/oac-tree/instruction_registry.h>
+#include <sup/oac-tree/instruction_utils.h>
 #include <sup/oac-tree/procedure.h>
 #include <sup/oac-tree/user_interface.h>
 #include <sup/oac-tree/workspace.h>
@@ -67,6 +69,23 @@ PvAccessWriteInstruction::PvAccessWriteInstruction()
 
 PvAccessWriteInstruction::~PvAccessWriteInstruction() = default;
 
+bool PvAccessWriteInstruction::InitHook(UserInterface& ui, Workspace& ws)
+{
+  if (!GetAttributeValueAs(pv_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, m_channel_name))
+  {
+    return false;
+  }
+  sup::dto::int64 timeout_ns = pv_access_helper::DEFAULT_TIMEOUT_NS;
+  if (!instruction_utils::GetVariableTimeoutAttribute(
+            *this, ui, ws, Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, timeout_ns))
+  {
+    return false;
+  }
+  m_finish = utils::GetNanosecsSinceEpoch() + timeout_ns;
+  m_pv = std::make_unique<sup::epics::PvAccessClientPV>(m_channel_name);
+  return true;
+}
+
 ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   auto value = pv_access_helper::PackIntoStructIfScalar(GetNewValue(ui, ws));
@@ -74,40 +93,45 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
   {
     return ExecutionStatus::FAILURE;
   }
-  std::string channel_name;
-  if (!GetAttributeValueAs(pv_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  if (IsHaltRequested())
   {
     return ExecutionStatus::FAILURE;
   }
-  sup::epics::PvAccessClientPV pv(channel_name);
-  sup::dto::float64 timeout_sec = pv_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  auto now = utils::GetNanosecsSinceEpoch();
+  auto ext_val = m_pv->GetExtendedValue();
+  if (!m_pv->IsConnected())
   {
-    return ExecutionStatus::FAILURE;
-  }
-  if (timeout_sec < 0)
-  {
-    std::string error_message = InstructionSetupExceptionProlog(*this) +
-      "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    LogError(ui, error_message);
-    return ExecutionStatus::FAILURE;
-  }
-  if (!pv.WaitForConnected(timeout_sec))
-  {
+    if (m_finish > now)
+    {
+      return ExecutionStatus::RUNNING;
+    }
     std::string warning_message = InstructionWarningProlog(*this) +
-      "channel with name [" + channel_name + "] timed out";
+      "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
-  if (!pv.SetValue(value))
+  if (!m_pv->SetValue(value))
   {
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
     std::string warning_message = InstructionWarningProlog(*this) +
-      "could not write value [" + json_value + "] to channel [" + channel_name + "]";
+      "could not write value [" + json_value + "] to channel [" + m_channel_name + "]";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;
+}
+
+void PvAccessWriteInstruction::ResetHook(UserInterface& ui)
+{
+  (void)ui;
+  Halt();
+}
+
+void PvAccessWriteInstruction::HaltImpl()
+{
+  m_channel_name = "";
+  m_finish = 0;
+  m_pv.reset();
 }
 
 sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Workspace& ws) const
