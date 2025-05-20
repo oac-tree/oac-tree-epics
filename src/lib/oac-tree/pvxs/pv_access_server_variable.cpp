@@ -142,8 +142,8 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
                                 callback);
   SetupTeardownActions actions{
     PvAccessServerVariable::Type,
-    [ws = m_workspace]() { GetSharedPvAccessServerRegistry().Setup(ws); },
-    [ws = m_workspace]() { GetSharedPvAccessServerRegistry().Teardown(ws); }
+    [workspace = m_workspace]() { GetSharedPvAccessServerRegistry().Setup(workspace); },
+    [workspace = m_workspace]() { GetSharedPvAccessServerRegistry().Teardown(workspace); }
   };
   Notify(val, true);
   return actions;
