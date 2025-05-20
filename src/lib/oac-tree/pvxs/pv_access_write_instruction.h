@@ -33,6 +33,10 @@ namespace dto
 {
 class AnyValue;
 }  // namespace dto
+namespace epics
+{
+class PvAccessClientPV;
+}  // namespace epics
 
 namespace oac_tree
 {
@@ -67,9 +71,19 @@ public:
   static const std::string Type;
 
 private:
+  // std::string m_channel_name;
+  // sup::dto::uint64 m_finish;
+  // std::unique_ptr<sup::epics::PvAccessClientPV> m_pv;
+
+  // bool InitHook(UserInterface& ui, Workspace& ws) override;
+
   ExecutionStatus ExecuteSingleImpl(UserInterface& ui, Workspace& ws) override;
 
   sup::dto::AnyValue GetNewValue(UserInterface& ui, Workspace& ws) const;
+
+  // void ResetHook(UserInterface& ui) override;
+
+  // void HaltImpl() override;
 };
 
 }  // namespace oac_tree

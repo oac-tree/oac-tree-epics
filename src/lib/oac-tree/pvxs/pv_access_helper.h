@@ -35,6 +35,8 @@ namespace pv_access_helper
 const double DEFAULT_TIMEOUT_SEC = 2.0;
 const sup::dto::int64 DEFAULT_TIMEOUT_NS = 2000000000;
 
+const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
+
 const std::string VALUE_FIELD_NAME = "value";
 
 sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,

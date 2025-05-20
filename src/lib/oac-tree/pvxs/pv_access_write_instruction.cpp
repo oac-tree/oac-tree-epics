@@ -24,6 +24,7 @@
 
 #include "pv_access_helper.h"
 
+#include <sup/oac-tree/constants.h>
 #include <sup/oac-tree/concrete_constraints.h>
 #include <sup/oac-tree/exceptions.h>
 #include <sup/oac-tree/instruction_registry.h>
@@ -44,30 +45,24 @@ namespace oac_tree {
 
 const std::string PvAccessWriteInstruction::Type = "PvAccessWrite";
 
-const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-const std::string VARIABLE_NAME_ATTRIBUTE_NAME = "varName";
-const std::string TYPE_ATTRIBUTE_NAME = "type";
-const std::string VALUE_ATTRIBUTE_NAME = "value";
-const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
-
 static bool _pv_access_write_instruction_initialised_flag =
   RegisterGlobalInstruction<PvAccessWriteInstruction>();
 
 PvAccessWriteInstruction::PvAccessWriteInstruction()
   : Instruction(PvAccessWriteInstruction::Type)
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME)
+  AddAttributeDefinition(pv_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
-  AddAttributeDefinition(VARIABLE_NAME_ATTRIBUTE_NAME)
+  AddAttributeDefinition(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName);
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+  AddAttributeDefinition(Constants::TYPE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(Constants::VALUE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
     .SetCategory(AttributeCategory::kBoth);
   AddConstraint(MakeConstraint<Xor>(
-    MakeConstraint<Exists>(VARIABLE_NAME_ATTRIBUTE_NAME),
-    MakeConstraint<And>(MakeConstraint<Exists>(TYPE_ATTRIBUTE_NAME),
-                        MakeConstraint<Exists>(VALUE_ATTRIBUTE_NAME))));
+    MakeConstraint<Exists>(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME),
+    MakeConstraint<And>(MakeConstraint<Exists>(Constants::TYPE_ATTRIBUTE_NAME),
+                        MakeConstraint<Exists>(Constants::VALUE_ATTRIBUTE_NAME))));
 }
 
 PvAccessWriteInstruction::~PvAccessWriteInstruction() = default;
@@ -80,13 +75,13 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
     return ExecutionStatus::FAILURE;
   }
   std::string channel_name;
-  if (!GetAttributeValueAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  if (!GetAttributeValueAs(pv_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
   {
     return ExecutionStatus::FAILURE;
   }
   sup::epics::PvAccessClientPV pv(channel_name);
   sup::dto::float64 timeout_sec = pv_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }
@@ -117,10 +112,10 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
 
 sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Workspace& ws) const
 {
-  if (HasAttribute(VARIABLE_NAME_ATTRIBUTE_NAME))
+  if (HasAttribute(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME))
   {
     sup::dto::AnyValue result;
-    if (!GetAttributeValue(VARIABLE_NAME_ATTRIBUTE_NAME, ws, ui, result))
+    if (!GetAttributeValue(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME, ws, ui, result))
     {
       return {};
     }
@@ -128,12 +123,13 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Work
     {
       std::string warning_message =
         InstructionWarningProlog(*this) + "value from field [" +
-        GetAttributeString(VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
+        GetAttributeString(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
       LogWarning(ui, warning_message);
     }
     return result;
   }
-  return ParseAnyValueAttributePair(*this, ws, ui, TYPE_ATTRIBUTE_NAME, VALUE_ATTRIBUTE_NAME);
+  return ParseAnyValueAttributePair(*this, ws, ui, Constants::TYPE_ATTRIBUTE_NAME,
+                                    Constants::VALUE_ATTRIBUTE_NAME);
 }
 
 } // namespace oac_tree

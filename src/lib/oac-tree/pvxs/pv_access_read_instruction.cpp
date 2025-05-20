@@ -41,8 +41,6 @@ namespace oac_tree {
 
 const std::string PvAccessReadInstruction::Type = "PvAccessRead";
 
-const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-
 static bool _pv_access_read_instruction_initialised_flag =
   RegisterGlobalInstruction<PvAccessReadInstruction>();
 
@@ -52,7 +50,7 @@ PvAccessReadInstruction::PvAccessReadInstruction()
   , m_finish{}
   , m_pv{}
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME)
+  AddAttributeDefinition(pv_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
   AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName).SetMandatory();
@@ -64,7 +62,7 @@ PvAccessReadInstruction::~PvAccessReadInstruction() = default;
 
 bool PvAccessReadInstruction::InitHook(UserInterface& ui, Workspace& ws)
 {
-  if (!GetAttributeValueAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, m_channel_name))
+  if (!GetAttributeValueAs(pv_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, m_channel_name))
   {
     return false;
   }
