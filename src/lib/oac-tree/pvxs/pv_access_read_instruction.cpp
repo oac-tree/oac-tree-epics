@@ -91,7 +91,7 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Wo
     {
       return ExecutionStatus::RUNNING;
     }
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;

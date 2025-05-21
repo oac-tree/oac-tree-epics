@@ -80,7 +80,7 @@ bool ChannelAccessWriteInstruction::InitHook(UserInterface& ui, Workspace& ws)
   m_value = channel_access_helper::ExtractChannelValue(GetNewValue(ui, ws));
   if (sup::dto::IsEmptyValue(m_value))
   {
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "value to write is Empty";
     LogWarning(ui, warning_message);
     return false;
@@ -112,7 +112,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
     {
       return ExecutionStatus::RUNNING;
     }
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
@@ -120,7 +120,7 @@ ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& 
   if (!m_pv->SetValue(m_value))
   {
     auto json_value = sup::dto::ValuesToJSONString(m_value).substr(0, 1024);
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "could not write value [" + json_value + "] to channel [" + m_channel_name + "]";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;

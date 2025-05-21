@@ -38,9 +38,6 @@
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/epics/pv_access_client_pv.h>
 
-#include <algorithm>
-#include <cmath>
-
 namespace sup {
 
 namespace oac_tree {
@@ -105,7 +102,7 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
     {
       return ExecutionStatus::RUNNING;
     }
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
@@ -113,7 +110,7 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
   if (!m_pv->SetValue(value))
   {
     auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "could not write value [" + json_value + "] to channel [" + m_channel_name + "]";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
@@ -145,7 +142,7 @@ sup::dto::AnyValue PvAccessWriteInstruction::GetNewValue(UserInterface& ui, Work
     }
     if (sup::dto::IsEmptyValue(result))
     {
-      std::string warning_message =
+      const std::string warning_message =
         InstructionWarningProlog(*this) + "value from field [" +
         GetAttributeString(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME) + "] is empty";
       LogWarning(ui, warning_message);

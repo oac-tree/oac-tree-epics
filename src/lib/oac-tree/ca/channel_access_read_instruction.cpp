@@ -80,7 +80,7 @@ bool ChannelAccessReadInstruction::InitHook(UserInterface& ui, Workspace& ws)
   auto channel_type = channel_access_helper::ChannelType(m_var_type);
   if (sup::dto::IsEmptyType(channel_type))
   {
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "type of variable field with name [" + m_var_field_name + "] is Empty";
     LogWarning(ui, warning_message);
     return false;
@@ -110,7 +110,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
     {
       return ExecutionStatus::RUNNING;
     }
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
@@ -118,7 +118,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
   auto var_val = channel_access_helper::ConvertToTypedAnyValue(ext_val, m_var_type);
   if (sup::dto::IsEmptyValue(var_val))
   {
-    std::string warning_message = InstructionWarningProlog(*this) +
+    const std::string warning_message = InstructionWarningProlog(*this) +
       "could not convert value from channel [" + m_channel_name +
       "] to type of variable field with name [" + m_var_field_name + "]";
     LogWarning(ui, warning_message);

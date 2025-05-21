@@ -94,7 +94,7 @@ bool RPCClientInstruction::InitHook(UserInterface& ui, Workspace& ws)
   }
   if (timeout_sec < 0)
   {
-    std::string error_message = InstructionSetupExceptionProlog(*this) +
+    const std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
     LogError(ui, error_message);
     return false;
@@ -155,7 +155,7 @@ sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace
     }
     if (sup::dto::IsEmptyValue(request))
     {
-      std::string warning_message = InstructionWarningProlog(*this) + "value from field [" +
+      const std::string warning_message = InstructionWarningProlog(*this) + "value from field [" +
         GetAttributeString(pv_access_helper::REQUEST_ATTRIBUTE_NAME) + "] is empty";
       LogWarning(ui, warning_message);
     }
