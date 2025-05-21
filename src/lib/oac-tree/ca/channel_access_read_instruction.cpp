@@ -25,6 +25,7 @@
 
 #include <sup/oac-tree/constants.h>
 #include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/generic_utils.h>
 #include <sup/oac-tree/instruction_registry.h>
 #include <sup/oac-tree/instruction_utils.h>
 #include <sup/oac-tree/user_interface.h>
@@ -47,6 +48,11 @@ static bool _ca_read_instruction_initialised_flag =
 
 ChannelAccessReadInstruction::ChannelAccessReadInstruction()
   : Instruction(ChannelAccessReadInstruction::Type)
+  , m_channel_name{}
+  , m_var_field_name{}
+  , m_var_type{}
+  , m_finish{}
+  , m_pv{}
 {
   AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
@@ -58,62 +64,86 @@ ChannelAccessReadInstruction::ChannelAccessReadInstruction()
 
 ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
 
-ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
+bool ChannelAccessReadInstruction::InitHook(UserInterface& ui, Workspace& ws)
 {
+  if (!GetAttributeValueAs(channel_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, m_channel_name))
+  {
+    return false;
+  }
   sup::dto::AnyValue value;
   if (!GetAttributeValue(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME, ws, ui, value))
   {
-    return ExecutionStatus::FAILURE;
+    return false;
   }
-  auto var_field_name = GetAttributeString(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME);
-  std::string channel_name;
-  if (!GetAttributeValueAs(channel_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
-  {
-    return ExecutionStatus::FAILURE;
-  }
-  auto channel_type = channel_access_helper::ChannelType(value.GetType());
+  m_var_field_name = GetAttributeString(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME);
+  m_var_type = value.GetType();
+  auto channel_type = channel_access_helper::ChannelType(m_var_type);
   if (sup::dto::IsEmptyType(channel_type))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
-      "type of variable field with name [" + var_field_name + "] is Empty";
+      "type of variable field with name [" + m_var_field_name + "] is Empty";
     LogWarning(ui, warning_message);
-    return ExecutionStatus::FAILURE;
+    return false;
   }
-  sup::epics::ChannelAccessPV pv(channel_name, channel_type);
-  sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  sup::dto::int64 timeout_ns = channel_access_helper::DEFAULT_TIMEOUT_NS;
+  if (!instruction_utils::GetVariableTimeoutAttribute(
+            *this, ui, ws, Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, timeout_ns))
+  {
+    return false;
+  }
+  m_finish = utils::GetNanosecsSinceEpoch() + timeout_ns;
+  m_pv = std::make_unique<sup::epics::ChannelAccessPV>(m_channel_name, channel_type);
+  return true;
+}
+
+ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
+{
+  if (IsHaltRequested())
   {
     return ExecutionStatus::FAILURE;
   }
-  if (timeout_sec < 0)
+  auto now = utils::GetNanosecsSinceEpoch();
+  auto ext_val = m_pv->GetExtendedValue();
+  if (!ext_val.connected || sup::dto::IsEmptyValue(ext_val.value))
   {
-    std::string error_message = InstructionSetupExceptionProlog(*this) +
-      "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    LogError(ui, error_message);
-    return ExecutionStatus::FAILURE;
-  }
-  if (!pv.WaitForValidValue(timeout_sec))
-  {
+    if (m_finish > now)
+    {
+      return ExecutionStatus::RUNNING;
+    }
     std::string warning_message = InstructionWarningProlog(*this) +
-      "channel with name [" + channel_name + "] timed out";
+      "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
-  auto ext_val = pv.GetExtendedValue();
-  auto var_val = channel_access_helper::ConvertToTypedAnyValue(ext_val, value.GetType());
+  auto var_val = channel_access_helper::ConvertToTypedAnyValue(ext_val, m_var_type);
   if (sup::dto::IsEmptyValue(var_val))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
-      "could not convert value from channel [" + channel_name +
-      "] to type of variable field with name [" + var_field_name + "]";
+      "could not convert value from channel [" + m_channel_name +
+      "] to type of variable field with name [" + m_var_field_name + "]";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
-  if (!SetValueFromAttributeName(*this, ws, ui, Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME, var_val))
+  if (!SetValueFromAttributeName(*this, ws, ui, Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME, ext_val.value))
   {
     return ExecutionStatus::FAILURE;
   }
   return ExecutionStatus::SUCCESS;
+}
+
+void ChannelAccessReadInstruction::ResetHook(UserInterface& ui)
+{
+  (void)ui;
+  Halt();
+}
+
+void ChannelAccessReadInstruction::HaltImpl()
+{
+  m_channel_name = "";
+  m_var_field_name = "";
+  m_var_type = sup::dto::EmptyType;
+  m_finish = 0;
+  m_pv.reset();
 }
 
 } // namespace oac_tree

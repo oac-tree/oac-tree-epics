@@ -33,6 +33,10 @@ namespace dto
 {
 class AnyValue;
 }  // namespace dto
+namespace epics
+{
+class ChannelAccessPV;
+}  // namespace epics
 
 namespace oac_tree
 {
@@ -80,7 +84,19 @@ public:
   static const std::string Type;
 
 private:
+  std::string m_channel_name;
+  std::string m_var_field_name;
+  sup::dto::AnyType m_var_type;
+  sup::dto::uint64 m_finish;
+  std::unique_ptr<sup::epics::ChannelAccessPV> m_pv;
+
+  bool InitHook(UserInterface& ui, Workspace& ws) override;
+
   ExecutionStatus ExecuteSingleImpl(UserInterface& ui, Workspace& ws) override;
+
+  void ResetHook(UserInterface& ui) override;
+
+  void HaltImpl() override;
 };
 
 }  // namespace oac_tree
