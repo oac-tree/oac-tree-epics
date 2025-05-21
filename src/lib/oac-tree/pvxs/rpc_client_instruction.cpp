@@ -36,7 +36,7 @@
 #include <sup/epics/pv_access_rpc_client.h>
 #include <sup/protocol/protocol_rpc.h>
 
-#include <algorithm>
+#include <thread>
 
 namespace
 {
@@ -104,7 +104,9 @@ bool RPCClientInstruction::InitHook(UserInterface& ui, Workspace& ws)
     sup::epics::PvAccessRPCClient rpc_client(client_config);
     return rpc_client(request);
   };
-  m_future = std::async(std::launch::async, task);
+  std::packaged_task<sup::dto::AnyValue()> task_wrapper(std::move(task));
+  m_future = task_wrapper.get_future();
+  std::thread(std::move(task_wrapper)).detach();
   return true;
 }
 
