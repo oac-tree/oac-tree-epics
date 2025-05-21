@@ -24,6 +24,7 @@
 #include "pv_access_helper.h"
 
 #include <sup/oac-tree/concrete_constraints.h>
+#include <sup/oac-tree/constants.h>
 #include <sup/oac-tree/exceptions.h>
 #include <sup/oac-tree/instruction.h>
 #include <sup/oac-tree/instruction_registry.h>
@@ -48,33 +49,26 @@ namespace oac_tree {
 
 const std::string RPCClientInstruction::Type = "RPCClient";
 
-const std::string SERVICE_ATTRIBUTE_NAME = "service";
-const std::string REQUEST_ATTRIBUTE_NAME = "requestVar";
-const std::string TYPE_ATTRIBUTE_NAME = "type";
-const std::string VALUE_ATTRIBUTE_NAME = "value";
-const std::string OUTPUT_ATTRIBUTE_NAME = "outputVar";
-const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
-
 static bool _rpcclient_instruction_initialised_flag =
   RegisterGlobalInstruction<RPCClientInstruction>();
 
 RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
 {
-  AddAttributeDefinition(SERVICE_ATTRIBUTE_NAME)
+  AddAttributeDefinition(pv_access_helper::SERVICE_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
-  AddAttributeDefinition(REQUEST_ATTRIBUTE_NAME)
+  AddAttributeDefinition(pv_access_helper::REQUEST_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName);
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME)
+  AddAttributeDefinition(Constants::TYPE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(Constants::VALUE_ATTRIBUTE_NAME);
+  AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName);
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+  AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
     .SetCategory(AttributeCategory::kBoth);
   AddConstraint(MakeConstraint<Xor>(
-    MakeConstraint<Exists>(REQUEST_ATTRIBUTE_NAME),
-    MakeConstraint<And>(MakeConstraint<Exists>(TYPE_ATTRIBUTE_NAME),
-                        MakeConstraint<Exists>(VALUE_ATTRIBUTE_NAME))));
+    MakeConstraint<Exists>(pv_access_helper::REQUEST_ATTRIBUTE_NAME),
+    MakeConstraint<And>(MakeConstraint<Exists>(Constants::TYPE_ATTRIBUTE_NAME),
+                        MakeConstraint<Exists>(Constants::VALUE_ATTRIBUTE_NAME))));
 }
 
 RPCClientInstruction::~RPCClientInstruction() = default;
@@ -88,13 +82,13 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
     return ExecutionStatus::FAILURE;
   }
   std::string service_name;
-  if (!GetAttributeValueAs(SERVICE_ATTRIBUTE_NAME, ws, ui, service_name))
+  if (!GetAttributeValueAs(pv_access_helper::SERVICE_ATTRIBUTE_NAME, ws, ui, service_name))
   {
     return ExecutionStatus::FAILURE;
   }
   auto client_config = sup::epics::GetDefaultRPCClientConfig(service_name);
   sup::dto::float64 timeout_sec = client_config.timeout;
-  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }
@@ -109,9 +103,10 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
   sup::epics::PvAccessRPCClient rpc_client(client_config);
 
   auto reply = rpc_client(request);
-  if (HasAttribute(OUTPUT_ATTRIBUTE_NAME))
+  if (HasAttribute(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME))
   {
-    if (!SetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, reply))
+    if (!SetValueFromAttributeName(*this, ws, ui, Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME,
+                                   reply))
     {
       return ExecutionStatus::FAILURE;
     }
@@ -122,22 +117,23 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
 
 sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace& ws)
 {
-  if (HasAttribute(REQUEST_ATTRIBUTE_NAME))
+  if (HasAttribute(pv_access_helper::REQUEST_ATTRIBUTE_NAME))
   {
     sup::dto::AnyValue request;
-    if (!GetAttributeValue(REQUEST_ATTRIBUTE_NAME, ws, ui, request))
+    if (!GetAttributeValue(pv_access_helper::REQUEST_ATTRIBUTE_NAME, ws, ui, request))
     {
       return {};
     }
     if (sup::dto::IsEmptyValue(request))
     {
-      std::string warning_message = InstructionWarningProlog(*this) +
-        "value from field [" + GetAttributeString(REQUEST_ATTRIBUTE_NAME) + "] is empty";
+      std::string warning_message = InstructionWarningProlog(*this) + "value from field [" +
+        GetAttributeString(pv_access_helper::REQUEST_ATTRIBUTE_NAME) + "] is empty";
       LogWarning(ui, warning_message);
     }
     return request;
   }
-  return ParseAnyValueAttributePair(*this, ws, ui, TYPE_ATTRIBUTE_NAME, VALUE_ATTRIBUTE_NAME);
+  return ParseAnyValueAttributePair(*this, ws, ui, Constants::TYPE_ATTRIBUTE_NAME,
+                                    Constants::VALUE_ATTRIBUTE_NAME);
 }
 
 } // namespace oac_tree
