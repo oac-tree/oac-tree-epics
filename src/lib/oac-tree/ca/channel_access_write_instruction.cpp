@@ -26,7 +26,9 @@
 #include <sup/oac-tree/constants.h>
 #include <sup/oac-tree/concrete_constraints.h>
 #include <sup/oac-tree/exceptions.h>
+#include <sup/oac-tree/generic_utils.h>
 #include <sup/oac-tree/instruction_registry.h>
+#include <sup/oac-tree/instruction_utils.h>
 #include <sup/oac-tree/user_interface.h>
 #include <sup/oac-tree/workspace.h>
 
@@ -48,6 +50,10 @@ static bool _ca_write_instruction_initialised_flag =
 
 ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()
   : Instruction(ChannelAccessWriteInstruction::Type)
+  , m_channel_name{}
+  , m_value{}
+  , m_finish{}
+  , m_pv{}
 {
   AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
@@ -65,48 +71,56 @@ ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()
 
 ChannelAccessWriteInstruction::~ChannelAccessWriteInstruction() = default;
 
-ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
+bool ChannelAccessWriteInstruction::InitHook(UserInterface& ui, Workspace& ws)
 {
-  (void)ui;
-  auto value = channel_access_helper::ExtractChannelValue(GetNewValue(ui, ws));
-  if (sup::dto::IsEmptyValue(value))
+  if (!GetAttributeValueAs(channel_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, m_channel_name))
+  {
+    return false;
+  }
+  m_value = channel_access_helper::ExtractChannelValue(GetNewValue(ui, ws));
+  if (sup::dto::IsEmptyValue(m_value))
   {
     std::string warning_message = InstructionWarningProlog(*this) +
       "value to write is Empty";
     LogWarning(ui, warning_message);
-    return ExecutionStatus::FAILURE;
+    return false;
   }
-  std::string channel_name;
-  if (!GetAttributeValueAs(channel_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  auto channel_type = m_value.GetType();
+  sup::dto::int64 timeout_ns = channel_access_helper::DEFAULT_TIMEOUT_NS;
+  if (!instruction_utils::GetVariableTimeoutAttribute(
+            *this, ui, ws, Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, timeout_ns))
+  {
+    return false;
+  }
+  m_finish = utils::GetNanosecsSinceEpoch() + timeout_ns;
+  m_pv = std::make_unique<sup::epics::ChannelAccessPV>(m_channel_name, channel_type);
+  return true;
+}
+
+ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
+{
+  if (IsHaltRequested())
   {
     return ExecutionStatus::FAILURE;
   }
-  auto channel_type = value.GetType();
-  sup::epics::ChannelAccessPV pv(channel_name, channel_type);
-  sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  auto now = utils::GetNanosecsSinceEpoch();
+  auto ext_val = m_pv->GetExtendedValue();
+  if (!ext_val.connected)
   {
-    return ExecutionStatus::FAILURE;
-  }
-  if (timeout_sec < 0)
-  {
-    std::string error_message = InstructionSetupExceptionProlog(*this) +
-      "timeout attribute is not positive: " + std::to_string(timeout_sec);
-    LogError(ui, error_message);
-    return ExecutionStatus::FAILURE;
-  }
-  if (!pv.WaitForConnected(timeout_sec))
-  {
+    if (m_finish > now)
+    {
+      return ExecutionStatus::RUNNING;
+    }
     std::string warning_message = InstructionWarningProlog(*this) +
-      "channel with name [" + channel_name + "] timed out";
+      "channel with name [" + m_channel_name + "] timed out";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
-  if (!pv.SetValue(value))
+  if (!m_pv->SetValue(m_value))
   {
-    auto json_value = sup::dto::ValuesToJSONString(value).substr(0, 1024);
+    auto json_value = sup::dto::ValuesToJSONString(m_value).substr(0, 1024);
     std::string warning_message = InstructionWarningProlog(*this) +
-      "could not write value [" + json_value + "] to channel [" + channel_name + "]";
+      "could not write value [" + json_value + "] to channel [" + m_channel_name + "]";
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
@@ -126,6 +140,20 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface& ui,
     return result;
   }
   return ParseAnyValueAttributePair(*this, ws, ui, Constants::TYPE_ATTRIBUTE_NAME, Constants::VALUE_ATTRIBUTE_NAME);
+}
+
+void ChannelAccessWriteInstruction::ResetHook(UserInterface& ui)
+{
+  (void)ui;
+  Halt();
+}
+
+void ChannelAccessWriteInstruction::HaltImpl()
+{
+  m_channel_name = "";
+  m_value = sup::dto::AnyValue{};
+  m_finish = 0;
+  m_pv.reset();
 }
 
 } // namespace oac_tree
