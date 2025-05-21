@@ -54,6 +54,7 @@ static bool _rpcclient_instruction_initialised_flag =
 
 RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
+  , m_future{}
 {
   AddAttributeDefinition(pv_access_helper::SERVICE_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
@@ -73,36 +74,51 @@ RPCClientInstruction::RPCClientInstruction()
 
 RPCClientInstruction::~RPCClientInstruction() = default;
 
-
-ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
+bool RPCClientInstruction::InitHook(UserInterface& ui, Workspace& ws)
 {
   auto request = GetRequest(ui, ws);
   if (sup::dto::IsEmptyValue(request))
   {
-    return ExecutionStatus::FAILURE;
+    return false;
   }
   std::string service_name;
   if (!GetAttributeValueAs(pv_access_helper::SERVICE_ATTRIBUTE_NAME, ws, ui, service_name))
   {
-    return ExecutionStatus::FAILURE;
+    return false;
   }
   auto client_config = sup::epics::GetDefaultRPCClientConfig(service_name);
   sup::dto::float64 timeout_sec = client_config.timeout;
   if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
-    return ExecutionStatus::FAILURE;
+    return false;
   }
   if (timeout_sec < 0)
   {
     std::string error_message = InstructionSetupExceptionProlog(*this) +
       "timeout attribute is not positive: " + std::to_string(timeout_sec);
     LogError(ui, error_message);
-    return ExecutionStatus::FAILURE;
+    return false;
   }
   client_config.timeout = timeout_sec;
-  sup::epics::PvAccessRPCClient rpc_client(client_config);
+  auto task = [client_config, request]() {
+    sup::epics::PvAccessRPCClient rpc_client(client_config);
+    return rpc_client(request);
+  };
+  m_future = std::async(std::launch::async, task);
+  return true;
+}
 
-  auto reply = rpc_client(request);
+ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
+{
+  if (IsHaltRequested())
+  {
+    return ExecutionStatus::FAILURE;
+  }
+  if (m_future.wait_for(std::chrono::nanoseconds(0)) != std::future_status::ready)
+  {
+    return ExecutionStatus::RUNNING;
+  }
+  auto reply = m_future.get();
   if (HasAttribute(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME))
   {
     if (!SetValueFromAttributeName(*this, ws, ui, Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME,
@@ -113,6 +129,17 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
   }
   return IsSuccessfulReply(reply) ? ExecutionStatus::SUCCESS
                                   : ExecutionStatus::FAILURE;
+}
+
+void RPCClientInstruction::ResetHook(UserInterface& ui)
+{
+  (void)ui;
+  Halt();
+}
+
+void RPCClientInstruction::HaltImpl()
+{
+  m_future = {};
 }
 
 sup::dto::AnyValue RPCClientInstruction::GetRequest(UserInterface& ui, Workspace& ws)

@@ -25,6 +25,8 @@
 
 #include <sup/oac-tree/instruction.h>
 
+#include <future>
+
 namespace sup
 {
 namespace dto
@@ -64,9 +66,17 @@ public:
   static const std::string Type;
 
 private:
+  std::future<sup::dto::AnyValue> m_future;
+
+  bool InitHook(UserInterface& ui, Workspace& ws) override;
+
   ExecutionStatus ExecuteSingleImpl(UserInterface& ui, Workspace& ws) override;
 
   sup::dto::AnyValue GetRequest(UserInterface& ui, Workspace& ws);
+
+  void ResetHook(UserInterface& ui) override;
+
+  void HaltImpl() override;
 };
 
 }  // namespace oac_tree
