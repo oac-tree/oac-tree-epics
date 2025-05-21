@@ -35,6 +35,9 @@ namespace oac_tree
 namespace channel_access_helper
 {
 const double DEFAULT_TIMEOUT_SEC = 2.0;
+const sup::dto::int64 DEFAULT_TIMEOUT_NS = 2000000000;
+
+const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
 
 const std::string VALUE_FIELD_NAME = "value";
 const std::string CONNECTED_FIELD_NAME = "connected";

@@ -23,6 +23,7 @@
 #include "channel_access_read_instruction.h"
 #include "channel_access_helper.h"
 
+#include <sup/oac-tree/constants.h>
 #include <sup/oac-tree/exceptions.h>
 #include <sup/oac-tree/instruction_registry.h>
 #include <sup/oac-tree/instruction_utils.h>
@@ -41,21 +42,17 @@ namespace oac_tree {
 
 const std::string ChannelAccessReadInstruction::Type = "ChannelAccessRead";
 
-const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-const std::string OUTPUT_ATTRIBUTE_NAME = "outputVar";
-const std::string TIMEOUT_ATTRIBUTE_NAME = "timeout";
-
 static bool _ca_read_instruction_initialised_flag =
   RegisterGlobalInstruction<ChannelAccessReadInstruction>();
 
 ChannelAccessReadInstruction::ChannelAccessReadInstruction()
   : Instruction(ChannelAccessReadInstruction::Type)
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME)
+  AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
-  AddAttributeDefinition(OUTPUT_ATTRIBUTE_NAME)
+  AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName).SetMandatory();
-  AddAttributeDefinition(TIMEOUT_ATTRIBUTE_NAME, sup::dto::Float64Type)
+  AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
     .SetCategory(AttributeCategory::kBoth);
 }
 
@@ -64,13 +61,13 @@ ChannelAccessReadInstruction::~ChannelAccessReadInstruction() = default;
 ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
   sup::dto::AnyValue value;
-  if (!GetAttributeValue(OUTPUT_ATTRIBUTE_NAME, ws, ui, value))
+  if (!GetAttributeValue(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME, ws, ui, value))
   {
     return ExecutionStatus::FAILURE;
   }
-  auto var_field_name = GetAttributeString(OUTPUT_ATTRIBUTE_NAME);
+  auto var_field_name = GetAttributeString(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME);
   std::string channel_name;
-  if (!GetAttributeValueAs(CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
+  if (!GetAttributeValueAs(channel_access_helper::CHANNEL_ATTRIBUTE_NAME, ws, ui, channel_name))
   {
     return ExecutionStatus::FAILURE;
   }
@@ -84,7 +81,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
   }
   sup::epics::ChannelAccessPV pv(channel_name, channel_type);
   sup::dto::float64 timeout_sec = channel_access_helper::DEFAULT_TIMEOUT_SEC;
-  if (!GetAttributeValueAs(TIMEOUT_ATTRIBUTE_NAME, ws, ui, timeout_sec))
+  if (!GetAttributeValueAs(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, ws, ui, timeout_sec))
   {
     return ExecutionStatus::FAILURE;
   }
@@ -112,7 +109,7 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
     LogWarning(ui, warning_message);
     return ExecutionStatus::FAILURE;
   }
-  if (!SetValueFromAttributeName(*this, ws, ui, OUTPUT_ATTRIBUTE_NAME, var_val))
+  if (!SetValueFromAttributeName(*this, ws, ui, Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME, var_val))
   {
     return ExecutionStatus::FAILURE;
   }
