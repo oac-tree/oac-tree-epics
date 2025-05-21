@@ -99,6 +99,7 @@ bool ChannelAccessWriteInstruction::InitHook(UserInterface& ui, Workspace& ws)
 
 ExecutionStatus ChannelAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, Workspace& ws)
 {
+  (void)ws;
   if (IsHaltRequested())
   {
     return ExecutionStatus::FAILURE;
