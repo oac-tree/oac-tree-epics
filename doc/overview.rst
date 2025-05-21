@@ -3,6 +3,8 @@ Overview
 
 This plugin provides instructions to read and write from/to EPICS process variables and a single instruction to call functions that are hosted by an EPICS RPC server.
 
+.. warning:: This plugin also contains a library ``liboac-tree-misc`` that is deprecated. Please use the ``oac-tree-plugin-system`` plugin instead. This library will be removed in future releases.
+
 .. list-table:: EPICS Instructions
    :widths: 25 25
    :header-rows: 1
