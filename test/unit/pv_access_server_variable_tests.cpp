@@ -109,8 +109,7 @@ TEST_F(PvAccessServerVariableTest, Setup)
     std::string value;
     // Reset has no effect on the value attribute
     variable2.GetAttributeValue("value", value);
-    auto reset_does_nothing = value == UINT16_STRUCT_VALUE;
-
+    auto reset_does_nothing = ( value == UINT16_STRUCT_VALUE );
     EXPECT_TRUE(reset_does_nothing);
   }
 }

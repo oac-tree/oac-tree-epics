@@ -251,6 +251,24 @@ TEST_F(RPCClientInstructionTest, ValueParseError)
   EXPECT_NE(message.find("ValueCannotBeParsed"), std::string::npos);
 }
 
+TEST_F(RPCClientInstructionTest, NegativeTimeout)
+{
+  Procedure proc;
+  Workspace ws;
+
+  RPCClientInstruction instruction{};
+  EXPECT_TRUE(instruction.AddAttribute("service", "Does_Not_Exist"));
+  EXPECT_TRUE(instruction.AddAttribute("type", REQUEST_TYPE));
+  EXPECT_TRUE(instruction.AddAttribute("value", REQUEST_VALUE));
+  EXPECT_TRUE(instruction.AddAttribute("timeout", "-1.0"));
+  EXPECT_NO_THROW(instruction.Setup(proc));
+
+  EXPECT_EQ(ui.m_log_entries.size(), 0);
+  EXPECT_NO_THROW(instruction.ExecuteSingle(ui, ws));
+  EXPECT_EQ(instruction.GetStatus(), ExecutionStatus::FAILURE);
+}
+
+
 TEST_F(RPCClientInstructionTest, ServiceTimeout)
 {
   Procedure proc;
