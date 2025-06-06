@@ -95,7 +95,6 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
     return ExecutionStatus::FAILURE;
   }
   auto now = utils::GetNanosecsSinceEpoch();
-  auto ext_val = m_pv->GetExtendedValue();
   if (!m_pv->IsConnected())
   {
     if (m_finish > now)
