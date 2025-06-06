@@ -40,6 +40,11 @@ using namespace sup::oac_tree;
 static const std::string UINT16_STRUCT_TYPE =
   R"RAW({"type":"seq-test::uint16-struct-type","attributes":[{"value":{"type":"uint16"}}]})RAW";
 
+static const std::string UINT16_STRUCT_VALUE = R"RAW({"value":42})RAW";
+
+static const std::string UINT16TYPE =
+  R"RAW({"type":"uint16"})RAW";
+
 static const std::string UINT16_STRUCT_WRONG_VALUE =
   R"RAW({"value":"A_String!"})RAW";
 
@@ -89,6 +94,24 @@ TEST_F(PvAccessServerVariableTest, Setup)
     EXPECT_TRUE(variable.AddAttribute("type", UINT16_STRUCT_TYPE));
     EXPECT_TRUE(variable.AddAttribute("value", UINT16_STRUCT_WRONG_VALUE));
     EXPECT_THROW(variable.Setup(ws), VariableSetupException);
+  }
+  // Reset variable
+  {
+    PvAccessServerVariable variable1;
+    EXPECT_NO_THROW(variable1.Reset(ws));
+
+    PvAccessServerVariable variable2;
+    EXPECT_TRUE(variable2.AddAttribute("channel", "pvaccess-server-var-test::setup2"));
+    EXPECT_TRUE(variable2.AddAttribute("type", UINT16_STRUCT_TYPE));
+    EXPECT_TRUE(variable2.AddAttribute("value", UINT16_STRUCT_VALUE));
+    EXPECT_NO_THROW(variable2.Setup(ws));
+    EXPECT_NO_THROW(variable2.Reset(ws));
+    std::string value;
+    // Reset has no effect on the value attribute
+    variable2.GetAttributeValue("value", value);
+    auto reset_does_nothing = value == UINT16_STRUCT_VALUE;
+
+    EXPECT_TRUE(reset_does_nothing);
   }
 }
 
