@@ -4,7 +4,7 @@
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
     <Plugin>liboac-tree-ca.so</Plugin>
-    <Plugin>liboac-tree-misc.so</Plugin>
+    <Plugin>liboac-tree-system.so</Plugin>
     <Sequence>
         <Log severity="info" message="Step 1 - Wait for some time"/>
         <Wait timeout="1.0"/>

@@ -3,8 +3,8 @@
            name="Trivial procedure for testing purposes"
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
-    <Plugin>liboac-tree-misc.so</Plugin>
     <Plugin>liboac-tree-pvxs.so</Plugin>
+    <Plugin>liboac-tree-system.so</Plugin>
     <Repeat maxCount="10">
         <Sequence>
             <Wait name="wait" timeout="1.0"/>
