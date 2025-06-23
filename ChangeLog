@@ -1,3 +1,7 @@
+Changes for 4.2.0:
+
+- Remove obsolete oac-tree-misc plugin (oac-tree-system shall be used instead)
+
 Changes for 4.1.0:
 
 - CMake changes to allow for pulling sup-protocol as a github dependency

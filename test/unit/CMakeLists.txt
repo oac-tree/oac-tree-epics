@@ -17,8 +17,6 @@ target_sources(${unit-tests}
   pv_access_server_variable_tests.cpp
   pv_access_write_instruction_tests.cpp
   rpc_client_instruction_tests.cpp
-  system_call_instruction_tests.cpp
-  system_clock_variable_tests.cpp
   unit_test_helper.cpp
 )
 
@@ -29,6 +27,6 @@ target_include_directories(${unit-tests}
 
 find_package(GTest REQUIRED)
 
-target_link_libraries(${unit-tests} PUBLIC GTest::GTest GTest::Main oac-tree-ca oac-tree-misc oac-tree-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
+target_link_libraries(${unit-tests} PUBLIC GTest::GTest GTest::Main oac-tree-ca oac-tree-pvxs sup-epics::sup-epics-test sup-protocol::sup-protocol)
 
 gtest_discover_tests(${unit-tests} DISCOVERY_MODE PRE_TEST)
