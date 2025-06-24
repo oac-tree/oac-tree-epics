@@ -4,13 +4,10 @@
            xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
            xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
     <Plugin>liboac-tree-ca.so</Plugin>
-    <Plugin>liboac-tree-system.so</Plugin>
     <Sequence>
         <Log severity="info" message="Step 1 - Wait for some time"/>
         <Wait timeout="1.0"/>
         <Log severity="info" message="Step 2 - caput"/>
-        <SystemCall name="ca-put"
-            command='/usr/bin/caput -a SEQ-TEST:UIARRAY 8 0 1 2 3 4 5 6 7'/>
         <Wait timeout="1.0"/>
         <Log severity="info" message="Step 3 - Read variables"/>
         <Log severity="info" inputVar="boolean"/>
