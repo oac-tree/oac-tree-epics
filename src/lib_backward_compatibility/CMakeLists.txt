@@ -35,22 +35,3 @@ target_sources(sequencer-pvxs
 target_link_libraries(sequencer-pvxs PUBLIC oac-tree-pvxs)
 
 install(TARGETS sequencer-pvxs DESTINATION ${PLUGIN_PATH})
-
-# misc library compatibility
-add_library(sequencer-misc SHARED)
-
-set_target_properties(sequencer-misc PROPERTIES
-  EXPORT_NAME sequencer-misc
-  SOVERSION ${LIBSOVERSION}
-  VERSION ${LIBVERSION}
-  LIBRARY_OUTPUT_DIRECTORY ${PLUGIN_RUNTIME_DIRECTORY}
-)
-
-target_sources(sequencer-misc
-  PRIVATE
-  dummy.cpp
-)
-
-target_link_libraries(sequencer-misc PUBLIC oac-tree-misc)
-
-install(TARGETS sequencer-misc DESTINATION ${PLUGIN_PATH})
