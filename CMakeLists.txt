@@ -19,6 +19,7 @@ cmake_minimum_required(VERSION 3.13...3.31)
 project(sup-oac-tree-plugin-epics VERSION 4.2.0 LANGUAGES CXX)
 
 option(COA_COVERAGE "Generate unit test coverage information" OFF)
+option(COA_PARASOFT_INTEGRATION "Parasoft integration" OFF)
 option(COA_BUILD_TESTS "Build unit tests" ON)
 option(COA_BUILD_DOCUMENTATION "Build documentation" OFF)
 option(COA_NO_CODAC "Don't look for the presence of CODAC environment" OFF)
