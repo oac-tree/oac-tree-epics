@@ -54,7 +54,7 @@ const std::string VALUE_ATTRIBUTE_NAME = "value";
 PvAccessServerVariable::PvAccessServerVariable()
   : Variable(PvAccessServerVariable::Type)
   , m_anytype{}
-  , m_workspace{}
+  , m_workspace{nullptr}
 {
   (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
   (void)AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
