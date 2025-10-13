@@ -68,7 +68,7 @@ private:
   void ResetImpl(const Workspace& ws) override;
   void TeardownImpl() override;
 
-  sup::dto::AnyType m_type;
+  sup::dto::AnyType m_anytype;
   const Workspace* m_workspace;
 };
 

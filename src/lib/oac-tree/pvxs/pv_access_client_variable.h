@@ -62,7 +62,7 @@ private:
   SetupTeardownActions SetupImpl(const Workspace& ws) override;
   void TeardownImpl() override;
 
-  sup::dto::AnyType m_type;
+  sup::dto::AnyType m_anytype;
   std::unique_ptr<epics::PvAccessClientPV> m_pv;
 };
 

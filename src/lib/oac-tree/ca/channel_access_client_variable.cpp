@@ -44,7 +44,7 @@ const std::string TYPE_ATTRIBUTE_NAME = "type";
 
 ChannelAccessClientVariable::ChannelAccessClientVariable()
   : Variable(ChannelAccessClientVariable::Type)
-  , m_type{}
+  , m_anytype{}
   , m_pv{}
 {
   (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
@@ -60,7 +60,7 @@ bool ChannelAccessClientVariable::GetValueImpl(sup::dto::AnyValue &value) const
     return false;
   }
   auto ext_value = m_pv->GetExtendedValue();
-  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
+  auto result = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_anytype);
   if (sup::dto::IsEmptyValue(result))
   {
     return false;
@@ -106,8 +106,8 @@ SetupTeardownActions ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
     throw VariableSetupException(error_message);
   }
-  m_type = parser.MoveAnyType();
-  auto channel_type = channel_access_helper::ChannelType(m_type);
+  m_anytype = parser.MoveAnyType();
+  auto channel_type = channel_access_helper::ChannelType(m_anytype);
   if (sup::dto::IsEmptyType(channel_type))
   {
     std::string error_message = VariableSetupExceptionProlog(*this) +
@@ -116,7 +116,7 @@ SetupTeardownActions ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
   }
   auto callback =
     [this](const epics::ChannelAccessPV::ExtendedValue& ext_value) {
-      auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_type);
+      auto value = channel_access_helper::ConvertToTypedAnyValue(ext_value, m_anytype);
       Notify(value, ext_value.connected);
       return;
     };
@@ -128,7 +128,7 @@ SetupTeardownActions ChannelAccessClientVariable::SetupImpl(const Workspace& ws)
 void ChannelAccessClientVariable::TeardownImpl()
 {
   m_pv = nullptr;
-  m_type = sup::dto::EmptyType;
+  m_anytype = sup::dto::EmptyType;
 }
 
 } // namespace oac_tree

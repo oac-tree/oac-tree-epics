@@ -53,7 +53,7 @@ const std::string VALUE_ATTRIBUTE_NAME = "value";
 
 PvAccessServerVariable::PvAccessServerVariable()
   : Variable(PvAccessServerVariable::Type)
-  , m_type{}
+  , m_anytype{}
   , m_workspace{}
 {
   (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
@@ -80,7 +80,7 @@ sup::dto::AnyValue PvAccessServerVariable::GetInitialValue(const sup::dto::AnyTy
   {
     auto val_str = GetAttributeString(VALUE_ATTRIBUTE_NAME);
     sup::dto::JSONAnyValueParser value_parser;
-    if (!value_parser.TypedParseString(m_type, val_str))
+    if (!value_parser.TypedParseString(m_anytype, val_str))
     {
       std::string error_message = VariableSetupExceptionProlog(*this) +
         "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
@@ -94,13 +94,13 @@ sup::dto::AnyValue PvAccessServerVariable::GetInitialValue(const sup::dto::AnyTy
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
 {
   auto converted_val = pv_access_helper::ConvertToTypedAnyValue(
-    GetSharedServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
+    GetSharedServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_anytype);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
 bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
 {
-  sup::dto::AnyValue copy(m_type);
+  sup::dto::AnyValue copy(m_anytype);
   if (!sup::dto::TryConvert(copy, value))
   {
     return false;
@@ -112,7 +112,7 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
 bool PvAccessServerVariable::IsAvailableImpl() const
 {
   auto value = pv_access_helper::ConvertToTypedAnyValue(
-    GetSharedServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_type);
+    GetSharedServer().GetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME)), m_anytype);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -128,12 +128,12 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
       "could not parse attribute [" + TYPE_ATTRIBUTE_NAME + "] with value [" + type_attr_val + "]";
     throw VariableSetupException(error_message);
   }
-  m_type = parser.MoveAnyType();
-  auto val = GetInitialValue(m_type);
-  // Avoid dependence on destruction order of m_server and m_type.
+  m_anytype = parser.MoveAnyType();
+  auto val = GetInitialValue(m_anytype);
+  // Avoid dependence on destruction order of m_server and m_anytype.
   auto callback = [this](const sup::dto::AnyValue& value)
   {
-    auto typed_value = pv_access_helper::ConvertToTypedAnyValue(value, m_type);
+    auto typed_value = pv_access_helper::ConvertToTypedAnyValue(value, m_anytype);
     Notify(typed_value, true);
     return;
   };
@@ -152,11 +152,11 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
 void PvAccessServerVariable::ResetImpl(const Workspace& ws)
 {
   (void)ws;
-  if (sup::dto::IsEmptyType(m_type))
+  if (sup::dto::IsEmptyType(m_anytype))
   {
     return;
   }
-  auto val = GetInitialValue(m_type);
+  auto val = GetInitialValue(m_anytype);
   (void)GetSharedPvAccessServerRegistry().GetServer(m_workspace)
     .SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
               pv_access_helper::PackIntoStructIfScalar(val));
@@ -164,7 +164,7 @@ void PvAccessServerVariable::ResetImpl(const Workspace& ws)
 
 void PvAccessServerVariable::TeardownImpl()
 {
-  m_type = sup::dto::EmptyType;
+  m_anytype = sup::dto::EmptyType;
   m_workspace = nullptr;
 }
 

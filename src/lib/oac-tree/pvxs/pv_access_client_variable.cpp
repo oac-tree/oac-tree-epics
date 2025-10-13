@@ -45,7 +45,7 @@ const std::string TYPE_ATTRIBUTE_NAME = "type";
 
 PvAccessClientVariable::PvAccessClientVariable()
   : Variable(PvAccessClientVariable::Type)
-  , m_type{}
+  , m_anytype{}
   , m_pv{}
 {
   (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
@@ -60,9 +60,9 @@ bool PvAccessClientVariable::GetValueImpl(sup::dto::AnyValue& value) const
   {
     return false;
   }
-  auto converted_val = sup::dto::IsEmptyType(m_type)
+  auto converted_val = sup::dto::IsEmptyType(m_anytype)
                            ? m_pv->GetValue()
-                           : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_type);
+                           : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_anytype);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
@@ -73,13 +73,13 @@ bool PvAccessClientVariable::SetValueImpl(const sup::dto::AnyValue& value)
     return false;
   }
   sup::dto::AnyValue copy;
-  if (sup::dto::IsEmptyType(m_type))
+  if (sup::dto::IsEmptyType(m_anytype))
   {
     copy = value;
   }
   else
   {
-    copy = sup::dto::AnyValue(m_type);
+    copy = sup::dto::AnyValue(m_anytype);
     if (!sup::dto::TryConvert(copy, value))
     {
       return false;
@@ -94,9 +94,9 @@ bool PvAccessClientVariable::IsAvailableImpl() const
   {
     return false;
   }
-  auto value = sup::dto::IsEmptyType(m_type)
+  auto value = sup::dto::IsEmptyType(m_anytype)
                    ? m_pv->GetValue()
-                   : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_type);
+                   : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_anytype);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -119,14 +119,14 @@ SetupTeardownActions PvAccessClientVariable::SetupImpl(const Workspace& ws)
         "could not parse type [" + type_attr + "]";
       throw VariableSetupException(error_message);
     }
-    m_type = parser.MoveAnyType();
+    m_anytype = parser.MoveAnyType();
   }
-  // Avoid dependence on destruction order of m_pv and m_type.
+  // Avoid dependence on destruction order of m_pv and m_anytype.
   auto callback = [this](const epics::PvAccessClientPV::ExtendedValue& ext_value)
   {
-    auto value = sup::dto::IsEmptyType(m_type)
+    auto value = sup::dto::IsEmptyType(m_anytype)
                      ? ext_value.value
-                     : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, m_type);
+                     : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, m_anytype);
     Notify(value, ext_value.connected);
     return;
   };
@@ -138,7 +138,7 @@ SetupTeardownActions PvAccessClientVariable::SetupImpl(const Workspace& ws)
 void PvAccessClientVariable::TeardownImpl()
 {
   m_pv.reset();
-  m_type = sup::dto::EmptyType;
+  m_anytype = sup::dto::EmptyType;
 }
 
 }  // namespace oac_tree

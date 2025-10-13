@@ -94,7 +94,7 @@ private:
   bool IsAvailableImpl() const override;
   SetupTeardownActions SetupImpl(const Workspace& ws) override;
   void TeardownImpl() override;
-  sup::dto::AnyType m_type;  // Order matters: this member has to be destroyed after the PV
+  sup::dto::AnyType m_anytype;  // Order matters: this member has to be destroyed after the PV
   std::unique_ptr<epics::ChannelAccessPV> m_pv;
 };
 
