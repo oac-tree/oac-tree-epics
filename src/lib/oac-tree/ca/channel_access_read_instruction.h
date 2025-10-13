@@ -79,7 +79,7 @@ class ChannelAccessReadInstruction : public Instruction
 {
 public:
   ChannelAccessReadInstruction();
-  ~ChannelAccessReadInstruction();
+  ~ChannelAccessReadInstruction() override;
 
   static const std::string Type;
 

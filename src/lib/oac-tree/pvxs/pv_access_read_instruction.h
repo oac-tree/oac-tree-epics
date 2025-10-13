@@ -65,7 +65,7 @@ class PvAccessReadInstruction : public Instruction
 {
 public:
   PvAccessReadInstruction();
-  ~PvAccessReadInstruction();
+  ~PvAccessReadInstruction() override;
 
   static const std::string Type;
 

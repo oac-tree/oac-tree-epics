@@ -78,7 +78,7 @@ class ChannelAccessWriteInstruction : public Instruction
 {
 public:
   ChannelAccessWriteInstruction();
-  ~ChannelAccessWriteInstruction();
+  ~ChannelAccessWriteInstruction() override;
 
   static const std::string Type;
 

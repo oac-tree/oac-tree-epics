@@ -61,7 +61,7 @@ class RPCClientInstruction : public Instruction
 {
 public:
   RPCClientInstruction();
-  ~RPCClientInstruction();
+  ~RPCClientInstruction() override;
 
   static const std::string Type;
 

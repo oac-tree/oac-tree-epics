@@ -54,7 +54,7 @@ class PvAccessServerVariable : public Variable
 {
 public:
   PvAccessServerVariable();
-  ~PvAccessServerVariable();
+  ~PvAccessServerVariable() override;
 
   static const std::string Type;
 
