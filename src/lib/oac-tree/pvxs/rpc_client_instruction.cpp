@@ -56,15 +56,15 @@ RPCClientInstruction::RPCClientInstruction()
   : Instruction(RPCClientInstruction::Type)
   , m_future{}
 {
-  AddAttributeDefinition(pv_access_helper::SERVICE_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(pv_access_helper::SERVICE_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
-  AddAttributeDefinition(pv_access_helper::REQUEST_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(pv_access_helper::REQUEST_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName);
-  AddAttributeDefinition(Constants::TYPE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(Constants::VALUE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(Constants::TYPE_ATTRIBUTE_NAME);
+  (void)AddAttributeDefinition(Constants::VALUE_ATTRIBUTE_NAME);
+  (void)AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName);
-  AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
+  (void)AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
     .SetCategory(AttributeCategory::kBoth);
   AddConstraint(MakeConstraint<Xor>(
     MakeConstraint<Exists>(pv_access_helper::REQUEST_ATTRIBUTE_NAME),

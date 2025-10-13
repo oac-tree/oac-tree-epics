@@ -56,9 +56,9 @@ PvAccessServerVariable::PvAccessServerVariable()
   , m_type{}
   , m_workspace{}
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
+  (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  (void)AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  (void)AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
 }
 
 PvAccessServerVariable::~PvAccessServerVariable() = default;
@@ -157,7 +157,7 @@ void PvAccessServerVariable::ResetImpl(const Workspace& ws)
     return;
   }
   auto val = GetInitialValue(m_type);
-  GetSharedPvAccessServerRegistry().GetServer(m_workspace)
+  (void)GetSharedPvAccessServerRegistry().GetServer(m_workspace)
     .SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
               pv_access_helper::PackIntoStructIfScalar(val));
 }

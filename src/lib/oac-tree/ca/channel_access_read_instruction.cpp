@@ -54,11 +54,11 @@ ChannelAccessReadInstruction::ChannelAccessReadInstruction()
   , m_finish{}
   , m_pv{}
 {
-  AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
-  AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(Constants::OUTPUT_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName).SetMandatory();
-  AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
+  (void)AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
     .SetCategory(AttributeCategory::kBoth);
 }
 

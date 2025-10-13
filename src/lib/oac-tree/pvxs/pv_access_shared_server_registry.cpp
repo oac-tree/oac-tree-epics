@@ -67,7 +67,7 @@ void PvAccessSharedServerRegistry::Teardown(const Workspace* ws)
     throw InvalidOperationException("Trying to setup unknown PvAccessSharedServer");
   }
   iter->second->Teardown();
-  m_servers.erase(iter);
+  (void)m_servers.erase(iter);
 }
 
 }  // namespace oac_tree

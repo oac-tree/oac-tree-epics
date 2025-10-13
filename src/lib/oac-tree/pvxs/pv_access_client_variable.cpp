@@ -48,8 +48,8 @@ PvAccessClientVariable::PvAccessClientVariable()
   , m_type{}
   , m_pv{}
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
+  (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  (void)AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
 }
 
 PvAccessClientVariable::~PvAccessClientVariable() = default;

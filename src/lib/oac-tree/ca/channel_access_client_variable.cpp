@@ -47,8 +47,8 @@ ChannelAccessClientVariable::ChannelAccessClientVariable()
   , m_type{}
   , m_pv{}
 {
-  AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
+  (void)AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
 }
 
 ChannelAccessClientVariable::~ChannelAccessClientVariable() = default;

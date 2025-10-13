@@ -36,9 +36,6 @@
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/epics/channel_access_pv.h>
 
-#include <algorithm>
-#include <cmath>
-
 namespace sup {
 
 namespace oac_tree {
@@ -55,13 +52,13 @@ ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()
   , m_finish{}
   , m_pv{}
 {
-  AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(channel_access_helper::CHANNEL_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kBoth).SetMandatory();
-  AddAttributeDefinition(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME)
+  (void)AddAttributeDefinition(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME)
     .SetCategory(AttributeCategory::kVariableName);
-  AddAttributeDefinition(Constants::TYPE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(Constants::VALUE_ATTRIBUTE_NAME);
-  AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
+  (void)AddAttributeDefinition(Constants::TYPE_ATTRIBUTE_NAME);
+  (void)AddAttributeDefinition(Constants::VALUE_ATTRIBUTE_NAME);
+  (void)AddAttributeDefinition(Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, sup::dto::Float64Type)
     .SetCategory(AttributeCategory::kBoth);
   AddConstraint(MakeConstraint<Xor>(
     MakeConstraint<Exists>(Constants::GENERIC_VARIABLE_NAME_ATTRIBUTE_NAME),
