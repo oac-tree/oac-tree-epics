@@ -32,6 +32,7 @@
 #include <sup/oac-tree/user_interface.h>
 #include <sup/oac-tree/workspace.h>
 
+#include <sup/dto/anytype.h>
 #include <sup/dto/anyvalue.h>
 #include <sup/dto/anyvalue_helper.h>
 #include <sup/epics/channel_access_pv.h>
@@ -83,9 +84,9 @@ bool ChannelAccessWriteInstruction::InitHook(UserInterface& ui, Workspace& ws)
     return false;
   }
   auto channel_type = m_value.GetType();
-  sup::dto::int64 timeout_ns = channel_access_helper::DEFAULT_TIMEOUT_NS;
+  sup::dto::uint64 timeout_ns = channel_access_helper::DEFAULT_TIMEOUT_NS;
   if (!instruction_utils::GetVariableTimeoutAttribute(
-            *this, ui, ws, Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, timeout_ns))
+          *this, ui, ws, Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, timeout_ns))
   {
     return false;
   }

@@ -85,7 +85,7 @@ bool ChannelAccessReadInstruction::InitHook(UserInterface& ui, Workspace& ws)
     LogWarning(ui, warning_message);
     return false;
   }
-  sup::dto::int64 timeout_ns = channel_access_helper::DEFAULT_TIMEOUT_NS;
+  sup::dto::uint64 timeout_ns = channel_access_helper::DEFAULT_TIMEOUT_NS;
   if (!instruction_utils::GetVariableTimeoutAttribute(
             *this, ui, ws, Constants::TIMEOUT_SEC_ATTRIBUTE_NAME, timeout_ns))
   {
