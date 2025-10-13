@@ -38,6 +38,10 @@ class PvAccessSharedServerRegistry
 {
 public:
   PvAccessSharedServerRegistry();
+  PvAccessSharedServerRegistry(const PvAccessSharedServerRegistry&) = delete;
+  PvAccessSharedServerRegistry(PvAccessSharedServerRegistry&&) = delete;
+  PvAccessSharedServerRegistry& operator=(const PvAccessSharedServerRegistry&) = delete;
+  PvAccessSharedServerRegistry& operator=(PvAccessSharedServerRegistry&&) = delete;
   ~PvAccessSharedServerRegistry();
 
   PvAccessSharedServer& GetServer(const Workspace* ws);
