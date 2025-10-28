@@ -1,3 +1,7 @@
+Changes for 4.3.0:
+
+- Quality improvements
+
 Changes for 4.2.0:
 
 - Remove obsolete oac-tree-misc plugin (oac-tree-system shall be used instead)
