@@ -6,7 +6,7 @@
  *
  * Description   : Variable plugin implementation
  *
- * Author        : Walter Van Herck
+ * Author        : Walter Van Herck (IO)
  *
  * Copyright (c) : 2010-2026 ITER Organization,
  *                 CS 90 046

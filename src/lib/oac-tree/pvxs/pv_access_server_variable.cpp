@@ -41,12 +41,6 @@ const std::string PvAccessServerVariable::Type = "PvAccessServer";
 static bool PvAccessServerVariable_initialised_flag =
   RegisterGlobalVariable<PvAccessServerVariable>();
 
-PvAccessSharedServerRegistry& GetSharedPvAccessServerRegistry()
-{
-  static PvAccessSharedServerRegistry shared_registry{};
-  return shared_registry;
-}
-
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
 const std::string TYPE_ATTRIBUTE_NAME = "type";
 const std::string VALUE_ATTRIBUTE_NAME = "value";
@@ -70,25 +64,7 @@ PvAccessSharedServer& PvAccessServerVariable::GetSharedServer() const
     throw InvalidOperationException(
       "PvAccessServerVariable::GetSharedServer(): Workspace is not set");
   }
-  return GetSharedPvAccessServerRegistry().GetServer(m_workspace);
-}
-
-sup::dto::AnyValue PvAccessServerVariable::GetInitialValue(const sup::dto::AnyType& val_type) const
-{
-  sup::dto::AnyValue val(val_type);
-  if (HasAttribute(VALUE_ATTRIBUTE_NAME))
-  {
-    auto val_str = GetAttributeString(VALUE_ATTRIBUTE_NAME);
-    sup::dto::JSONAnyValueParser value_parser;
-    if (!value_parser.TypedParseString(m_anytype, val_str))
-    {
-      std::string error_message = VariableSetupExceptionProlog(*this) +
-        "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
-      throw VariableSetupException(error_message);
-    }
-    val = value_parser.MoveAnyValue();
-  }
-  return val;
+  return pv_access_helper::GetSharedPvAccessServerRegistry().GetServer(m_workspace);
 }
 
 bool PvAccessServerVariable::GetValueImpl(sup::dto::AnyValue& value) const
@@ -129,7 +105,7 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
     throw VariableSetupException(error_message);
   }
   m_anytype = parser.MoveAnyType();
-  auto val = GetInitialValue(m_anytype);
+  auto val = GetInitialValue(*this, m_anytype);
   // Avoid dependence on destruction order of m_server and m_anytype.
   auto callback = [this](const sup::dto::AnyValue& value)
   {
@@ -142,8 +118,12 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
                                 callback);
   SetupTeardownActions actions{
     PvAccessServerVariable::Type,
-    [workspace = m_workspace]() { GetSharedPvAccessServerRegistry().Setup(workspace); },
-    [workspace = m_workspace]() { GetSharedPvAccessServerRegistry().Teardown(workspace); }
+    [workspace = m_workspace]() {
+      pv_access_helper::GetSharedPvAccessServerRegistry().Setup(workspace);
+    },
+    [workspace = m_workspace]() {
+      pv_access_helper::GetSharedPvAccessServerRegistry().Teardown(workspace);
+    }
   };
   Notify(val, true);
   return actions;
@@ -156,8 +136,8 @@ void PvAccessServerVariable::ResetImpl(const Workspace& ws)
   {
     return;
   }
-  auto val = GetInitialValue(m_anytype);
-  (void)GetSharedPvAccessServerRegistry().GetServer(m_workspace)
+  auto val = GetInitialValue(*this, m_anytype);
+  (void)pv_access_helper::GetSharedPvAccessServerRegistry().GetServer(m_workspace)
     .SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
               pv_access_helper::PackIntoStructIfScalar(val));
 }
@@ -166,6 +146,24 @@ void PvAccessServerVariable::TeardownImpl()
 {
   m_anytype = sup::dto::EmptyType;
   m_workspace = nullptr;
+}
+
+sup::dto::AnyValue GetInitialValue(const Variable& variable, const sup::dto::AnyType& val_type)
+{
+  sup::dto::AnyValue val(val_type);
+  if (variable.HasAttribute(VALUE_ATTRIBUTE_NAME))
+  {
+    auto val_str = variable.GetAttributeString(VALUE_ATTRIBUTE_NAME);
+    sup::dto::JSONAnyValueParser value_parser;
+    if (!value_parser.TypedParseString(val_type, val_str))
+    {
+      std::string error_message = VariableSetupExceptionProlog(variable) +
+        "could not parse attribute [" + VALUE_ATTRIBUTE_NAME + "] with value [" + val_str + "]";
+      throw VariableSetupException(error_message);
+    }
+    val = value_parser.MoveAnyValue();
+  }
+  return val;
 }
 
 }  // namespace oac_tree

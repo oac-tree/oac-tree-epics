@@ -11,6 +11,7 @@ target_sources(oac-tree-pvxs
   PRIVATE
   pv_access_client_variable.cpp
   pv_access_encoded_client_variable.cpp
+  pv_access_encoded_server_variable.cpp
   pv_access_helper.cpp
   pv_access_read_instruction.cpp
   pv_access_server_variable.cpp

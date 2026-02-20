@@ -64,6 +64,12 @@ sup::dto::AnyValue PackIntoStructIfScalar(const sup::dto::AnyValue& value)
   return result;
 }
 
+PvAccessSharedServerRegistry& GetSharedPvAccessServerRegistry()
+{
+  static PvAccessSharedServerRegistry shared_registry{};
+  return shared_registry;
+}
+
 }  // namespace pv_access_helper
 
 }  // namespace oac_tree

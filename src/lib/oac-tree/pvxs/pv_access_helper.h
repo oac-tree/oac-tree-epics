@@ -25,6 +25,8 @@
 
 #include <sup/dto/anyvalue.h>
 
+#include "pv_access_shared_server_registry.h"
+
 namespace sup
 {
 namespace oac_tree
@@ -44,6 +46,8 @@ sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
                                           const sup::dto::AnyType& anytype);
 
 sup::dto::AnyValue PackIntoStructIfScalar(const sup::dto::AnyValue& value);
+
+PvAccessSharedServerRegistry& GetSharedPvAccessServerRegistry();
 
 }  // namespace pv_access_helper
 
