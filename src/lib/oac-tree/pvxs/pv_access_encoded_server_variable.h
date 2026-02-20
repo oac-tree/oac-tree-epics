@@ -39,18 +39,17 @@ class PvAccessServer;
 namespace oac_tree
 {
 /**
- * @brief Workspace variable associated with a locally hosted pvAccess server.
+ * @brief Workspace variable associated with a locally hosted PvAccess server.
  * The variable will be presented on the network as an encoded variable. This makes its type
  * dynamic. It has the following attributes:
  * - channel: mandatory name of PvAccess channel
- * - encoding: optional encoding name (default is base64)
  * - type: optional type for the initial value
  * - value: optional initial value
+ * @note Currently, we only support base64 encoding, so there is no need to specify the encoding.
  * @code
      <Workspace>
        <PvAccessEncodedServer name="pvxs-variable"
          channel="seq::pvxs::servervariable"
-         encoding="base64"
          type='{"type":"seq::pvxs::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'/>
      </Workspace>
    @endcode

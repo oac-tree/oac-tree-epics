@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
+    <Plugin>liboac-tree-pvxs.so</Plugin>
+    <Sequence>
+        <WaitForVariables timeout="5.0" varType="PvAccessEncodedClient"/>
+        <Listen varNames="ancoded_var" blocking="true">
+            <Output fromVar="ancoded_var"/>
+        </Listen>
+    </Sequence>
+    <Workspace>
+        <PvAccessEncodedClient name="ancoded_var" channel="seq::test::encoded"/>
+    </Workspace>
+</Procedure>

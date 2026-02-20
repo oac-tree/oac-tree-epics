@@ -41,7 +41,7 @@ namespace oac_tree
  * @brief Workspace variable associated with remote PvAccess server.
  * The variable value is encoded, which allows the type to be dynamic (the encoded result is always
  * of the same type). The encoding and its eventual type will be deduced from the 'encoding' field
- * in the PV.
+ * in the PV (currently only base64 encoding is supported).
  * @code
      <Workspace>
        <PvAccessEncodedClient name="pvxs-variable"

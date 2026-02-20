@@ -45,7 +45,6 @@ static bool PvAccessEncodedServerVariable_initialised_flag =
   RegisterGlobalVariable<PvAccessEncodedServerVariable>();
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
-const std::string ENCODING_ATTRIBUTE_NAME = "encoding";
 const std::string TYPE_ATTRIBUTE_NAME = "type";
 const std::string VALUE_ATTRIBUTE_NAME = "value";
 
@@ -55,7 +54,6 @@ PvAccessEncodedServerVariable::PvAccessEncodedServerVariable()
   , m_workspace{nullptr}
 {
   (void)AddAttributeDefinition(CHANNEL_ATTRIBUTE_NAME, sup::dto::StringType).SetMandatory();
-  (void)AddAttributeDefinition(ENCODING_ATTRIBUTE_NAME, sup::dto::StringType);
   (void)AddAttributeDefinition(TYPE_ATTRIBUTE_NAME, sup::dto::StringType);
   (void)AddAttributeDefinition(VALUE_ATTRIBUTE_NAME, sup::dto::StringType);
   AddConstraint(MakeConstraint<Or>(
