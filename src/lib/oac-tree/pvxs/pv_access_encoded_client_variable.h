@@ -6,7 +6,7 @@
  *
  * Description   : Variable plugin implementation
  *
- * Author        : Gennady Pospelov
+ * Author        : Walter Van Herck
  *
  * Copyright (c) : 2010-2026 ITER Organization,
  *                 CS 90 046
@@ -20,8 +20,8 @@
  * of the distribution package.
  ******************************************************************************/
 
-#ifndef SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
-#define SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+#ifndef SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_ENCODED_CLIENT_VARIABLE_H_
+#define SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_ENCODED_CLIENT_VARIABLE_H_
 
 #include <sup/oac-tree/variable.h>
 
@@ -36,22 +36,24 @@ class PvAccessClientPV;
 
 namespace oac_tree
 {
+
 /**
- * @brief Workspace variable associated with remote pvAccess server.
- * The variable is configured with mandatory 'channel' (PV name) and optional 'type' attributes.
+ * @brief Workspace variable associated with remote PvAccess server.
+ * The variable value is encoded, which allows the type to be dynamic (the encoded result is always
+ * of the same type). The encoding and its eventual type will be deduced from the 'encoding' field
+ * in the PV.
  * @code
      <Workspace>
-       <PvAccessClient name="pvxs-variable"
-         channel="seq::pvxs::variable"
-         type='{"type":"seq::pvxs::Type/v1.0","attributes":[{"timestamp":{"type":"uint64"}},{"value":{"type":"float32"}}]}'/>
+       <PvAccessEncodedClient name="pvxs-variable"
+         channel="seq::pvxs::variable"/>
      </Workspace>
    @endcode
  */
-class PvAccessClientVariable : public Variable
+class PvAccessEncodedClientVariable : public Variable
 {
 public:
-  PvAccessClientVariable();
-  ~PvAccessClientVariable() override;
+  PvAccessEncodedClientVariable();
+  ~PvAccessEncodedClientVariable() override;
 
   static const std::string Type;
 
@@ -62,7 +64,6 @@ private:
   SetupTeardownActions SetupImpl(const Workspace& ws) override;
   void TeardownImpl() override;
 
-  sup::dto::AnyType m_anytype;
   std::unique_ptr<epics::PvAccessClientPV> m_pv;
 };
 
@@ -70,4 +71,4 @@ private:
 
 }  // namespace sup
 
-#endif  // SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_CLIENT_VARIABLE_H_
+#endif  // SUP_OAC_TREE_PLUGIN_EPICS_PV_ACCESS_ENCODED_CLIENT_VARIABLE_H_
