@@ -152,3 +152,92 @@ This procedure contains a ``PvAccessServer`` workspace variable that will publis
         <PvAccessServer name="pva_pv" channel="EXAMPLE:COUNTER"
                         type='{"type":"uint64"}' value='0'/>
     </Workspace>
+
+PvAccessEncodedClient
+^^^^^^^^^^^^^^^^^^^^^
+
+``PvAccessEncodedClient`` is a workspace variable type that connects as a client to an EPICS PvAccess process variable. The process variable is expected to contain an encoded AnyValue as a structure with a ``encoding`` and ``value`` field, the latter of which is a Base64 encoding of the AnyValue. Because of this encoding, the type of such a variable is dynamic and can change between value updates.
+
+.. list-table::
+   :widths: 25 25 15 50
+   :header-rows: 1
+
+   * - Attribute name
+     - Attribute type
+     - Mandatory
+     - Description
+   * - channel
+     - StringType
+     - yes
+     - name of EPICS PvAccess channel
+
+.. _pva_encoded_client_example:
+
+**Example**
+
+This procedure contains a ``PvAccessEncodedClient`` workspace variable that will connect to an EPICS PvAccess process variable and make its value available to procedure instructions. The first instruction will copy its value to a local variable. Then it will verify that the locally cached value is less than a predefined threshold (if it's a scalar). The procedure will succeed if it could succesfully read the ``PvAccessEncodedClient`` variable, i.e. it was connected, and the obtained value was scalar and less than the threshold.
+
+.. code-block:: xml
+
+    <Sequence>
+        <Copy inputVar="pva_pv" outputVar="cache">
+        <IsLessThan leftVar="cache" rightVar="threshold">
+    </Sequence>
+    <Workspace>
+        <PvAccessEncodedClient name="pva_pv" channel='EXAMPLE:SETPOINT'/>
+        <Local name="cache">
+        <Local name="threshold" type='{"type":"float64"}' value='4000.0'>
+    </Workspace>
+
+PvAccessEncodedServer
+^^^^^^^^^^^^^^^^^^^^^
+
+``PvAccessEncodedServer`` is a workspace variable type that acts as a server for a EPICS PvAccess process variable. Its value be first encoded and then published to the network. To be able to extract the correct value at the client side, a ``PvAccessEncodedClient`` workspace variable is required.
+
+.. list-table::
+   :widths: 25 25 15 50
+   :header-rows: 1
+
+   * - Attribute name
+     - Attribute type
+     - Mandatory
+     - Description
+   * - channel
+     - StringType
+     - yes
+     - name of EPICS PvAccess channel
+   * - type
+     - StringType
+     - no
+     - JSON representation of the type of the variable
+   * - value
+     - StringType
+     - no
+     - JSON representation of the initial value of the variable
+
+.. note::
+
+   The optional ``type`` attribute is used to define the type of the process variable's value. If this attribute is absent, the initial value will be the empty value. If ``type`` is specified, but not ``value``, the initial value will be a default constructed value of the given type.
+
+.. note::
+
+   Contrary to the standard ``PvAccessServer`` workspace variable, this variable supports all possible types of ``AnyValue`` values, including empty, scalar and nested arrays/structures.
+
+.. _pva_encoded_server_example:
+
+**Example**
+
+This procedure contains a ``PvAccessEncodedServer`` workspace variable that will publish an EPICS PvAccess process variable that encodes a single integer. The procedure will perform a loop of 10 iterations, each iteration consisting of the increment of the published value and a one second waiting instruction. At the end of the procedure, the EPICS PvAccess process variable will contain an encoded version of the value 10.
+
+.. code-block:: xml
+
+    <Repeat maxCount="10">
+        <Sequence>
+            <Increment varName="pva_pv"/>
+            <Wait name="wait" timeout="1.0"/>
+        </Sequence>
+    </Repeat>
+    <Workspace>
+        <PvAccessEncodedServer name="pva_pv" channel="EXAMPLE:COUNTER"
+                               type='{"type":"uint64"}' value='0'/>
+    </Workspace>
