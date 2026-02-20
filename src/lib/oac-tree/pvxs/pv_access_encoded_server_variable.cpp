@@ -137,6 +137,10 @@ SetupTeardownActions PvAccessEncodedServerVariable::SetupImpl(const Workspace& w
 void PvAccessEncodedServerVariable::ResetImpl(const Workspace& ws)
 {
   (void)ws;
+  if (m_workspace == nullptr)
+  {
+    return;
+  }
   auto val = GetInitialValue(*this, m_initial_type);
   auto encoded = sup::protocol::Base64VariableCodec::Encode(val);
   (void)GetSharedServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME), encoded.second);

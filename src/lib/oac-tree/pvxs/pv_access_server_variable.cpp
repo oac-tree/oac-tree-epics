@@ -132,13 +132,12 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
 void PvAccessServerVariable::ResetImpl(const Workspace& ws)
 {
   (void)ws;
-  if (sup::dto::IsEmptyType(m_anytype))
+  if (sup::dto::IsEmptyType(m_anytype) || m_workspace == nullptr)
   {
     return;
   }
   auto val = GetInitialValue(*this, m_anytype);
-  (void)pv_access_helper::GetSharedPvAccessServerRegistry().GetServer(m_workspace)
-    .SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
+  (void)GetSharedServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
               pv_access_helper::PackIntoStructIfScalar(val));
 }
 
