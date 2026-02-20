@@ -13,6 +13,7 @@ target_sources(${unit-tests}
   global_ioc_environment.cpp
   test_user_interface.cpp
   pv_access_client_variable_tests.cpp
+  pv_access_encoded_client_variable_tests.cpp
   pv_access_read_instruction_tests.cpp
   pv_access_server_variable_tests.cpp
   pv_access_write_instruction_tests.cpp
