@@ -6,11 +6,11 @@
     <Plugin>liboac-tree-pvxs.so</Plugin>
     <Sequence>
         <WaitForVariables timeout="5.0" varType="PvAccessEncodedClient"/>
-        <Listen varNames="ancoded_var" blocking="true">
-            <Output fromVar="ancoded_var"/>
+        <Listen varNames="encoded_var" blocking="true">
+            <Output fromVar="encoded_var"/>
         </Listen>
     </Sequence>
     <Workspace>
-        <PvAccessEncodedClient name="ancoded_var" channel="seq::test::encoded"/>
+        <PvAccessEncodedClient name="encoded_var" channel="seq::test::encoded"/>
     </Workspace>
 </Procedure>

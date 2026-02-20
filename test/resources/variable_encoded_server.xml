@@ -6,12 +6,12 @@
     <Plugin>liboac-tree-pvxs.so</Plugin>
     <Repeat maxCount="100">
         <Sequence>
-           <Increment varName="ancoded_var"/>
+           <Increment varName="encoded_var"/>
            <Wait timeout="1.0"/>
         </Sequence>
     </Repeat>
     <Workspace>
-        <PvAccessEncodedServer name="ancoded_var" channel="seq::test::encoded"
+        <PvAccessEncodedServer name="encoded_var" channel="seq::test::encoded"
                                type='{"type":"uint64"}' value='0'/>
     </Workspace>
 </Procedure>
