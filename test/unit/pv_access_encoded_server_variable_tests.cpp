@@ -23,17 +23,12 @@
 #include <oac-tree/pvxs/pv_access_encoded_server_variable.h>
 
 #include <sup/oac-tree/exceptions.h>
-#include <sup/oac-tree/sequence_parser.h>
-#include <sup/oac-tree/user_interface.h>
 #include <sup/oac-tree/variable.h>
 #include <sup/oac-tree/variable_registry.h>
 #include <sup/oac-tree/workspace.h>
 
-#include <sup/dto/json_type_parser.h>
-
 #include <gtest/gtest.h>
 #include <sup/epics-test/unit_test_helper.h>
-#include "unit_test_helper.h"
 
 using namespace sup::oac_tree;
 
@@ -42,18 +37,10 @@ static const std::string UINT16_STRUCT_TYPE =
 
 static const std::string UINT16_STRUCT_VALUE = R"RAW({"value":42})RAW";
 
-static const std::string UINT16TYPE =
-  R"RAW({"type":"uint16"})RAW";
-
 static const std::string UINT16_STRUCT_WRONG_VALUE =
   R"RAW({"value":"A_String!"})RAW";
 
-class PvAccessEncodedServerVariableTest : public ::testing::Test
-{
-protected:
-  PvAccessEncodedServerVariableTest();
-  ~PvAccessEncodedServerVariableTest();
-};
+class PvAccessEncodedServerVariableTest : public ::testing::Test {};
 
 TEST_F(PvAccessEncodedServerVariableTest, VariableRegistration)
 {
@@ -175,6 +162,3 @@ TEST_F(PvAccessEncodedServerVariableTest, ServerClientTest)
     return ws.GetValue("client", tmp) && tmp == new_val;
   }));
 }
-
-PvAccessEncodedServerVariableTest::PvAccessEncodedServerVariableTest() = default;
-PvAccessEncodedServerVariableTest::~PvAccessEncodedServerVariableTest() = default;

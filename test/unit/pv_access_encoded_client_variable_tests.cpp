@@ -24,13 +24,8 @@
 #include "unit_test_helper.h"
 
 #include <sup/oac-tree/exceptions.h>
-#include <sup/oac-tree/sequence_parser.h>
-#include <sup/oac-tree/user_interface.h>
 #include <sup/oac-tree/variable_registry.h>
 #include <sup/oac-tree/workspace.h>
-
-#include <sup/dto/json_type_parser.h>
-#include <sup/epics/pv_access_server.h>
 
 #include <gtest/gtest.h>
 #include <sup/epics-test/unit_test_helper.h>
@@ -39,12 +34,7 @@
 
 using namespace sup::oac_tree;
 
-class PvAccessEncodedClientVariableTest : public ::testing::Test
-{
-protected:
-  PvAccessEncodedClientVariableTest();
-  ~PvAccessEncodedClientVariableTest();
-};
+class PvAccessEncodedClientVariableTest : public ::testing::Test {};
 
 TEST_F(PvAccessEncodedClientVariableTest, VariableRegistration)
 {
@@ -125,6 +115,3 @@ TEST_F(PvAccessEncodedClientVariableTest, ServerClient)
     return ws.GetValue("server", tmp) && tmp == new_val;
   }));
 }
-
-PvAccessEncodedClientVariableTest::PvAccessEncodedClientVariableTest() = default;
-PvAccessEncodedClientVariableTest::~PvAccessEncodedClientVariableTest() = default;
