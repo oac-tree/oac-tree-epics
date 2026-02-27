@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
+    <Plugin>liboac-tree-pvxs.so</Plugin>
+    <Sequence>
+        <WaitForVariables varType="PvAccessClient" timeout="3.0"/>
+        <Copy inputVar="init" outputVar="server_var"/>
+        <Wait timeout="1.0"/>
+        <Equals leftVar="client_var" rightVar="partial_init"/>
+        <Copy inputVar="partial_update" outputVar="client_var"/>
+        <Wait timeout="1.0"/>
+        <Equals leftVar="server_var" rightVar="update"/>
+    </Sequence>
+    <Workspace>
+        <PvAccessServer name="server_var"
+                        channel="seq::test::variable"
+                        type='{"type":"","attributes":[{"value":{"type":"float32"}},{"descr":{"type":"string"}}]}'/>
+        <PvAccessClient name="client_var"
+                        channel="seq::test::variable"
+                        type='{"type":"","attributes":[{"value":{"type":"float32"}}]}'/>
+        <Local name="init"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}},{"descr":{"type":"string"}}]}'
+               value='{"value":1.0,"descr":"test"}'/>
+        <Local name="update"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}},{"descr":{"type":"string"}}]}'
+               value='{"value":42.0,"descr":"test"}'/>
+        <Local name="partial_init"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}}]}'
+               value='{"value":1.0}'/>
+        <Local name="partial_update"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}}]}'
+               value='{"value":42.0}'/>
+    </Workspace>
+</Procedure>
