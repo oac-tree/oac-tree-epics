@@ -34,6 +34,10 @@ namespace pv_access_helper
 sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
                                           const sup::dto::AnyType& anytype)
 {
+  if (sup::dto::IsEmptyType(anytype))
+  {
+    return value;
+  }
   sup::dto::AnyValue result{anytype};
   if (sup::dto::IsScalarType(anytype) && value.HasField(VALUE_FIELD_NAME))
   {

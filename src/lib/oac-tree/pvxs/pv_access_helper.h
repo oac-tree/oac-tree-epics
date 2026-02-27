@@ -42,6 +42,7 @@ const std::string REQUEST_ATTRIBUTE_NAME = "requestVar";
 
 const std::string VALUE_FIELD_NAME = "value";
 
+// Create an AnyValue of type 'anytype' from 'value'
 sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
                                           const sup::dto::AnyType& anytype);
 

@@ -60,9 +60,7 @@ bool PvAccessClientVariable::GetValueImpl(sup::dto::AnyValue& value) const
   {
     return false;
   }
-  auto converted_val = sup::dto::IsEmptyType(m_anytype)
-                           ? m_pv->GetValue()
-                           : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_anytype);
+  auto converted_val = pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_anytype);
   return !sup::dto::IsEmptyValue(converted_val) && sup::dto::TryAssign(value, converted_val);
 }
 
@@ -94,9 +92,7 @@ bool PvAccessClientVariable::IsAvailableImpl() const
   {
     return false;
   }
-  auto value = sup::dto::IsEmptyType(m_anytype)
-                   ? m_pv->GetValue()
-                   : pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_anytype);
+  auto value = pv_access_helper::ConvertToTypedAnyValue(m_pv->GetValue(), m_anytype);
   return !sup::dto::IsEmptyValue(value);
 }
 
@@ -124,9 +120,7 @@ SetupTeardownActions PvAccessClientVariable::SetupImpl(const Workspace& ws)
   // Avoid dependence on destruction order of m_pv and m_anytype.
   auto callback = [this](const epics::PvAccessClientPV::ExtendedValue& ext_value)
   {
-    auto value = sup::dto::IsEmptyType(m_anytype)
-                     ? ext_value.value
-                     : pv_access_helper::ConvertToTypedAnyValue(ext_value.value, m_anytype);
+    auto value = pv_access_helper::ConvertToTypedAnyValue(ext_value.value, m_anytype);
     Notify(value, ext_value.connected);
     return;
   };
