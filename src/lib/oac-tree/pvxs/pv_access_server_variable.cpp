@@ -105,6 +105,12 @@ SetupTeardownActions PvAccessServerVariable::SetupImpl(const Workspace& ws)
     throw VariableSetupException(error_message);
   }
   m_anytype = parser.MoveAnyType();
+  if (sup::dto::IsEmptyType(m_anytype))
+  {
+    std::string error_message = VariableSetupExceptionProlog(*this) +
+      "empty type is not allowed for this type of variable";
+    throw VariableSetupException(error_message);
+  }
   auto val = GetInitialValue(*this, m_anytype);
   // Avoid dependence on destruction order of m_server and m_anytype.
   auto callback = [this](const sup::dto::AnyValue& value)
