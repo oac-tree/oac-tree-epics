@@ -35,7 +35,7 @@ namespace pv_access_helper
 namespace
 {
 // Try to convert the src value to dest, allowing for dest to only contain a subset of fields of
-// src. dest is assumed to be non-empty and non-scalar.
+// src.
 bool TryPartialConvert(sup::dto::AnyValue& dest, const sup::dto::AnyValue& src);
 }  // unnamed namespace
 
@@ -56,7 +56,7 @@ sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
   }
   else
   {
-    if (sup::dto::TryConvert(result, value))
+    if (TryPartialConvert(result, value))
     {
       return result;
     }
