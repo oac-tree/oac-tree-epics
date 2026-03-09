@@ -293,5 +293,45 @@ TEST_F(PvAccessClientVariableTest, WriteIndexFieldAsBool)
   }));
 }
 
+TEST_F(PvAccessClientVariableTest, PartialClientUpdate)
+{
+  DefaultUserInterface ui;
+  std::string procedure_body{
+      R"RAW(
+    <Sequence>
+        <WaitForVariables varType="PvAccessClient" timeout="3.0"/>
+        <Copy inputVar="init" outputVar="server_var"/>
+        <WaitForVariable timeout="2.0" varName="client_var" equalsVar="partial_init"/>
+        <Copy inputVar="partial_update" outputVar="client_var"/>
+        <WaitForVariable timeout="2.0" varName="server_var" equalsVar="update"/>
+    </Sequence>
+    <Workspace>
+        <PvAccessServer name="server_var"
+                        channel="seq::test::variable"
+                        type='{"type":"","attributes":[{"value":{"type":"float32"}},{"descr":{"type":"string"}}]}'/>
+        <PvAccessClient name="client_var"
+                        channel="seq::test::variable"
+                        type='{"type":"","attributes":[{"value":{"type":"float32"}}]}'/>
+        <Local name="init"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}},{"descr":{"type":"string"}}]}'
+               value='{"value":1.0,"descr":"test"}'/>
+        <Local name="update"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}},{"descr":{"type":"string"}}]}'
+               value='{"value":42.0,"descr":"test"}'/>
+        <Local name="partial_init"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}}]}'
+               value='{"value":1.0}'/>
+        <Local name="partial_update"
+               type='{"type":"","attributes":[{"value":{"type":"float32"}}]}'
+               value='{"value":42.0}'/>
+    </Workspace>
+)RAW"};
+
+  const auto procedure_string = unit_test_helper::CreateProcedureString(procedure_body);
+  auto proc = ParseProcedureString(procedure_string);
+  ASSERT_TRUE(proc);
+  EXPECT_TRUE(unit_test_helper::TryAndExecute(proc, ui));
+}
+
 PvAccessClientVariableTest::PvAccessClientVariableTest() = default;
 PvAccessClientVariableTest::~PvAccessClientVariableTest() = default;
