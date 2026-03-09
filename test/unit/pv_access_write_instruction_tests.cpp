@@ -265,7 +265,7 @@ TEST_F(PvAccessWriteInstructionTest, ChannelTimeout)
   EXPECT_NE(message.find("Does_Not_Exist"), std::string::npos);
 }
 
-TEST_F(PvAccessWriteInstructionTest, DISABLED_ChannelTypeMismatch)
+TEST_F(PvAccessWriteInstructionTest, ChannelTypeMismatch)
 {
   auto procedure = ParseProcedureString(PV_ACCESS_CHANNEL_MISMATCH_PROCEDURE);
   ASSERT_TRUE(static_cast<bool>(procedure));

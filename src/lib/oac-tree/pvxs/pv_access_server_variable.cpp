@@ -82,7 +82,7 @@ bool PvAccessServerVariable::SetValueImpl(const sup::dto::AnyValue& value)
     return false;
   }
   return GetSharedServer().SetValue(GetAttributeString(CHANNEL_ATTRIBUTE_NAME),
-                                            pv_access_helper::PackIntoStructIfScalar(copy));
+                                    pv_access_helper::PackIntoStructIfScalar(copy));
 }
 
 bool PvAccessServerVariable::IsAvailableImpl() const

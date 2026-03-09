@@ -50,7 +50,7 @@ sup::dto::AnyValue ConvertToTypedAnyValue(const sup::dto::AnyValue& value,
   }
   else
   {
-    auto converted = sup::dto::TryNarrowingConvert(value, anytype);
+    auto converted = sup::dto::TryConvertAllowExtraSourceFields(value, anytype);
     if (converted.first)
     {
       return converted.second;
