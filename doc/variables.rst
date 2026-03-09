@@ -76,7 +76,7 @@ PvAccessClient
 
 .. note::
 
-   The ``type`` attribute is used to define the type of the process variable's value. If it is a scalar type, the EPICS PvAccess process variable has to be a structured value with a scalar ``value`` member field, whose value will be cached in the workspace variable. If it is a structured type, the type of the process variable has to be convertible to it. This implies the exact same fields in the structure and the convertibility of all of its leaf values. For structured types, it is more convenient to not define this ``type`` attribute at all, so that the type will be an exact copy of the process variable's type.
+   The ``type`` attribute is used to define the type of the process variable's value. If it is a scalar type, the EPICS PvAccess process variable has to be a structured value with a scalar ``value`` member field, whose value will be cached in the workspace variable. If it is a structured type, the type of the process variable has to be convertible to it, although it may contain a superset of structure members compared to the requested type. This implies that the process variable's structures, at any depth, may contain extra members that will be ignored in the client variable.
 
 .. _pva_client_example:
 

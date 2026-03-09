@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Procedure xmlns="http://codac.iter.org/sup/oac-tree" version="1.0"
+           name="Trivial procedure for testing purposes"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+           xs:schemaLocation="http://codac.iter.org/sup/oac-tree oac-tree.xsd">
+    <Plugin>liboac-tree-pvxs.so</Plugin>
+    <RegisterType jsontype='{"type":"enum_t","attributes":[{"index":{"type":"int32"}},{"choices":{"type":"","element":{"type":"string"},"multiplicity":2}}]}'/>
+    <RegisterType jsontype='{"type":"NTEnum","attributes":[{"value":{"type":"enum_t"}}]}'/>
+    <Listen varNames="enum_server">
+        <Output fromVar="enum_server"/>
+    </Listen>
+    <Workspace>
+        <PvAccessServer name="enum_server" channel="seq::test::enum_test" type='{"type":"NTEnum"}'
+               value='{"value":{"index":0,"choices":["OFF","ON"]}}'/>
+    </Workspace>
+</Procedure>
