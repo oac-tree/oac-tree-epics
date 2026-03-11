@@ -1,6 +1,7 @@
 Changes for 4.5.0:
 
 - Support for Base64 encoded PvAccess variables (both client and server)
+- PvAccessClient variable is allowed to subscribe to only subset of fields in the PV
 
 Changes for 4.4.0:
 
