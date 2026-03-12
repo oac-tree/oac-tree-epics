@@ -101,7 +101,8 @@ bool PopulateExtraFields(sup::dto::AnyValue& anyvalue,
                          const sup::epics::ChannelAccessPV::ExtendedValue& ext_value)
 {
   if (anyvalue.HasField(CONNECTED_FIELD_NAME) &&
-      !sup::dto::TryConvert(anyvalue[CONNECTED_FIELD_NAME], ext_value.connected))
+      !sup::dto::TryConvert(anyvalue[CONNECTED_FIELD_NAME],
+                            sup::dto::AnyValue{ext_value.connected}))
   {
     return false;
   }
