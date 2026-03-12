@@ -41,7 +41,7 @@ namespace oac_tree {
 
 const std::string PvAccessReadInstruction::Type = "PvAccessRead";
 
-static const bool _pv_access_read_instruction_initialised_flag =
+static const bool pv_access_read_instruction_initialised_flag =
   RegisterGlobalInstruction<PvAccessReadInstruction>();
 
 PvAccessReadInstruction::PvAccessReadInstruction()

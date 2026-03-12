@@ -43,7 +43,7 @@ namespace oac_tree {
 
 const std::string ChannelAccessWriteInstruction::Type = "ChannelAccessWrite";
 
-static const bool _ca_write_instruction_initialised_flag =
+static const bool ca_write_instruction_initialised_flag =
    RegisterGlobalInstruction<ChannelAccessWriteInstruction>();
 
 ChannelAccessWriteInstruction::ChannelAccessWriteInstruction()

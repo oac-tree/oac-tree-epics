@@ -49,7 +49,7 @@ namespace oac_tree {
 
 const std::string RPCClientInstruction::Type = "RPCClient";
 
-static const bool _rpcclient_instruction_initialised_flag =
+static const bool rpcclient_instruction_initialised_flag =
   RegisterGlobalInstruction<RPCClientInstruction>();
 
 RPCClientInstruction::RPCClientInstruction()

@@ -43,7 +43,7 @@ namespace oac_tree {
 
 const std::string ChannelAccessReadInstruction::Type = "ChannelAccessRead";
 
-static const bool _ca_read_instruction_initialised_flag =
+static const bool ca_read_instruction_initialised_flag =
   RegisterGlobalInstruction<ChannelAccessReadInstruction>();
 
 ChannelAccessReadInstruction::ChannelAccessReadInstruction()
