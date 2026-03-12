@@ -34,7 +34,7 @@ namespace oac_tree
 {
 
 const std::string PvAccessEncodedClientVariable::Type = "PvAccessEncodedClient";
-static bool PvAccessEncodedClientVariable_initialised_flag =
+static const bool PvAccessEncodedClientVariable_initialised_flag =
   RegisterGlobalVariable<PvAccessEncodedClientVariable>();
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";

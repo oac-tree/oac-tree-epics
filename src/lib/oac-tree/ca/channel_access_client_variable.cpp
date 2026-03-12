@@ -37,7 +37,7 @@ namespace sup {
 namespace oac_tree {
 
 const std::string ChannelAccessClientVariable::Type = "ChannelAccessClient";
-static bool _cavariable_registered_flag = RegisterGlobalVariable<ChannelAccessClientVariable>();
+static const bool _cavariable_registered_flag = RegisterGlobalVariable<ChannelAccessClientVariable>();
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";
 const std::string TYPE_ATTRIBUTE_NAME = "type";

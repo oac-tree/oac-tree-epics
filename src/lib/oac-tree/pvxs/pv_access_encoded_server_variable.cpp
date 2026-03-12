@@ -41,7 +41,7 @@ namespace sup
 namespace oac_tree
 {
 const std::string PvAccessEncodedServerVariable::Type = "PvAccessEncodedServer";
-static bool PvAccessEncodedServerVariable_initialised_flag =
+static const bool PvAccessEncodedServerVariable_initialised_flag =
   RegisterGlobalVariable<PvAccessEncodedServerVariable>();
 
 const std::string CHANNEL_ATTRIBUTE_NAME = "channel";

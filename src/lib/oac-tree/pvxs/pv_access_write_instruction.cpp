@@ -44,7 +44,7 @@ namespace oac_tree {
 
 const std::string PvAccessWriteInstruction::Type = "PvAccessWrite";
 
-static bool _pv_access_write_instruction_initialised_flag =
+static const bool _pv_access_write_instruction_initialised_flag =
   RegisterGlobalInstruction<PvAccessWriteInstruction>();
 
 PvAccessWriteInstruction::PvAccessWriteInstruction()
