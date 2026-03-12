@@ -58,9 +58,9 @@ static inline bool TryAndExecuteNoReset(std::unique_ptr<Procedure>& proc, UserIn
                                         const ExecutionStatus& expect)
 {
   bool status = static_cast<bool>(proc);
-  proc->Setup();
   if (status)
   {
+    proc->Setup();
     ExecutionStatus exec = ExecutionStatus::FAILURE;
     do
     {
