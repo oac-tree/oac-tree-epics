@@ -105,12 +105,12 @@ ExecutionStatus PvAccessReadInstruction::ExecuteSingleImpl(UserInterface& ui, Wo
 
 void PvAccessReadInstruction::ResetHook(UserInterface& ui)
 {
-  (void)ui;
-  Halt();
+  Halt(ui);
 }
 
-void PvAccessReadInstruction::HaltImpl()
+void PvAccessReadInstruction::HaltImpl(UserInterface& ui)
 {
+  (void)ui;
   m_channel_name = "";
   m_finish = 0;
   m_pv.reset();

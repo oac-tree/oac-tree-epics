@@ -133,12 +133,12 @@ ExecutionStatus ChannelAccessReadInstruction::ExecuteSingleImpl(UserInterface& u
 
 void ChannelAccessReadInstruction::ResetHook(UserInterface& ui)
 {
-  (void)ui;
-  Halt();
+  Halt(ui);
 }
 
-void ChannelAccessReadInstruction::HaltImpl()
+void ChannelAccessReadInstruction::HaltImpl(UserInterface& ui)
 {
+  (void)ui;
   m_channel_name = "";
   m_var_field_name = "";
   m_var_type = sup::dto::EmptyType;

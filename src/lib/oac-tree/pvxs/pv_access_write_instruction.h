@@ -81,7 +81,7 @@ private:
 
   void ResetHook(UserInterface& ui) override;
 
-  void HaltImpl() override;
+  void HaltImpl(UserInterface& ui) override;
 
   sup::dto::AnyValue GetNewValue(UserInterface& ui, Workspace& ws) const;
 };

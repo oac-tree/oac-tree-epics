@@ -143,12 +143,12 @@ sup::dto::AnyValue ChannelAccessWriteInstruction::GetNewValue(UserInterface& ui,
 
 void ChannelAccessWriteInstruction::ResetHook(UserInterface& ui)
 {
-  (void)ui;
-  Halt();
+  Halt(ui);
 }
 
-void ChannelAccessWriteInstruction::HaltImpl()
+void ChannelAccessWriteInstruction::HaltImpl(UserInterface& ui)
 {
+  (void)ui;
   m_channel_name = "";
   m_value = sup::dto::AnyValue{};
   m_finish = 0;

@@ -119,12 +119,12 @@ ExecutionStatus PvAccessWriteInstruction::ExecuteSingleImpl(UserInterface& ui, W
 
 void PvAccessWriteInstruction::ResetHook(UserInterface& ui)
 {
-  (void)ui;
-  Halt();
+  Halt(ui);
 }
 
-void PvAccessWriteInstruction::HaltImpl()
+void PvAccessWriteInstruction::HaltImpl(UserInterface& ui)
 {
+  (void)ui;
   m_channel_name = "";
   m_finish = 0;
   m_pv.reset();

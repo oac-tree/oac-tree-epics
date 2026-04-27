@@ -135,12 +135,12 @@ ExecutionStatus RPCClientInstruction::ExecuteSingleImpl(UserInterface& ui, Works
 
 void RPCClientInstruction::ResetHook(UserInterface& ui)
 {
-  (void)ui;
-  Halt();
+  Halt(ui);
 }
 
-void RPCClientInstruction::HaltImpl()
+void RPCClientInstruction::HaltImpl(UserInterface& ui)
 {
+  (void)ui;
   m_future = {};
 }
 
