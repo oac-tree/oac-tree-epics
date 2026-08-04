@@ -1,3 +1,8 @@
+Changes for 4.7.0:
+
+- Build coverage with -O0 by selecting Debug over RelWithDebInfo
+- Instrument test code for coverage by setting flags before add_subdirectory
+
 Changes for 4.6.0:
 
 - Adapt to new Halt API for instructions
